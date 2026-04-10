@@ -13,7 +13,8 @@
   method to measure embedding model similarity distribution on indexed corpus.
   Reports percentile statistics and suggests a `--min-score` threshold
   calibrated to the specific model + corpus.
-- Update README on RRF limitations.
+- Update README and add Hybrid Search Guide document.
+- Document corpus for evals.
 
 ## [1.0.0] - 2024-04-10
 

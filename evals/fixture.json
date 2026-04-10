@@ -1,0 +1,158 @@
+{
+  "description": "General knowledge eval: 6 documents across photography, baking, networking, plants, finance, and running",
+  "version": 1,
+  "queries": [
+    {
+      "id": "exact-rrf-composition",
+      "query": "rule of thirds",
+      "type": "exact",
+      "description": "Direct keyword match in photography document",
+      "expected_files": ["photography-composition.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-sourdough-starter",
+      "query": "sourdough starter feeding schedule",
+      "type": "exact",
+      "description": "Direct keyword match in baking document",
+      "expected_files": ["sourdough-bread-baking.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-wpa3",
+      "query": "WPA3 authentication",
+      "type": "exact",
+      "description": "Direct keyword match in network security document",
+      "expected_files": ["home-network-security.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-compound-interest",
+      "query": "compound interest investing",
+      "type": "exact",
+      "description": "Direct keyword match in finance document",
+      "expected_files": ["personal-finance-basics.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "semantic-framing",
+      "query": "how to make the subject stand out in a photo",
+      "type": "semantic",
+      "description": "Conceptual match for composition techniques — no exact keyword overlap",
+      "expected_files": ["photography-composition.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-gluten",
+      "query": "how does dough develop structure",
+      "type": "semantic",
+      "description": "Conceptual match for autolyse and stretch-and-fold — no keyword 'gluten' vs 'structure'",
+      "expected_files": ["sourdough-bread-baking.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-iot-isolation",
+      "query": "keeping smart home devices separate from computers",
+      "type": "semantic",
+      "description": "Conceptual match for network segmentation and guest networks",
+      "expected_files": ["home-network-security.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-overwatering",
+      "query": "why are my houseplant leaves turning yellow",
+      "type": "semantic",
+      "description": "Symptom-based query that should match overwatering section",
+      "expected_files": ["indoor-plant-care.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-retirement",
+      "query": "how much should I save for retirement",
+      "type": "semantic",
+      "description": "Conceptual match for investing and tax-advantaged accounts sections",
+      "expected_files": ["personal-finance-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-bonking",
+      "query": "running out of energy at the end of a long race",
+      "type": "semantic",
+      "description": "Conceptual match for hitting the wall and glycogen depletion",
+      "expected_files": ["marathon-training-plan.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-negative-space",
+      "query": "empty areas around the subject in a picture",
+      "type": "alias",
+      "description": "Paraphrase of 'negative space' — no shared keywords",
+      "expected_files": ["photography-composition.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-password-vault",
+      "query": "storing all my passwords safely in one place",
+      "type": "alias",
+      "description": "Paraphrase of password manager section — no keyword overlap",
+      "expected_files": ["home-network-security.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-propagation",
+      "query": "growing new plants from cuttings",
+      "type": "alias",
+      "description": "Synonym for propagation section",
+      "expected_files": ["indoor-plant-care.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "cross-hydration",
+      "query": "what ratio of water to use",
+      "type": "cross-domain",
+      "description": "Ambiguous query — could match baking hydration or plant watering. Baking has explicit ratio discussion.",
+      "expected_files": ["sourdough-bread-baking.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-injury-prevention",
+      "query": "how to avoid knee problems",
+      "type": "cross-domain",
+      "description": "Should match runner's knee in marathon document",
+      "expected_files": ["marathon-training-plan.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-debt-snowball",
+      "query": "paying smallest balance first",
+      "type": "hard",
+      "description": "Matches snowball method section — partial phrase, no keyword 'debt'",
+      "expected_files": ["personal-finance-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-taper",
+      "query": "reducing training before a competition",
+      "type": "hard",
+      "description": "Conceptual match for tapering section — no shared terms with 'taper'",
+      "expected_files": ["marathon-training-plan.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "negative-woodworking",
+      "query": "how to build a dovetail joint",
+      "type": "negative",
+      "description": "Topic not present in any document — should return no results or very low scores",
+      "expected_files": [],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "negative-astronomy",
+      "query": "observing Saturn's rings with a telescope",
+      "type": "negative",
+      "description": "Topic not present in any document — should return no results or very low scores",
+      "expected_files": [],
+      "expected_in_top_k": 1
+    }
+  ]
+}
