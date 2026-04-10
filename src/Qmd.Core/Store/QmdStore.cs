@@ -153,7 +153,7 @@ public class QmdStore : IDisposable
         await EmbeddingPipeline.GenerateEmbeddingsAsync(Db, llmService, options, dims => EnsureVecTable(dims));
 
     // =========================================================================
-    // Hybrid Search (Phase 4)
+    // Hybrid Search
     // =========================================================================
     public async Task<List<HybridQueryResult>> HybridQueryAsync(ILlmService llmService,
         string query, HybridQueryOptions? options = null, CancellationToken ct = default) =>

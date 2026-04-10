@@ -50,6 +50,15 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="ct">Cancellation token.</param>
     Task<List<ExpandedQuery>> ExpandQueryAsync(string query, ExpandQuerySdkOptions? options = null, CancellationToken ct = default);
 
+    /// <summary>
+    /// Run the full hybrid search pipeline (BM25 + vector + RRF + reranking) with low-level options.
+    /// For most use cases, prefer <see cref="SearchAsync"/> which wraps this with simpler options.
+    /// </summary>
+    /// <param name="query">Natural-language search query.</param>
+    /// <param name="options">Full pipeline options including candidate limits, explain traces, and hooks.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<List<HybridQueryResult>> HybridQueryAsync(string query, HybridQueryOptions? options = null, CancellationToken ct = default);
+
     #endregion
 
     #region Retrieval
@@ -87,6 +96,27 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="pathPrefix">Optional prefix to filter paths (e.g. <c>wiki/concepts</c>).</param>
     /// <returns>File entries sorted by path, with body length.</returns>
     Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null);
+
+    /// <summary>
+    /// Get the combined context string for a file path (hierarchical, most-specific-first).
+    /// </summary>
+    /// <param name="filepath">Absolute file path or virtual path (<c>qmd://collection/path</c>).</param>
+    /// <returns>Combined context string, or <c>null</c> if no context is set.</returns>
+    Task<string?> GetContextForFileAsync(string filepath);
+
+    /// <summary>
+    /// Find file paths similar to a query using Levenshtein distance ("did you mean?" suggestions).
+    /// </summary>
+    /// <param name="query">File path or partial path to match against.</param>
+    /// <param name="maxDistance">Maximum edit distance (default 3).</param>
+    /// <param name="limit">Maximum number of suggestions (default 5).</param>
+    Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5);
+
+    /// <summary>
+    /// List all active (non-deleted) document paths in a collection.
+    /// </summary>
+    /// <param name="collection">Collection name.</param>
+    Task<List<string>> GetActiveDocumentPathsAsync(string collection);
 
     #endregion
 

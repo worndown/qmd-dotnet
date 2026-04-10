@@ -603,6 +603,143 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
+    // HybridQueryAsync (low-level pipeline)
+    // =========================================================================
+
+    [Fact]
+    public async Task HybridQueryAsync_ReturnsResults()
+    {
+        await using var store = CreateSeededStoreWithMockLlm();
+        var results = await store.HybridQueryAsync("authentication");
+        results.Count.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task HybridQueryAsync_RespectsLimit()
+    {
+        await using var store = CreateSeededStoreWithMockLlm();
+        var results = await store.HybridQueryAsync("authentication",
+            new HybridQueryOptions { Limit = 1, SkipRerank = true });
+        results.Count.Should().BeLessThanOrEqualTo(1);
+    }
+
+    [Fact]
+    public async Task HybridQueryAsync_RespectsCollectionFilter()
+    {
+        await using var store = CreateSeededStoreWithMockLlm();
+        var results = await store.HybridQueryAsync("authentication",
+            new HybridQueryOptions { Collections = ["notes"], SkipRerank = true });
+        foreach (var r in results)
+        {
+            r.DisplayPath.Should().Contain("notes");
+        }
+    }
+
+    // =========================================================================
+    // GetContextForFileAsync
+    // =========================================================================
+
+    [Fact]
+    public async Task GetContextForFile_ReturnsNull_WhenNoContext()
+    {
+        await using var store = CreateSeededStore();
+        var context = await store.GetContextForFileAsync("qmd://docs/readme.md");
+        context.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetContextForFile_ReturnsNull_ForUnknownPath()
+    {
+        await using var store = CreateSeededStore();
+        var context = await store.GetContextForFileAsync("qmd://nonexistent/file.md");
+        context.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetContextForFile_ReturnsContext_WithFilesystemPath()
+    {
+        // Build a store where collection path matches filesystem conventions
+        // so ContextResolver can resolve filesystem path → collection + relative path
+        var config = new CollectionConfig
+        {
+            Collections = new()
+            {
+                ["docs"] = new Collection
+                {
+                    Path = "/test/docs",
+                    Pattern = "**/*.md",
+                    Context = new Dictionary<string, string> { ["/"] = "Documentation files" },
+                },
+            }
+        };
+        var db = new SqliteDatabase(":memory:");
+        var coreStore = new QmdStore(db);
+        var configManager = new ConfigManager(new InlineConfigSource(config));
+        coreStore.SyncConfig(configManager.LoadConfig());
+
+        // Insert document with relative path (matching what ContextResolver expects)
+        var body = "# Readme\n\nTest content.";
+        var hash = coreStore.HashContent(body);
+        coreStore.InsertContent(hash, body, "2025-01-01");
+        coreStore.InsertDocument("docs", "readme.md", "Readme", hash, "2025-01-01", "2025-01-01");
+
+        await using IQmdStore store = new QmdStoreImpl(coreStore, configManager);
+        var context = await store.GetContextForFileAsync("/test/docs/readme.md");
+        context.Should().Be("Documentation files");
+    }
+
+    // =========================================================================
+    // FindSimilarFilesAsync
+    // =========================================================================
+
+    [Fact]
+    public async Task FindSimilarFiles_FindsCloseMatches()
+    {
+        await using var store = CreateSeededStore();
+        var similar = await store.FindSimilarFilesAsync("qmd://docs/auth.m");
+        similar.Should().Contain(p => p.Contains("auth.md"));
+    }
+
+    [Fact]
+    public async Task FindSimilarFiles_RespectsLimit()
+    {
+        await using var store = CreateSeededStore();
+        var similar = await store.FindSimilarFilesAsync("qmd://docs/a", limit: 1);
+        similar.Count.Should().BeLessThanOrEqualTo(1);
+    }
+
+    [Fact]
+    public async Task FindSimilarFiles_ReturnsEmpty_WhenNoCloseMatch()
+    {
+        await using var store = CreateSeededStore();
+        var similar = await store.FindSimilarFilesAsync("completely-unrelated-path-xyz", maxDistance: 1);
+        similar.Should().BeEmpty();
+    }
+
+    // =========================================================================
+    // GetActiveDocumentPathsAsync
+    // =========================================================================
+
+    [Fact]
+    public async Task GetActiveDocumentPaths_ReturnsPaths()
+    {
+        await using var store = CreateSeededStore();
+        var paths = await store.GetActiveDocumentPathsAsync("docs");
+        paths.Should().HaveCount(3);
+        paths.Should().Contain(p => p.Contains("readme.md"));
+        paths.Should().Contain(p => p.Contains("auth.md"));
+        paths.Should().Contain(p => p.Contains("api.md"));
+    }
+
+    [Fact]
+    public async Task GetActiveDocumentPaths_ReturnsEmpty_ForUnknownCollection()
+    {
+        await using var store = CreateSeededStore();
+        var paths = await store.GetActiveDocumentPathsAsync("nonexistent");
+        paths.Should().BeEmpty();
+    }
+
+    // =========================================================================
     // get and multiGet
     // =========================================================================
 

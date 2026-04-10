@@ -327,5 +327,17 @@ public class BenchmarkRunnerTests : IAsyncDisposable
 
         public Task<IndexHealthInfo> GetIndexHealthAsync()
             => throw new NotSupportedException();
+
+        public Task<List<HybridQueryResult>> HybridQueryAsync(string query, HybridQueryOptions? options = null, CancellationToken ct = default)
+            => throw new NotSupportedException();
+
+        public Task<string?> GetContextForFileAsync(string filepath)
+            => throw new NotSupportedException();
+
+        public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
+            => throw new NotSupportedException();
+
+        public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+            => throw new NotSupportedException();
     }
 }
