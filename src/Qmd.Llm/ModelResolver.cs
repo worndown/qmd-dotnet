@@ -35,7 +35,11 @@ public class ModelResolver
     /// <summary>
     /// Resolve a model URI to a local file path. Downloads if not cached.
     /// </summary>
-    public async Task<string> ResolveModelFileAsync(string modelUri, bool refresh = false, CancellationToken ct = default)
+    /// <param name="modelUri">HuggingFace URI (hf:user/repo/file) or local path.</param>
+    /// <param name="refresh">Force re-download even if cached.</param>
+    /// <param name="onProgress">Optional callback for progress messages (e.g. "Downloading model...").</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task<string> ResolveModelFileAsync(string modelUri, bool refresh = false, Action<string>? onProgress = null, CancellationToken ct = default)
     {
         var hfRef = ParseHfUri(modelUri);
         if (hfRef == null)
@@ -81,7 +85,7 @@ public class ModelResolver
 
         // Download from HuggingFace
         var url = $"https://huggingface.co/{hfRef.Repo}/resolve/main/{hfRef.File}";
-        Console.Error.WriteLine($"Downloading model: {modelUri}...");
+        onProgress?.Invoke($"Downloading model: {modelUri}...");
 
         using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
@@ -97,7 +101,7 @@ public class ModelResolver
         await using var fileStream = File.Create(localPath);
         await response.Content.CopyToAsync(fileStream, ct);
 
-        Console.Error.WriteLine($"Model saved to: {localPath}");
+        onProgress?.Invoke($"Model saved to: {localPath}");
         return localPath;
     }
 }

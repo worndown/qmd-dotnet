@@ -201,10 +201,10 @@ public static class AstBreakPointScanner
             result.Sort((a, b) => a.Pos.CompareTo(b.Pos));
             return result;
         }
-        catch (Exception ex)
+        catch
         {
+            // AST parse failed — fall back to regex chunking (callers handle empty list)
             FailedLanguages.TryAdd(lang.Value, true);
-            Console.Error.WriteLine($"[qmd] AST parse failed for {filepath}, falling back to regex: {ex.Message}");
             return [];
         }
     }

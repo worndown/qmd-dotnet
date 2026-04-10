@@ -21,10 +21,10 @@ public static class VecExtension
             Verify(db);
             _isAvailable = true;
         }
-        catch (Exception ex)
+        catch
         {
+            // sqlite-vec not available — vector search disabled, FTS still works
             _isAvailable = false;
-            Console.Error.WriteLine($"sqlite-vec unavailable: {ex.Message}");
         }
     }
 

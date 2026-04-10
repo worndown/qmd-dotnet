@@ -28,7 +28,8 @@ public static class PullCommand
                 AnsiConsole.MarkupLine($"[yellow]{role}:[/] {uri}");
                 try
                 {
-                    var path = await resolver.ResolveModelFileAsync(uri, refresh);
+                    var path = await resolver.ResolveModelFileAsync(uri, refresh,
+                        msg => AnsiConsole.MarkupLine($"  [grey]{msg}[/]"));
                     AnsiConsole.MarkupLine($"  [green]OK[/] {path}");
                 }
                 catch (Exception ex)

@@ -99,20 +99,12 @@ public static class SkillInstaller
         return true;
     }
 
-    public static bool ShouldCreateClaudeSymlink(string linkPath, bool autoYes)
+    public static bool ShouldCreateClaudeSymlink(bool autoYes, Func<string, bool>? promptUser = null)
     {
         if (autoYes)
             return true;
 
-        if (Console.IsInputRedirected)
-        {
-            Console.WriteLine($"Tip: create a Claude symlink manually at {linkPath}");
-            return false;
-        }
-
-        Console.Write($"Create a symlink in {linkPath}? [y/N] ");
-        var answer = Console.ReadLine()?.Trim().ToLowerInvariant();
-        return answer is "y" or "yes";
+        return promptUser?.Invoke("Create a Claude symlink") ?? false;
     }
 
     private static string NormalizeLinkTarget(string target)

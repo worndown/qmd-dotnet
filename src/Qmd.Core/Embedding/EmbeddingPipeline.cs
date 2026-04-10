@@ -76,10 +76,9 @@ public static class EmbeddingPipeline
                         embeddings = await llmService.EmbedBatchAsync(formattedTexts,
                             new EmbedOptions { Model = model }, options.CancellationToken);
                     }
-                    catch (Exception batchEx)
+                    catch
                     {
-                        // Batch failed — fallback to per-chunk embedding (matches TS behavior)
-                        Console.Error.WriteLine($"Batch embed failed for {doc.Path}, retrying per-chunk: {batchEx.Message}");
+                        // Batch failed — fallback to per-chunk embedding
                         embeddings = new List<EmbeddingResult?>(new EmbeddingResult?[formattedTexts.Count]);
                         for (int j = 0; j < formattedTexts.Count; j++)
                         {
@@ -124,9 +123,9 @@ public static class EmbeddingPipeline
                         totalBytes,
                         totalErrors));
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.Error.WriteLine($"Embedding error for {doc.Path}: {ex.Message}");
+                    // Per-doc embedding failure — count it and continue with remaining docs
                     totalErrors++;
                 }
 
@@ -134,7 +133,7 @@ public static class EmbeddingPipeline
                 var totalProcessed = totalChunksEmbedded + totalErrors;
                 if (totalProcessed >= 32 && totalErrors > totalProcessed * 0.8)
                 {
-                    Console.Error.WriteLine($"Aborting: error rate too high ({totalErrors}/{totalProcessed})");
+                    // Error rate too high — abort early; caller sees totalErrors in EmbedResult
                     break;
                 }
             }
