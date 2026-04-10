@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+
+      - name: Restore
+        run: dotnet restore Qmd.slnx
+
+      - name: Build
+        run: dotnet build Qmd.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Qmd.slnx --configuration Release --no-build --filter "Category!=LLM"

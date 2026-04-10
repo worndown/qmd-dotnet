@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Qmd.Cli/Qmd.Cli.csproj" />
+    <Project Path="src/Qmd.Core/Qmd.Core.csproj" />
+    <Project Path="src/Qmd.Llm/Qmd.Llm.csproj" />
+    <Project Path="src/Qmd.Mcp/Qmd.Mcp.csproj" />
+    <Project Path="src/Qmd.Sdk/Qmd.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Qmd.Cli.Tests/Qmd.Cli.Tests.csproj" />
+    <Project Path="tests/Qmd.Core.Tests/Qmd.Core.Tests.csproj" />
+    <Project Path="tests/Qmd.Mcp.Tests/Qmd.Mcp.Tests.csproj" />
+    <Project Path="tests/Qmd.Sdk.Tests/Qmd.Sdk.Tests.csproj" />
+  </Folder>
+</Solution>

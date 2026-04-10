@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>12</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>Qmd.Cli</RootNamespace>
+		<AssemblyName>qmd</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Spectre.Console" Version="0.55.0" />
+		<PackageReference Include="System.CommandLine" Version="2.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Qmd.Core\Qmd.Core.csproj" />
+		<ProjectReference Include="..\Qmd.Sdk\Qmd.Sdk.csproj" />
+		<ProjectReference Include="..\Qmd.Llm\Qmd.Llm.csproj" />
+		<ProjectReference Include="..\Qmd.Mcp\Qmd.Mcp.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Qmd.Cli.Tests" />
+	</ItemGroup>
+
+</Project>
