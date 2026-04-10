@@ -81,8 +81,7 @@ public class LlamaSharpService : ILlmService
         if (int.TryParse(envValue, out var parsed) && parsed > 0)
             return parsed;
 
-        Console.Error.Write(
-            $"QMD Warning: invalid QMD_EXPAND_CONTEXT_SIZE=\"{envValue}\", using default {DefaultExpandContextSize}.\n");
+        // Invalid env var — silently use default
         return DefaultExpandContextSize;
     }
 
@@ -94,18 +93,10 @@ public class LlamaSharpService : ILlmService
     /// <param name="ct">Cancellation token.</param>
     public async Task<EmbeddingResult?> EmbedAsync(string text, EmbedOptions? options = null, CancellationToken ct = default)
     {
-        try
-        {
-            var embedder = await EnsureEmbedContextAsync(ct);
-            text = TruncateToEmbedContextSize(text);
-            var embeddings = await embedder.GetEmbeddings(text, ct);
-            return new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Embedding error: {ex.Message}");
-            return null;
-        }
+        var embedder = await EnsureEmbedContextAsync(ct);
+        text = TruncateToEmbedContextSize(text);
+        var embeddings = await embedder.GetEmbeddings(text, ct);
+        return new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri);
     }
 
     /// <summary>Generate vector embeddings for multiple texts, parallelized across available contexts.</summary>
@@ -119,62 +110,54 @@ public class LlamaSharpService : ILlmService
         // Truncate all texts to fit within embedding context size
         texts = texts.Select(TruncateToEmbedContextSize).ToList();
 
-        try
-        {
-            var contexts = await EnsureEmbedContextsAsync(ct);
-            var n = contexts.Count;
+        var contexts = await EnsureEmbedContextsAsync(ct);
+        var n = contexts.Count;
 
-            if (n == 1)
+        if (n == 1)
+        {
+            var results = new List<EmbeddingResult?>();
+            foreach (var text in texts)
             {
-                var results = new List<EmbeddingResult?>();
-                foreach (var text in texts)
+                ct.ThrowIfCancellationRequested();
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
-                    try
-                    {
-                        var embeddings = await contexts[0].GetEmbeddings(text, ct);
-                        results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"Batch embed error: {ex.Message}");
-                        results.Add(null);
-                    }
+                    var embeddings = await contexts[0].GetEmbeddings(text, ct);
+                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
                 }
-                return results;
+                catch
+                {
+                    // Per-text embedding failure — null signals failure for this item
+                    results.Add(null);
+                }
             }
-
-            var chunkSize = (int)Math.Ceiling(texts.Count / (double)n);
-            var tasks = Enumerable.Range(0, n).Select(async i =>
-            {
-                var chunk = texts.Skip(i * chunkSize).Take(chunkSize).ToList();
-                var embedder = contexts[i];
-                var results = new List<EmbeddingResult?>();
-                foreach (var text in chunk)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    try
-                    {
-                        var embeddings = await embedder.GetEmbeddings(text, ct);
-                        results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"Batch embed error: {ex.Message}");
-                        results.Add(null);
-                    }
-                }
-                return results;
-            }).ToArray();
-
-            var allResults = await Task.WhenAll(tasks);
-            return allResults.SelectMany(r => r).ToList();
+            return results;
         }
-        catch (Exception ex)
+
+        var chunkSize = (int)Math.Ceiling(texts.Count / (double)n);
+        var tasks = Enumerable.Range(0, n).Select(async i =>
         {
-            Console.Error.WriteLine($"EmbedBatch error: {ex.Message}");
-            return texts.Select(_ => (EmbeddingResult?)null).ToList();
-        }
+            var chunk = texts.Skip(i * chunkSize).Take(chunkSize).ToList();
+            var embedder = contexts[i];
+            var results = new List<EmbeddingResult?>();
+            foreach (var text in chunk)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    var embeddings = await embedder.GetEmbeddings(text, ct);
+                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
+                }
+                catch
+                {
+                    // Per-text embedding failure — null signals failure for this item
+                    results.Add(null);
+                }
+            }
+            return results;
+        }).ToArray();
+
+        var allResults = await Task.WhenAll(tasks);
+        return allResults.SelectMany(r => r).ToList();
     }
 
     /// <summary>Count tokens in a text string using the embedding model tokenizer.</summary>
@@ -199,49 +182,41 @@ public class LlamaSharpService : ILlmService
     /// <param name="ct">Cancellation token.</param>
     public async Task<GenerateResult?> GenerateAsync(string prompt, GenerateOptions? options = null, CancellationToken ct = default)
     {
-        try
+        var weights = await EnsureGenerateWeightsAsync(ct);
+
+        var maxTokens = options?.MaxTokens ?? 150;
+        // Qwen3 recommended: temp=0.7, topP=0.8, topK=20 for non-thinking mode
+        // DO NOT use greedy decoding (temp=0) - causes repetition loops
+        var temperature = options?.Temperature ?? 0.7;
+
+        var modelParams = new ModelParams(_generateModelPath!)
         {
-            var weights = await EnsureGenerateWeightsAsync(ct);
+            ContextSize = (uint)_expandContextSize,
+        };
 
-            var maxTokens = options?.MaxTokens ?? 150;
-            // Qwen3 recommended: temp=0.7, topP=0.8, topK=20 for non-thinking mode
-            // DO NOT use greedy decoding (temp=0) - causes repetition loops
-            var temperature = options?.Temperature ?? 0.7;
-
-            var modelParams = new ModelParams(_generateModelPath!)
-            {
-                ContextSize = (uint)_expandContextSize,
-            };
-
-            var executor = new StatelessExecutor(weights, modelParams)
-            {
-                ApplyTemplate = true,
-            };
-
-            var inferenceParams = new InferenceParams
-            {
-                MaxTokens = maxTokens,
-                SamplingPipeline = new DefaultSamplingPipeline
-                {
-                    Temperature = (float)temperature,
-                    TopK = 20,
-                    TopP = 0.8f,
-                },
-            };
-
-            var result = "";
-            await foreach (var text in executor.InferAsync(prompt, inferenceParams, ct))
-            {
-                result += text;
-            }
-
-            return new GenerateResult(result, _generateModelUri, null, true);
-        }
-        catch (Exception ex)
+        var executor = new StatelessExecutor(weights, modelParams)
         {
-            Console.Error.WriteLine($"Generate error: {ex.Message}");
-            return null;
+            ApplyTemplate = true,
+        };
+
+        var inferenceParams = new InferenceParams
+        {
+            MaxTokens = maxTokens,
+            SamplingPipeline = new DefaultSamplingPipeline
+            {
+                Temperature = (float)temperature,
+                TopK = 20,
+                TopP = 0.8f,
+            },
+        };
+
+        var result = "";
+        await foreach (var text in executor.InferAsync(prompt, inferenceParams, ct))
+        {
+            result += text;
         }
+
+        return new GenerateResult(result, _generateModelUri, null, true);
     }
 
     #endregion
@@ -348,9 +323,9 @@ content ::= [^\n]+
             };
             return includeLexical ? fallback : fallback.Where(q => q.Type != QueryType.Lex).ToList();
         }
-        catch (Exception ex)
+        catch
         {
-            Console.Error.WriteLine($"Structured query expansion failed: {ex.Message}");
+            // Query expansion failed — fall back to direct query (degraded but functional)
             var fallback = new List<QueryExpansion> { new(QueryType.Vec, query) };
             if (options?.IncludeLexical ?? true) fallback.Insert(0, new QueryExpansion(QueryType.Lex, query));
             return fallback;
@@ -370,84 +345,76 @@ content ::= [^\n]+
     {
         if (documents.Count == 0) return new RerankResult([], _rerankModelUri);
 
-        try
+        var rerankers = await EnsureRerankContextsAsync(ct);
+        var model = await EnsureRerankWeightsAsync(ct);
+
+        // Truncate documents that would exceed rerank context size
+        // Budget = contextSize - template overhead - query tokens
+        var queryTokens = model.Tokenize(query, false, false, System.Text.Encoding.UTF8).Length;
+        var maxDocTokens = LlmConstants.RerankContextSize - LlmConstants.RerankTemplateOverhead - queryTokens;
+
+        var truncatedDocs = documents.Select(doc =>
         {
-            var rerankers = await EnsureRerankContextsAsync(ct);
-            var model = await EnsureRerankWeightsAsync(ct);
+            var tokens = model.Tokenize(doc.Text, false, false, System.Text.Encoding.UTF8);
+            if (tokens.Length <= maxDocTokens) return doc;
+            var truncatedTokens = tokens[..maxDocTokens];
+            var sb = new StringBuilder();
+            foreach (var token in truncatedTokens)
+                sb.Append(model.Vocab.LLamaTokenToString(token, false));
+            return doc with { Text = sb.ToString() };
+        }).ToList();
 
-            // Truncate documents that would exceed rerank context size
-            // Budget = contextSize - template overhead - query tokens
-            var queryTokens = model.Tokenize(query, false, false, System.Text.Encoding.UTF8).Length;
-            var maxDocTokens = LlmConstants.RerankContextSize - LlmConstants.RerankTemplateOverhead - queryTokens;
-
-            var truncatedDocs = documents.Select(doc =>
-            {
-                var tokens = model.Tokenize(doc.Text, false, false, System.Text.Encoding.UTF8);
-                if (tokens.Length <= maxDocTokens) return doc;
-                var truncatedTokens = tokens[..maxDocTokens];
-                var sb = new StringBuilder();
-                foreach (var token in truncatedTokens)
-                    sb.Append(model.Vocab.LLamaTokenToString(token, false));
-                return doc with { Text = sb.ToString() };
-            }).ToList();
-
-            // Deduplicate identical texts before scoring
-            var textToDocs = new Dictionary<string, List<(string File, int Index)>>();
-            for (int i = 0; i < truncatedDocs.Count; i++)
-            {
-                var text = truncatedDocs[i].Text;
-                if (!textToDocs.TryGetValue(text, out var list))
-                {
-                    list = [];
-                    textToDocs[text] = list;
-                }
-                list.Add((truncatedDocs[i].File, i));
-            }
-
-            var uniqueTexts = textToDocs.Keys.ToList();
-
-            // Split across contexts for parallel evaluation
-            var activeContextCount = Math.Max(1, Math.Min(rerankers.Count,
-                (int)Math.Ceiling(uniqueTexts.Count / (double)RerankTargetDocsPerContext)));
-            var activeContexts = rerankers.Take(activeContextCount).ToList();
-            var chunkSize = (int)Math.Ceiling(uniqueTexts.Count / (double)activeContexts.Count);
-
-            var chunks = Enumerable.Range(0, activeContexts.Count)
-                .Select(i => uniqueTexts.Skip(i * chunkSize).Take(chunkSize).ToList())
-                .Where(chunk => chunk.Count > 0)
-                .ToList();
-
-            var scoreTasks = chunks.Select(async (chunk, i) =>
-                await activeContexts[i].GetRelevanceScores(query, chunk, true, ct)
-            ).ToArray();
-
-            var allScores = await Task.WhenAll(scoreTasks);
-            var flatScores = allScores.SelectMany(s => s).ToArray();
-
-            // Reassemble scores and sort descending
-            var ranked = uniqueTexts
-                .Select((text, i) => (Text: text, Score: flatScores[i]))
-                .OrderByDescending(x => x.Score)
-                .ToList();
-
-            // Map back to original documents
-            var results = new List<RerankDocumentResult>();
-            foreach (var item in ranked)
-            {
-                if (!textToDocs.TryGetValue(item.Text, out var docInfos)) continue;
-                foreach (var (file, index) in docInfos)
-                {
-                    results.Add(new RerankDocumentResult(file, item.Score, index));
-                }
-            }
-
-            return new RerankResult(results, _rerankModelUri);
-        }
-        catch (Exception ex)
+        // Deduplicate identical texts before scoring
+        var textToDocs = new Dictionary<string, List<(string File, int Index)>>();
+        for (int i = 0; i < truncatedDocs.Count; i++)
         {
-            Console.Error.WriteLine($"Rerank error: {ex.Message}");
-            return new RerankResult([], _rerankModelUri);
+            var text = truncatedDocs[i].Text;
+            if (!textToDocs.TryGetValue(text, out var list))
+            {
+                list = [];
+                textToDocs[text] = list;
+            }
+            list.Add((truncatedDocs[i].File, i));
         }
+
+        var uniqueTexts = textToDocs.Keys.ToList();
+
+        // Split across contexts for parallel evaluation
+        var activeContextCount = Math.Max(1, Math.Min(rerankers.Count,
+            (int)Math.Ceiling(uniqueTexts.Count / (double)RerankTargetDocsPerContext)));
+        var activeContexts = rerankers.Take(activeContextCount).ToList();
+        var chunkSize = (int)Math.Ceiling(uniqueTexts.Count / (double)activeContexts.Count);
+
+        var chunks = Enumerable.Range(0, activeContexts.Count)
+            .Select(i => uniqueTexts.Skip(i * chunkSize).Take(chunkSize).ToList())
+            .Where(chunk => chunk.Count > 0)
+            .ToList();
+
+        var scoreTasks = chunks.Select(async (chunk, i) =>
+            await activeContexts[i].GetRelevanceScores(query, chunk, true, ct)
+        ).ToArray();
+
+        var allScores = await Task.WhenAll(scoreTasks);
+        var flatScores = allScores.SelectMany(s => s).ToArray();
+
+        // Reassemble scores and sort descending
+        var ranked = uniqueTexts
+            .Select((text, i) => (Text: text, Score: flatScores[i]))
+            .OrderByDescending(x => x.Score)
+            .ToList();
+
+        // Map back to original documents
+        var results = new List<RerankDocumentResult>();
+        foreach (var item in ranked)
+        {
+            if (!textToDocs.TryGetValue(item.Text, out var docInfos)) continue;
+            foreach (var (file, index) in docInfos)
+            {
+                results.Add(new RerankDocumentResult(file, item.Score, index));
+            }
+        }
+
+        return new RerankResult(results, _rerankModelUri);
     }
 
     #endregion
@@ -610,12 +577,11 @@ content ::= [^\n]+
                 var reranker = new LLamaReranker(weights, contextParams);
                 _rerankContexts.Add(reranker);
             }
-            catch (Exception ex)
+            catch
             {
                 if (_rerankContexts.Count == 0)
                 {
-                    // Flash attention might not be supported — retry without it
-                    Console.Error.WriteLine($"Rerank context {i} creation failed (FlashAttention): {ex.Message}");
+                    // FlashAttention not supported — retry without it
                     try
                     {
                         var fallbackParams = new ModelParams(_rerankModelPath!)
@@ -629,7 +595,6 @@ content ::= [^\n]+
                     }
                     catch (Exception ex2)
                     {
-                        Console.Error.WriteLine($"Rerank context fallback (no FlashAttention) also failed: {ex2.Message}");
                         throw new InvalidOperationException("Failed to create any rerank context", ex2);
                     }
                 }

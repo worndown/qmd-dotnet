@@ -76,17 +76,16 @@ public class SessionManager : IAsyncDisposable
         lock (_lock)
         {
             if (_disposed) return;
-            Console.Error.WriteLine("QMD: Disposing LLM models due to inactivity");
-            // Dispose the service asynchronously
+            // Dispose the service asynchronously — fire-and-forget on background timer
             _ = Task.Run(async () =>
             {
                 try
                 {
                     await _service.DisposeAsync();
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.Error.WriteLine($"QMD: Error disposing LLM on inactivity: {ex.Message}");
+                    // Background cleanup — nothing to propagate to
                 }
             });
         }

@@ -39,7 +39,17 @@ public static class SkillCommand
             Console.WriteLine($"Installed QMD skill to {installDir}");
 
             var claudeLinkPath = SkillInstaller.GetClaudeSkillLinkPath(global);
-            if (!SkillInstaller.ShouldCreateClaudeSymlink(claudeLinkPath, yes))
+            if (!SkillInstaller.ShouldCreateClaudeSymlink(yes, _ =>
+            {
+                if (Console.IsInputRedirected)
+                {
+                    Console.WriteLine($"Tip: create a Claude symlink manually at {claudeLinkPath}");
+                    return false;
+                }
+                Console.Write($"Create a symlink in {claudeLinkPath}? [y/N] ");
+                var answer = Console.ReadLine()?.Trim().ToLowerInvariant();
+                return answer is "y" or "yes";
+            }))
                 return;
 
             try
