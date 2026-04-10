@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Qmd.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNet.Glob" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.5" />
+    <PackageReference Include="sqlite-vec" Version="0.1.7-alpha.2.1" />
+    <PackageReference Include="TreeSitter.DotNet" Version="1.3.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+</Project>
