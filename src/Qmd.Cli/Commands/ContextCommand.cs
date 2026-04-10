@@ -31,8 +31,8 @@ public static class ContextCommand
         var addCmd = new Command("add", "Add context to a path") { addPath, addText };
         addCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var path = parseResult.GetValue(addPath);
-            var text = parseResult.GetValue(addText);
+            var path = parseResult.GetValue(addPath) ?? ".";
+            var text = parseResult.GetValue(addText) ?? throw new InvalidOperationException("Required argument 'text' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             var collections = await store.ListCollectionsAsync();
             if (collections.Count == 0) { Console.Error.WriteLine("No collections found."); return; }
@@ -87,7 +87,7 @@ public static class ContextCommand
         rmCmd.Aliases.Add("remove");
         rmCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var path = parseResult.GetValue(rmPath);
+            var path = parseResult.GetValue(rmPath) ?? throw new InvalidOperationException("Required argument 'path' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             var collections = await store.ListCollectionsAsync();
             if (collections.Count == 0) { Console.Error.WriteLine("No collections found."); return; }

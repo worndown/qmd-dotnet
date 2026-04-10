@@ -43,4 +43,14 @@ var parseResult = root.Parse(args);
 var indexVal = parseResult.GetValue(indexOpt);
 if (indexVal != null)
     CliHelper.IndexName = indexVal;
-return await parseResult.InvokeAsync();
+
+try
+{
+    return await parseResult.InvokeAsync();
+}
+catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine($"ERROR: {ex.Message}");
+    return 1;
+}
+

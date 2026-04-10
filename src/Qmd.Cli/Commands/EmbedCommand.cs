@@ -19,7 +19,7 @@ public static class EmbedCommand
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
             var force = parseResult.GetValue(forceOpt);
-            var chunkStrategy = parseResult.GetValue(chunkStrategyOpt);
+            var chunkStrategy = parseResult.GetValue(chunkStrategyOpt) ?? "regex";
             var maxDocs = parseResult.GetValue(maxDocsOpt);
             var maxMb = parseResult.GetValue(maxMbOpt);
 

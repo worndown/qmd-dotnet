@@ -20,7 +20,7 @@ public static class BenchCommand
 
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var fixturePath = parseResult.GetValue(fixtureArg);
+            var fixturePath = parseResult.GetValue(fixtureArg) ?? throw new InvalidOperationException("Required argument 'fixture' was not provided.");
             var json = parseResult.GetValue(jsonOpt);
             var collection = parseResult.GetValue(collectionOpt);
 

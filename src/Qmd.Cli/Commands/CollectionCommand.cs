@@ -50,9 +50,9 @@ public static class CollectionCommand
         var addCmd = new Command("add", "Add a new collection") { addPath, nameOpt, maskOpt, ignoreOpt };
         addCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var path = parseResult.GetValue(addPath);
+            var path = parseResult.GetValue(addPath) ?? ".";
             var name = parseResult.GetValue(nameOpt);
-            var mask = parseResult.GetValue(maskOpt);
+            var mask = parseResult.GetValue(maskOpt) ?? "**/*.md";
             var ignore = parseResult.GetValue(ignoreOpt) ?? [];
             // Auto-derive name from directory basename if not provided
             name ??= Path.GetFileName(Path.GetFullPath(path));
@@ -73,7 +73,7 @@ public static class CollectionCommand
         removeCmd.Aliases.Add("rm");
         removeCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var name = parseResult.GetValue(removeName);
+            var name = parseResult.GetValue(removeName) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             if (await store.RemoveCollectionAsync(name))
                 Console.WriteLine($"Collection '{name}' removed.");
@@ -88,8 +88,8 @@ public static class CollectionCommand
         renameCmd.Aliases.Add("mv");
         renameCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var old = parseResult.GetValue(oldName);
-            var @new = parseResult.GetValue(newName);
+            var old = parseResult.GetValue(oldName) ?? throw new InvalidOperationException("Required argument 'old' was not provided.");
+            var @new = parseResult.GetValue(newName) ?? throw new InvalidOperationException("Required argument 'new' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             if (await store.RenameCollectionAsync(old, @new))
                 Console.WriteLine($"Collection '{old}' renamed to '{@new}'.");
@@ -135,7 +135,7 @@ public static class CollectionCommand
         updateCmdCmd.Aliases.Add("set-update");
         updateCmdCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var name = parseResult.GetValue(updateCmdName);
+            var name = parseResult.GetValue(updateCmdName) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             var command = parseResult.GetValue(updateCmdValue);
             await using var store = await CliHelper.CreateStoreAsync();
             var result = await store.UpdateCollectionSettingsAsync(name,
@@ -151,7 +151,7 @@ public static class CollectionCommand
         var includeCmd = new Command("include", "Include collection in default searches") { includeNameArg };
         includeCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var name = parseResult.GetValue(includeNameArg);
+            var name = parseResult.GetValue(includeNameArg) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: true);
             if (!result) { Console.Error.WriteLine($"Collection '{name}' not found."); return; }
@@ -163,7 +163,7 @@ public static class CollectionCommand
         var excludeCmd = new Command("exclude", "Exclude collection from default searches") { excludeNameArg };
         excludeCmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var name = parseResult.GetValue(excludeNameArg);
+            var name = parseResult.GetValue(excludeNameArg) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
             var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: false);
             if (!result) { Console.Error.WriteLine($"Collection '{name}' not found."); return; }
