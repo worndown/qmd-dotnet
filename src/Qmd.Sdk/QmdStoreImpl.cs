@@ -77,6 +77,11 @@ internal class QmdStoreImpl : IQmdStore
         return await _store.ExpandQueryAsync(GetLlmService(), query, options?.Intent, ct);
     }
 
+    public async Task<List<HybridQueryResult>> HybridQueryAsync(string query, HybridQueryOptions? options = null, CancellationToken ct = default)
+    {
+        return await HybridQueryService.HybridQueryAsync(_store, GetLlmService(), query, options, ct);
+    }
+
     #endregion
 
     #region Retrieval
@@ -102,6 +107,21 @@ internal class QmdStoreImpl : IQmdStore
         var (docs, errors) = MultiGetService.FindDocuments(
             _store.Db, pattern, options.IncludeBody, options.MaxBytes);
         return Task.FromResult((docs, errors));
+    }
+
+    public Task<string?> GetContextForFileAsync(string filepath)
+    {
+        return Task.FromResult(_store.GetContextForFile(filepath));
+    }
+
+    public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
+    {
+        return Task.FromResult(_store.FindSimilarFiles(query, maxDistance, limit));
+    }
+
+    public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+    {
+        return Task.FromResult(_store.GetActiveDocumentPaths(collection));
     }
 
     public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null)

@@ -48,6 +48,8 @@ public class LlamaSharpService : ILlmService
     /// <summary>Resolved expand context size (config > env > default 2048).</summary>
     public int ExpandContextSize => _expandContextSize;
 
+    /// <summary>Create a new LlamaSharp LLM service.</summary>
+    /// <param name="options">Model URIs, cache directory, and context size overrides.</param>
     public LlamaSharpService(LlamaSharpOptions? options = null)
     {
         options ??= new LlamaSharpOptions();
@@ -61,6 +63,8 @@ public class LlamaSharpService : ILlmService
 
     private const int DefaultExpandContextSize = 2048;
 
+    /// <summary>Resolve expand context size from config value, <c>QMD_EXPAND_CONTEXT_SIZE</c> env var, or default (2048).</summary>
+    /// <param name="configValue">Explicit config override, or <c>null</c> to fall through to env/default.</param>
     internal static int ResolveExpandContextSize(int? configValue)
     {
         if (configValue.HasValue)
@@ -82,10 +86,12 @@ public class LlamaSharpService : ILlmService
         return DefaultExpandContextSize;
     }
 
-    // =========================================================================
-    // Embedding
-    // =========================================================================
+    #region Embedding
 
+    /// <summary>Generate a vector embedding for a single text.</summary>
+    /// <param name="text">Input text to embed.</param>
+    /// <param name="options">Optional model override.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<EmbeddingResult?> EmbedAsync(string text, EmbedOptions? options = null, CancellationToken ct = default)
     {
         try
@@ -102,6 +108,10 @@ public class LlamaSharpService : ILlmService
         }
     }
 
+    /// <summary>Generate vector embeddings for multiple texts, parallelized across available contexts.</summary>
+    /// <param name="texts">Input texts to embed.</param>
+    /// <param name="options">Optional model override.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<List<EmbeddingResult?>> EmbedBatchAsync(List<string> texts, EmbedOptions? options = null, CancellationToken ct = default)
     {
         if (texts.Count == 0) return [];
@@ -167,6 +177,9 @@ public class LlamaSharpService : ILlmService
         }
     }
 
+    /// <summary>Count tokens in a text string using the embedding model tokenizer.</summary>
+    /// <param name="text">Text to tokenize.</param>
+    /// <returns>Token count, or a character-based estimate if the model is not loaded.</returns>
     public int CountTokens(string text)
     {
         if (_embedWeights == null)
@@ -176,10 +189,14 @@ public class LlamaSharpService : ILlmService
         return tokens.Length;
     }
 
-    // =========================================================================
-    // Generation
-    // =========================================================================
+    #endregion
 
+    #region Generation
+
+    /// <summary>Run generic text completion. Not currently used by any command.</summary>
+    /// <param name="prompt">Prompt to complete.</param>
+    /// <param name="options">Max tokens, temperature, and model overrides.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<GenerateResult?> GenerateAsync(string prompt, GenerateOptions? options = null, CancellationToken ct = default)
     {
         try
@@ -227,10 +244,14 @@ public class LlamaSharpService : ILlmService
         }
     }
 
-    // =========================================================================
-    // Query expansion
-    // =========================================================================
+    #endregion
 
+    #region Query expansion
+
+    /// <summary>Expand a search query into multiple typed search strategies (lex/vec/hyde) using GBNF-constrained generation.</summary>
+    /// <param name="query">User search query to expand.</param>
+    /// <param name="options">Context hint, lexical inclusion flag.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<List<QueryExpansion>> ExpandQueryAsync(string query, ExpandQueryOptions? options = null, CancellationToken ct = default)
     {
         try
@@ -336,10 +357,15 @@ content ::= [^\n]+
         }
     }
 
-    // =========================================================================
-    // Reranking
-    // =========================================================================
+    #endregion
 
+    #region Reranking
+
+    /// <summary>Score and reorder documents by relevance to a query using a cross-encoder reranker.</summary>
+    /// <param name="query">Search query to rank against.</param>
+    /// <param name="documents">Documents to rerank.</param>
+    /// <param name="options">Optional reranking parameters.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<RerankResult> RerankAsync(string query, List<RerankDocument> documents, RerankOptions? options = null, CancellationToken ct = default)
     {
         if (documents.Count == 0) return new RerankResult([], _rerankModelUri);
@@ -424,10 +450,11 @@ content ::= [^\n]+
         }
     }
 
-    // =========================================================================
-    // Model loading — Embedding
-    // =========================================================================
+    #endregion
 
+    #region Model loading — Embedding
+
+    /// <summary>Return cached embedding weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureEmbedWeightsAsync(CancellationToken ct = default)
     {
         if (_embedWeights != null) return _embedWeights;
@@ -438,6 +465,7 @@ content ::= [^\n]+
         finally { _embedWeightsLoadTask = null; }
     }
 
+    /// <summary>Resolve the model URI and load embedding weights from disk.</summary>
     private async Task<LLamaWeights> LoadEmbedWeightsAsync(CancellationToken ct)
     {
         _embedModelPath = await _modelResolver.ResolveModelFileAsync(_embedModelUri, ct: ct);
@@ -450,12 +478,14 @@ content ::= [^\n]+
         return _embedWeights;
     }
 
+    /// <summary>Return the first available embedding context (convenience for single-text operations).</summary>
     private async Task<LLamaEmbedder> EnsureEmbedContextAsync(CancellationToken ct = default)
     {
         var contexts = await EnsureEmbedContextsAsync(ct);
         return contexts[0];
     }
 
+    /// <summary>Return cached embedding contexts, or create the pool on first call. Coalesces concurrent callers.</summary>
     private async Task<List<LLamaEmbedder>> EnsureEmbedContextsAsync(CancellationToken ct = default)
     {
         if (_embedContexts.Count > 0) return _embedContexts;
@@ -466,6 +496,7 @@ content ::= [^\n]+
         finally { _embedContextsCreateTask = null; }
     }
 
+    /// <summary>Create a pool of embedding contexts sized by CPU parallelism. Stops gracefully if a context fails to allocate.</summary>
     private async Task<List<LLamaEmbedder>> CreateEmbedContextsAsync(CancellationToken ct)
     {
         var weights = await EnsureEmbedWeightsAsync(ct);
@@ -493,10 +524,11 @@ content ::= [^\n]+
         return _embedContexts;
     }
 
-    // =========================================================================
-    // Model loading — Generation
-    // =========================================================================
+    #endregion
 
+    #region Model loading — Generation
+
+    /// <summary>Return cached generation weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureGenerateWeightsAsync(CancellationToken ct = default)
     {
         if (_generateWeights != null) return _generateWeights;
@@ -507,6 +539,7 @@ content ::= [^\n]+
         finally { _generateWeightsLoadTask = null; }
     }
 
+    /// <summary>Resolve the model URI and load generation weights from disk.</summary>
     private async Task<LLamaWeights> LoadGenerateWeightsAsync(CancellationToken ct)
     {
         _generateModelPath = await _modelResolver.ResolveModelFileAsync(_generateModelUri, ct: ct);
@@ -518,10 +551,11 @@ content ::= [^\n]+
         return _generateWeights;
     }
 
-    // =========================================================================
-    // Model loading — Reranking
-    // =========================================================================
+    #endregion
 
+    #region Model loading — Reranking
+
+    /// <summary>Return cached rerank weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureRerankWeightsAsync(CancellationToken ct = default)
     {
         if (_rerankWeights != null) return _rerankWeights;
@@ -532,6 +566,7 @@ content ::= [^\n]+
         finally { _rerankWeightsLoadTask = null; }
     }
 
+    /// <summary>Resolve the model URI and load rerank weights from disk.</summary>
     private async Task<LLamaWeights> LoadRerankWeightsAsync(CancellationToken ct)
     {
         _rerankModelPath = await _modelResolver.ResolveModelFileAsync(_rerankModelUri, ct: ct);
@@ -543,6 +578,7 @@ content ::= [^\n]+
         return _rerankWeights;
     }
 
+    /// <summary>Return cached reranker contexts, or create the pool on first call. Coalesces concurrent callers.</summary>
     private async Task<List<LLamaReranker>> EnsureRerankContextsAsync(CancellationToken ct = default)
     {
         if (_rerankContexts.Count > 0) return _rerankContexts;
@@ -553,6 +589,7 @@ content ::= [^\n]+
         finally { _rerankContextsCreateTask = null; }
     }
 
+    /// <summary>Create a pool of reranker contexts (up to 4). Falls back to non-FlashAttention if first context fails.</summary>
     private async Task<List<LLamaReranker>> CreateRerankContextsAsync(CancellationToken ct)
     {
         var weights = await EnsureRerankWeightsAsync(ct);
@@ -603,13 +640,13 @@ content ::= [^\n]+
         return _rerankContexts;
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
+    #endregion
 
+    #region Helpers
+
+    /// <summary>Compute context pool size based on CPU core count (1–4, CPU-only heuristic).</summary>
     private static int ComputeParallelism()
     {
-        // CPU-only for now (GPU detection would need llama.cpp backend info)
         var cores = Environment.ProcessorCount;
         return Math.Max(1, Math.Min(4, cores / 4));
     }
@@ -651,10 +688,11 @@ content ::= [^\n]+
         return text.Length <= maxChars ? text : text[..maxChars];
     }
 
-    // =========================================================================
-    // Lifecycle
-    // =========================================================================
+    #endregion
 
+    #region Lifecycle
+
+    /// <summary>Dispose all loaded models, embedders, and reranker contexts.</summary>
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
@@ -679,13 +717,23 @@ content ::= [^\n]+
 
         GC.SuppressFinalize(this);
     }
+
+    #endregion
 }
 
+/// <summary>Configuration options for <see cref="LlamaSharpService"/>.</summary>
 public class LlamaSharpOptions
 {
+    /// <summary>HuggingFace URI or local path for the embedding model. Falls back to <c>QMD_EMBED_MODEL</c> env var.</summary>
     public string? EmbedModel { get; init; }
+
+    /// <summary>HuggingFace URI or local path for the generation model. Falls back to <c>QMD_GENERATE_MODEL</c> env var.</summary>
     public string? GenerateModel { get; init; }
+
+    /// <summary>HuggingFace URI or local path for the reranking model. Falls back to <c>QMD_RERANK_MODEL</c> env var.</summary>
     public string? RerankModel { get; init; }
+
+    /// <summary>Directory to cache downloaded model files.</summary>
     public string? ModelCacheDir { get; init; }
 
     /// <summary>

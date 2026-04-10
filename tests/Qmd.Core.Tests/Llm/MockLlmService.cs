@@ -57,7 +57,6 @@ public class MockLlmService : ILlmService
 
     public int CountTokens(string text) => (int)Math.Ceiling(text.Length / 4.0);
 
-    // Phase 4 stubs
     public Task<GenerateResult?> GenerateAsync(string prompt, GenerateOptions? options = null, CancellationToken ct = default)
         => Task.FromResult<GenerateResult?>(null);
 
