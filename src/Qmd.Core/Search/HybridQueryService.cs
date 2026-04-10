@@ -107,6 +107,31 @@ public static class HybridQueryService
         }
 
         // =====================================================================
+        // Step 3d: Diagnostics + pre-reranking vector-score gate
+        // =====================================================================
+        var hasFts = rankedListMeta.Any(m => m.Source == "fts");
+        var bestVecScore = 0.0;
+        for (int li = 0; li < rankedLists.Count; li++)
+        {
+            if (rankedListMeta[li].Source == "vec" && rankedLists[li].Count > 0)
+            {
+                var listTopScore = rankedLists[li][0].Score;
+                if (listTopScore > bestVecScore) bestVecScore = listTopScore;
+            }
+        }
+
+        if (options.Diagnostics != null)
+        {
+            options.Diagnostics.HasFtsResults = hasFts;
+            options.Diagnostics.BestVecScore = bestVecScore;
+        }
+
+        // Gate: when BM25 found nothing and all vector scores are below the noise
+        // floor, there is no evidence of relevance — return empty early.
+        if (!hasFts && bestVecScore < SearchConstants.VecOnlyGateThreshold && rankedLists.Count > 0)
+            return [];
+
+        // =====================================================================
         // Step 4: RRF Fusion
         // =====================================================================
         var weights = rankedLists.Select((_, i) => i < 2 ? 2.0 : 1.0).ToList();
@@ -160,6 +185,20 @@ public static class HybridQueryService
         }
 
         // =====================================================================
+        // Step 6b: Reranker gate — if the best reranker score is near zero,
+        // the reranker considers everything irrelevant.
+        // =====================================================================
+        if (rerankScores is { Count: > 0 })
+        {
+            var bestRerank = rerankScores.Values.Max();
+            if (options.Diagnostics != null)
+                options.Diagnostics.BestRerankScore = bestRerank;
+
+            if (!hasFts && bestRerank < SearchConstants.RerankGateThreshold)
+                return [];
+        }
+
+        // =====================================================================
         // Step 7: Position-aware score blending
         // =====================================================================
         var blended = new List<HybridQueryResult>();
@@ -174,6 +213,13 @@ public static class HybridQueryService
                 double rrfWeight = rrfRank <= 3 ? 0.75 : rrfRank <= 10 ? 0.60 : 0.40;
                 double rrfScore = 1.0 / rrfRank;
                 finalScore = rrfWeight * rrfScore + (1 - rrfWeight) * rerankScore;
+
+                // When BM25 contributed nothing, the RRF positional score is
+                // artificially high.  Cap the blended score at the best raw
+                // vector similarity so it cannot exceed the actual semantic
+                // relevance signal.
+                if (!hasFts && bestVecScore > 0)
+                    finalScore = Math.Min(finalScore, bestVecScore);
             }
             else
             {
@@ -199,12 +245,26 @@ public static class HybridQueryService
         // Step 8: Dedup, filter, sort, limit
         // =====================================================================
         var seen = new HashSet<string>();
-        return blended
+        var results = blended
             .OrderByDescending(r => r.Score)
             .Where(r => { if (seen.Contains(r.File)) return false; seen.Add(r.File); return true; })
             .Where(r => r.Score >= options.MinScore)
             .Take(limit)
             .ToList();
+
+        // =====================================================================
+        // Step 9: Post-fusion confidence gap filter
+        // Drop results that score below ConfidenceGapRatio of the top result,
+        // keeping at least one result if any passed the min-score filter.
+        // =====================================================================
+        if (results.Count > 1)
+        {
+            var topBlended = results[0].Score;
+            var floor = topBlended * SearchConstants.ConfidenceGapRatio;
+            results = results.Where(r => r.Score >= floor).ToList();
+        }
+
+        return results;
     }
 
     private static HybridQueryExplain BuildExplain(string file,

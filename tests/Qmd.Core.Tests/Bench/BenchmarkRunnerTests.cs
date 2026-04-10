@@ -2,6 +2,7 @@ using FluentAssertions;
 using Qmd.Core.Bench;
 using Qmd.Core.Configuration;
 using Qmd.Core.Models;
+using Qmd.Core.Search;
 using Qmd.Sdk;
 using Qmd.Sdk.Bench;
 
@@ -338,6 +339,9 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             => throw new NotSupportedException();
 
         public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+            => throw new NotSupportedException();
+
+        public Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
     }
 }

@@ -27,6 +27,12 @@ public class HybridQueryOptions
     public string? Intent { get; init; }
     public bool SkipRerank { get; init; }
     public ChunkStrategy ChunkStrategy { get; init; } = ChunkStrategy.Regex;
+
+    /// <summary>
+    /// Populated by the pipeline with diagnostic information (vector-only flag, best scores).
+    /// Pass a new instance to receive diagnostics; leave null to skip.
+    /// </summary>
+    public HybridQueryDiagnostics? Diagnostics { get; set; }
 }
 
 public class HybridQueryResult
@@ -46,6 +52,20 @@ public class HybridQueryResult
 public record HybridQueryExplain(
     List<double> FtsScores, List<double> VectorScores,
     RrfScoreTrace? Rrf, double RerankScore, double BlendedScore);
+
+/// <summary>
+/// Diagnostic output populated by the hybrid pipeline so callers can
+/// detect low-confidence scenarios (e.g. vector-only results).
+/// </summary>
+public class HybridQueryDiagnostics
+{
+    /// <summary>Whether any FTS/BM25 backend contributed results.</summary>
+    public bool HasFtsResults { get; set; }
+    /// <summary>Best raw cosine similarity score among vector backends.</summary>
+    public double BestVecScore { get; set; }
+    /// <summary>Best reranker score (0-1, from Qwen3-Reranker).</summary>
+    public double BestRerankScore { get; set; }
+}
 
 public class StructuredSearchOptions
 {

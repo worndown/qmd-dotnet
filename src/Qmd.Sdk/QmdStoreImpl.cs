@@ -44,6 +44,7 @@ internal class QmdStoreImpl : IQmdStore
                 CandidateLimit = options.CandidateLimit,
                 ChunkStrategy = options.ChunkStrategy,
                 Explain = options.Explain,
+                Diagnostics = options.Diagnostics,
             }, ct);
     }
 
@@ -313,6 +314,15 @@ internal class QmdStoreImpl : IQmdStore
     public async Task<EmbedResult> EmbedAsync(EmbedPipelineOptions? options = null, CancellationToken ct = default)
     {
         return await _store.GenerateEmbeddingsAsync(GetLlmService(), options);
+    }
+
+    #endregion
+
+    #region Diagnostics
+
+    public async Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
+    {
+        return await EmbeddingProfiler.ProfileAsync(_store.Db, GetLlmService(), options, ct);
     }
 
     #endregion

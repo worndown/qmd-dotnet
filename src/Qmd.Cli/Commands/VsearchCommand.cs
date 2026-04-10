@@ -13,7 +13,7 @@ public static class VsearchCommand
         var queryArg = new Argument<string>("query") { Description = "Search query" };
         var limitOpt = new Option<int>("--limit", "-n") { Description = "Max results", DefaultValueFactory = _ => 10 };
         var collectionOpt = new Option<string[]>("--collection", "-c") { Description = "Filter by collection(s)", AllowMultipleArgumentsPerToken = true };
-        var minScoreOpt = new Option<double>("--min-score") { Description = "Minimum cosine similarity score", DefaultValueFactory = _ => 0.3 };
+        var minScoreOpt = new Option<double>("--min-score") { Description = "Minimum cosine similarity score", DefaultValueFactory = _ => 0.5 };
         var allOpt = new Option<bool>("--all") { Description = "Return all results" };
         var intentOpt = new Option<string?>("--intent") { Description = "Domain context for search" };
         var formatOpt = new Option<string>("--format") { Description = "Output format: cli, json, csv, md, xml, files", DefaultValueFactory = _ => "cli" };
@@ -74,7 +74,7 @@ public static class VsearchCommand
 
             if (results.Count == 0)
             {
-                CliHelper.PrintEmptySearchResults(outputFormat, minScore > 0.3
+                CliHelper.PrintEmptySearchResults(outputFormat, minScore > 0.5
                     ? $"No results above --min-score {minScore}. Note: cosine similarity scores differ from BM25 scores; try a lower threshold."
                     : null);
                 return;

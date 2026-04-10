@@ -1,5 +1,6 @@
 using Qmd.Core.Configuration;
 using Qmd.Core.Models;
+using Qmd.Core.Search;
 
 namespace Qmd.Sdk;
 
@@ -215,6 +216,19 @@ public interface IQmdStore : IAsyncDisposable
 
     #endregion
 
+    #region Diagnostics
+
+    /// <summary>
+    /// Profile the embedding model's similarity distribution on the indexed corpus.
+    /// Samples random document chunks, searches for neighbors, and returns percentile
+    /// statistics to help calibrate <c>--min-score</c> thresholds.
+    /// </summary>
+    /// <param name="options">Sample size and optional collection filter.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default);
+
+    #endregion
+
     #region Health
 
     /// <summary>
@@ -263,6 +277,12 @@ public class SearchOptions
 
     /// <summary>Include detailed retrieval traces (FTS/vector scores, RRF breakdown) in results.</summary>
     public bool Explain { get; init; }
+
+    /// <summary>
+    /// Pass a new instance to receive pipeline diagnostics (vector-only flag, best scores).
+    /// Leave null to skip diagnostic collection.
+    /// </summary>
+    public HybridQueryDiagnostics? Diagnostics { get; set; }
 }
 
 /// <summary>

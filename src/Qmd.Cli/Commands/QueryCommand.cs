@@ -15,7 +15,7 @@ public static class QueryCommand
         var collectionOpt = new Option<string[]>("--collection", "-c") { Description = "Filter by collection(s)", AllowMultipleArgumentsPerToken = true };
         var intentOpt = new Option<string?>("--intent") { Description = "Domain context for search" };
         var noRerankOpt = new Option<bool>("--no-rerank") { Description = "Skip LLM reranking" };
-        var minScoreOpt = new Option<double>("--min-score") { Description = "Minimum relevance score", DefaultValueFactory = _ => 0 };
+        var minScoreOpt = new Option<double>("--min-score") { Description = "Minimum relevance score", DefaultValueFactory = _ => 0.2 };
         var allOpt = new Option<bool>("--all") { Description = "Return all results" };
         var candidateLimitOpt = new Option<int>("--candidate-limit", "-C") { Description = "Max reranking candidates", DefaultValueFactory = _ => 40 };
         var chunkStrategyOpt = new Option<string>("--chunk-strategy") { Description = "Chunking strategy: regex or auto", DefaultValueFactory = _ => "regex" };
@@ -73,6 +73,7 @@ public static class QueryCommand
             {
                 Out = new AnsiConsoleOutput(Console.Error),
             });
+            var diagnostics = new HybridQueryDiagnostics();
             List<HybridQueryResult> results = [];
             await stderr.Status()
                 .Spinner(Spinner.Known.Dots)
@@ -105,9 +106,13 @@ public static class QueryCommand
                             CandidateLimit = candidateLimit,
                             ChunkStrategy = strategy,
                             Explain = explain,
+                            Diagnostics = diagnostics,
                         });
                     }
                 });
+
+            if (diagnostics is { HasFtsResults: false } && results.Count > 0)
+                Console.Error.WriteLine("Note: no keyword matches found -- results are based on semantic similarity only and may be less precise.");
 
             if (minScore > 0)
                 results = results.Where(r => r.Score >= minScore).ToList();

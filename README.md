@@ -20,7 +20,17 @@ This is not a fork. It is written from scratch in C# and reproduces the function
 
 Future changes in this repository may diverge from the original qmd. There are no plans to backport future qmd updates — this port will evolve independently in its own direction.
 
-There is no roadmap at this point. The focus is on making it work properly.
+### RRF Limitations & Mitigations
+
+Standard RRF is purely positional — it discards score magnitude and treats a 0.99 similarity match identically to a 0.50 match if they share the same rank ([Bruch et al., ACM TOIS 2023](https://arxiv.org/abs/2210.11934)).
+
+When BM25 returns zero results (the query has no keyword matches in the corpus), vector-only results receive inflated RRF scores with no cross-system agreement to validate them, and the reranker at only 25% weight cannot veto an irrelevant top-ranked result.
+
+The **qmd-dotnet** adds four safeguards that do not exist in the original **qmd** version: 
+1) a **vector-score gate** that returns empty results when BM25 finds nothing and all vector similarities are below 0.55 (the noise floor for most embedding models);
+2) a **reranker gate** that returns empty when the best Qwen3-Reranker score is below 0.1, indicating the reranker considers everything irrelevant;
+3) a **score cap** that clamps blended scores to the best raw vector similarity when BM25 is absent, preventing positional RRF scores from exceeding the actual semantic signal; and
+4) a **confidence gap filter** that drops results scoring below 50% of the top result. The CLI defaults are also raised: `vsearch --min-score` defaults to 0.5 (was 0.3) and `query --min-score` defaults to 0.2 (was 0.0). Use `qmd profile-embeddings` to measure the actual similarity distribution on your corpus and calibrate thresholds for your embedding model.
 
 ## Prerequisites
 

@@ -31,6 +31,7 @@ root.Subcommands.Add(McpCommand.Create());
 root.Subcommands.Add(PullCommand.Create());
 root.Subcommands.Add(SkillCommand.Create());
 root.Subcommands.Add(BenchCommand.Create());
+root.Subcommands.Add(ProfileEmbeddingsCommand.Create());
 
 NativeLibraryConfig.All.WithLogCallback((level, message) =>
 {
