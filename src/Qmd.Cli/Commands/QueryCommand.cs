@@ -35,7 +35,7 @@ public static class QueryCommand
 
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var query = parseResult.GetValue(queryArg);
+            var query = parseResult.GetValue(queryArg) ?? throw new InvalidOperationException("Required argument 'query' was not provided.");
             var collections = parseResult.GetValue(collectionOpt) ?? [];
             var intent = parseResult.GetValue(intentOpt);
             var noRerank = parseResult.GetValue(noRerankOpt);

@@ -21,7 +21,7 @@ public static class GetCommand
 
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var file = parseResult.GetValue(fileArg);
+            var file = parseResult.GetValue(fileArg) ?? throw new InvalidOperationException("Required argument 'file' was not provided.");
             var fromLine = parseResult.GetValue(fromLineOpt);
             var maxLines = parseResult.GetValue(maxLinesOpt);
             var lineNumbers = parseResult.GetValue(lineNumbersOpt);

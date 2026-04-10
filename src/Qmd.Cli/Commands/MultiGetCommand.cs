@@ -24,7 +24,7 @@ public static class MultiGetCommand
 
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var pattern = parseResult.GetValue(patternArg);
+            var pattern = parseResult.GetValue(patternArg) ?? throw new InvalidOperationException("Required argument 'pattern' was not provided.");
             var maxLines = parseResult.GetValue(maxLinesOpt);
             var maxBytes = parseResult.GetValue(maxBytesOpt);
             var format = parseResult.GetValue(formatOpt) ?? "cli";

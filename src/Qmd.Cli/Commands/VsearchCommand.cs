@@ -31,7 +31,7 @@ public static class VsearchCommand
 
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
-            var query = parseResult.GetValue(queryArg);
+            var query = parseResult.GetValue(queryArg) ?? throw new InvalidOperationException("Required argument 'query' was not provided.");
             var collections = parseResult.GetValue(collectionOpt) ?? [];
             var minScore = parseResult.GetValue(minScoreOpt);
             var all = parseResult.GetValue(allOpt);
