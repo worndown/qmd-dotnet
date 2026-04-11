@@ -15,6 +15,7 @@
   calibrated to the specific model + corpus.
 - Update README and add Hybrid Search Guide document.
 - Document corpus for evals.
+- Component refactoring; merged SDK, LLM and MCP projects into Qmd.Core.
 
 ## [1.0.0] - 2024-04-10
 
