@@ -1,6 +1,6 @@
 namespace Qmd.Core.Llm;
 
-public static class LlmConstants
+internal static class LlmConstants
 {
     public const string DefaultEmbedModel = "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf";
     public const string DefaultRerankModel = "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf";

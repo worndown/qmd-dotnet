@@ -12,7 +12,7 @@ namespace Qmd.Core.Search;
 /// <summary>
 /// 8-step hybrid query pipeline combining BM25, vector search, RRF fusion, and LLM reranking.
 /// </summary>
-public static class HybridQueryService
+internal static class HybridQueryService
 {
     public static async Task<List<HybridQueryResult>> HybridQueryAsync(
         QmdStore store,

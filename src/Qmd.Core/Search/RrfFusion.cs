@@ -2,7 +2,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Search;
 
-public static class RrfFusion
+internal static class RrfFusion
 {
     public const int DefaultK = 60;
     public const double TopRankBonusFirst = 0.05;

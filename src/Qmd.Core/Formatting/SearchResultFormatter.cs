@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Qmd.Core.Models;
-using Qmd.Core.Paths;
 using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Formatting;

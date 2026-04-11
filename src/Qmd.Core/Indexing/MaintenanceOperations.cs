@@ -2,7 +2,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Indexing;
 
-public static class MaintenanceOperations
+internal static class MaintenanceOperations
 {
     public static int DeleteInactiveDocuments(IQmdDatabase db)
     {

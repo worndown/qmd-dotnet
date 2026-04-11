@@ -2,10 +2,8 @@ namespace Qmd.Core.Database;
 
 /// <summary>
 /// Initializes the QMD SQLite database schema.
-/// Ports initializeDatabase() from store.ts lines 729-869.
-/// All SQL is identical to the TypeScript version.
 /// </summary>
-public static class SchemaInitializer
+internal static class SchemaInitializer
 {
     public static void Initialize(IQmdDatabase db)
     {

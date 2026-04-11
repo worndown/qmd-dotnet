@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
@@ -10,7 +9,7 @@ namespace Qmd.Core.Search;
 /// <summary>
 /// Reranks documents using cross-encoder LLM with per-chunk caching.
 /// </summary>
-public static class Reranker
+internal static class Reranker
 {
     public static async Task<List<(string File, double Score)>> RerankAsync(
         IQmdDatabase db,

@@ -11,7 +11,7 @@ namespace Qmd.Core.Search;
 /// Expands search queries via LLM with SQLite caching.
 /// Produces lex/vec/hyde query variants.
 /// </summary>
-public static class QueryExpander
+internal static class QueryExpander
 {
     public static async Task<List<ExpandedQuery>> ExpandQueryAsync(
         IQmdDatabase db,

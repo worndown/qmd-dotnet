@@ -9,7 +9,7 @@ namespace Qmd.Core.Mcp;
 /// MCP resources for QMD. Provides qmd:// URI access to documents.
 /// </summary>
 [McpServerResourceType]
-public class QmdResources
+internal class QmdResources
 {
     private readonly IQmdStore _store;
 

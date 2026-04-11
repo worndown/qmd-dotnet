@@ -5,9 +5,8 @@ namespace Qmd.Core.Retrieval;
 
 /// <summary>
 /// Multi-get pipeline: retrieve multiple documents by glob pattern or comma-separated list.
-/// Ports findDocuments() from store.ts.
 /// </summary>
-public static class MultiGetService
+internal static class MultiGetService
 {
     private const int DefaultMaxBytes = 10 * 1024; // 10KB
 

@@ -2,6 +2,7 @@ namespace Qmd.Core.Models;
 
 // RRF types
 public record RankedResult(string File, string DisplayPath, string Title, string Body, double Score, string Hash);
+
 public record RankedListMeta(string Source, string QueryType, string Query);
 
 public record RrfContributionTrace(int ListIndex, string Source, string QueryType, string Query,

@@ -1,7 +1,5 @@
-using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
-using Qmd.Core.Paths;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Store;
 
@@ -12,7 +10,7 @@ namespace Qmd.Core.Search;
 /// Expands query via LLM, filters to vec/hyde variants, runs vector search
 /// for original + each expanded variant, deduplicates by filepath (best score).
 /// </summary>
-public static class VectorSearchQueryService
+internal static class VectorSearchQueryService
 {
     public static async Task<List<SearchResult>> SearchAsync(
         QmdStore store,

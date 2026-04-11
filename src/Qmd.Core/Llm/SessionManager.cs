@@ -5,7 +5,7 @@ namespace Qmd.Core.Llm;
 /// Models are loaded on first use and disposed after a configurable timeout of inactivity.
 /// Ports the touchActivity/inactivity timer pattern from the TypeScript LlamaCpp class.
 /// </summary>
-public class SessionManager : IAsyncDisposable
+internal class SessionManager : IAsyncDisposable
 {
     private readonly LlamaSharpService _service;
     private readonly int _inactivityTimeoutMs;

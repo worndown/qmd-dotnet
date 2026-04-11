@@ -7,7 +7,7 @@ namespace Qmd.Core.Llm;
 /// - EmbeddingGemma (default): nomic-style task prefix
 /// - Qwen3-Embedding: instruct format
 /// </summary>
-public static class EmbeddingFormatter
+internal static class EmbeddingFormatter
 {
     private static readonly Regex Qwen3Pattern = new(@"qwen.*embed|embed.*qwen", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

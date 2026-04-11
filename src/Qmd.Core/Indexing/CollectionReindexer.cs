@@ -8,7 +8,7 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Indexing;
 
-public class ReindexOptions
+internal class ReindexOptions
 {
     public List<string>? IgnorePatterns { get; init; }
     public Action<ReindexProgress>? OnProgress { get; init; }
@@ -17,7 +17,7 @@ public class ReindexOptions
 /// <summary>
 /// Re-indexes a collection by scanning the filesystem and updating the database.
 /// </summary>
-public static class CollectionReindexer
+internal static class CollectionReindexer
 {
     private static readonly string[] ExcludeDirs = ["node_modules", ".git", ".cache", "vendor", "dist", "build"];
 

@@ -6,7 +6,7 @@ namespace Qmd.Core.Embedding;
 /// <summary>
 /// Database operations for embeddings: insert, query, clear.
 /// </summary>
-public static class EmbeddingOperations
+internal static class EmbeddingOperations
 {
     /// <summary>
     /// Get all unique content hashes that need embeddings (active docs without vectors).

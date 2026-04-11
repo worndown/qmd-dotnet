@@ -1,5 +1,6 @@
 namespace Qmd.Core.Skills;
 
+// TODO: make internal and expose via IQmdClaude or something
 public static class SkillInstaller
 {
     public static string GetSkillInstallDir(bool global)

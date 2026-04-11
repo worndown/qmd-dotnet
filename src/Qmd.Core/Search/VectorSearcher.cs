@@ -9,9 +9,9 @@ namespace Qmd.Core.Search;
 
 /// <summary>
 /// Vector similarity search via sqlite-vec.
-/// CRITICAL: Uses two-step query pattern. Single-query JOINs with vectors_vec hang indefinitely.
+/// TODO: Critical. Uses two-step query pattern. Single-query JOINs with vectors_vec hang indefinitely.
 /// </summary>
-public static class VectorSearcher
+internal static class VectorSearcher
 {
     public static async Task<List<SearchResult>> SearchVecAsync(
         IQmdDatabase db,

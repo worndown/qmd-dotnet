@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Qmd.Core;
 using Qmd.Core.Formatting;
+using Qmd.Core.Models;
 
 namespace Qmd.Cli.Commands;
 
@@ -68,7 +69,7 @@ public static class MultiGetCommand
                 if (!item.Skipped && lineNumbers)
                     body = FormatHelpers.AddLineNumbers(body);
 
-                return new Qmd.Core.Models.MultiGetFile
+                return new MultiGetFile
                 {
                     Filepath = item.Doc.Filepath,
                     DisplayPath = item.Doc.DisplayPath,
@@ -80,7 +81,7 @@ public static class MultiGetCommand
                 };
             }).ToList();
 
-            Console.Write(Qmd.Core.Formatting.DocumentFormatter.Format(files, outputFormat));
+            Console.Write(DocumentFormatter.Format(files, outputFormat));
         });
 
         return cmd;

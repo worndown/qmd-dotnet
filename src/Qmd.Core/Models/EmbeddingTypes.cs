@@ -1,8 +1,11 @@
 namespace Qmd.Core.Models;
 
 public record EmbedProgress(int ChunksEmbedded, int TotalChunks, long BytesProcessed, long TotalBytes, int Errors);
+
 public record EmbedResult(int DocsProcessed, int ChunksEmbedded, int Errors, long DurationMs);
+
 public record PendingEmbeddingDoc(string Hash, string Path, long Bytes);
+
 public record EmbeddingDoc(string Hash, string Path, long Bytes, string Body);
 
 public record ChunkItem(string Hash, string Title, string Text, int Seq, int Pos, int Tokens, int Bytes);

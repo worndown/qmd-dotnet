@@ -3,7 +3,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Indexing;
 
-public static class StatusOperations
+internal static class StatusOperations
 {
     public static IndexStatus GetStatus(IQmdDatabase db)
     {

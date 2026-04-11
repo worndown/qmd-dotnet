@@ -2,7 +2,6 @@ namespace Qmd.Core.Database;
 
 /// <summary>
 /// Abstraction over a prepared SQL statement.
-/// Mirrors the TypeScript Statement interface from db.ts.
 /// </summary>
 public interface IStatement : IDisposable
 {

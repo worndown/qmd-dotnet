@@ -5,7 +5,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Indexing;
 
-public static class CacheOperations
+internal static class CacheOperations
 {
     public static string GetCacheKey(string url, object body)
     {

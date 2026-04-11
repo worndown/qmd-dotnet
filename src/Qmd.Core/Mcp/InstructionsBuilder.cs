@@ -7,7 +7,7 @@ namespace Qmd.Core.Mcp;
 /// Builds dynamic LLM instructions from index state.
 /// Injected into MCP server prompts at initialization.
 /// </summary>
-public static class InstructionsBuilder
+internal static class InstructionsBuilder
 {
     public static async Task<string> BuildAsync(IQmdStore store)
     {

@@ -5,9 +5,8 @@ using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Search;
-using Qmd.Core.Store;
 
-namespace Qmd.Core;
+namespace Qmd.Core.Store;
 
 /// <summary>
 /// Implementation wrapping Qmd.Core.Store.QmdStore.

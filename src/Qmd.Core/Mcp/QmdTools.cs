@@ -1,12 +1,10 @@
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Qmd.Core.Formatting;
 using Qmd.Core.Models;
-using Qmd.Core.Retrieval;
 using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Mcp;
@@ -15,7 +13,7 @@ namespace Qmd.Core.Mcp;
 /// MCP tools for QMD. Discovered via [McpServerToolType] attribute.
 /// </summary>
 [McpServerToolType]
-public class QmdTools
+internal class QmdTools
 {
     private static readonly JsonSerializerOptions McpJsonOpts = new()
     {

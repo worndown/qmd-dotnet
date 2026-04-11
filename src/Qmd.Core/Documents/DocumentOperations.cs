@@ -2,14 +2,14 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Documents;
 
-public class ActiveDocumentRow
+internal class ActiveDocumentRow
 {
     public long Id { get; set; }
     public string Hash { get; set; } = "";
     public string Title { get; set; } = "";
 }
 
-public static class DocumentOperations
+internal static class DocumentOperations
 {
     public static void InsertDocument(IQmdDatabase db, string collection, string path,
         string title, string hash, string createdAt, string modifiedAt)

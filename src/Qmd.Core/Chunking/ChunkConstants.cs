@@ -1,6 +1,6 @@
 namespace Qmd.Core.Chunking;
 
-public static class ChunkConstants
+internal static class ChunkConstants
 {
     // Token-based limits (used by AST chunking with CharBasedTokenizer at 3 chars/token)
     public const int ChunkSizeTokens = 900;

@@ -3,7 +3,7 @@ using Qmd.Core.Paths;
 
 namespace Qmd.Core.Search;
 
-public static class Fts5QueryBuilder
+internal static class Fts5QueryBuilder
 {
     private static readonly Regex HyphenatedRegex = new(
         @"^[\p{L}\p{N}][\p{L}\p{N}'-]*-[\p{L}\p{N}][\p{L}\p{N}'-]*$",

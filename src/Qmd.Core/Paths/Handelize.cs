@@ -7,7 +7,7 @@ namespace Qmd.Core.Paths;
 /// <summary>
 /// Converts filesystem paths to URL-safe, token-friendly format.
 /// </summary>
-public static class Handelize
+internal static class Handelize
 {
     private static readonly Regex NonWordRegex = new(@"[^\p{L}\p{N}$]+", RegexOptions.Compiled);
     private static readonly Regex LeadTrailDashRegex = new(@"^-+|-+$", RegexOptions.Compiled);

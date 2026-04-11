@@ -6,9 +6,9 @@ using Qmd.Core.Paths;
 namespace Qmd.Core.Retrieval;
 
 /// <summary>
-/// Multi-strategy document lookup. Ports findDocument() and getDocumentBody() from store.ts.
+/// Multi-strategy document lookup.
 /// </summary>
-public static class DocumentFinder
+internal static class DocumentFinder
 {
     private static readonly Regex ColonLineRegex = new(@":(\d+)$", RegexOptions.Compiled);
 

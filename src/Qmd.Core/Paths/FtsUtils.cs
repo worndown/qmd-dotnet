@@ -5,7 +5,7 @@ namespace Qmd.Core.Paths;
 /// <summary>
 /// FTS5 full-text search utility functions.
 /// </summary>
-public static class FtsUtils
+internal static class FtsUtils
 {
     private static readonly Regex NonFtsCharsRegex = new(@"[^\p{L}\p{N}'_]", RegexOptions.Compiled);
 

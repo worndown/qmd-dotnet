@@ -61,7 +61,7 @@ public static class StatusCommand
             // AST chunking
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[bold]AST Chunking[/]");
-            var langs = Enum.GetNames<AstBreakPointScanner.SupportedLanguage>();
+            var langs = Enum.GetNames<SupportedLanguage>();
             AnsiConsole.MarkupLine($"  Languages: [cyan]{string.Join(", ", langs)}[/]");
 
             // Collections

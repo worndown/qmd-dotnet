@@ -2,7 +2,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Chunking;
 
-public static class DocumentChunker
+internal static class DocumentChunker
 {
     /// <summary>
     /// Core chunking algorithm using precomputed break points and code fences.

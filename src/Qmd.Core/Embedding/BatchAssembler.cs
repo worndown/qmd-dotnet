@@ -5,7 +5,7 @@ namespace Qmd.Core.Embedding;
 /// <summary>
 /// Builds size-bounded batches of documents for embedding.
 /// </summary>
-public static class BatchAssembler
+internal static class BatchAssembler
 {
     public static List<List<PendingEmbeddingDoc>> BuildBatches(
         List<PendingEmbeddingDoc> docs,

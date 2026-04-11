@@ -11,7 +11,7 @@ namespace Qmd.Core.Llm;
 /// LLamaSharp implementation of ILlmService.
 /// Manages model loading, embedding contexts, and inference.
 /// </summary>
-public class LlamaSharpService : ILlmService
+internal class LlamaSharpService : ILlmService
 {
     private readonly string _embedModelUri;
     private readonly string _generateModelUri;

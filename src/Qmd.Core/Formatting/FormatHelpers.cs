@@ -28,6 +28,7 @@ public static class FormatHelpers
         if (score >= 0.4) return $"{Yellow}{pct}%{Reset}";
         return $"{Dim}{pct}%{Reset}";
     }
+
     public static string EscapeCsv(string? value)
     {
         if (value == null) return "";
