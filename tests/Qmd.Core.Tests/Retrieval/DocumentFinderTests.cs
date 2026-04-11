@@ -132,7 +132,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_ByDisplayPath_WithoutQmdPrefix()
     {
-        // Ports: "findDocument finds by display_path" — lookup using collection/path format without qmd://
+        // Lookup using collection/path format without qmd://
         var result = DocumentFinder.FindDocument(_db, "docs/api.md");
         result.IsFound.Should().BeTrue();
     }
@@ -144,7 +144,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_IncludesContextFromPathContexts()
     {
-        // Ports: "findDocument includes context from path_contexts"
+        // FindDocument includes context from path_contexts
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
@@ -178,7 +178,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_IncludesHierarchicalContexts()
     {
-        // Ports: "findDocument includes hierarchical contexts (global + collection + path)"
+        // FindDocument includes hierarchical contexts (global + collection + path)
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
@@ -223,7 +223,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_ExpandsTildeToHomeDirectory()
     {
-        // Ports: "findDocument expands ~ to home directory"
+        // FindDocument expands ~ to home directory
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 

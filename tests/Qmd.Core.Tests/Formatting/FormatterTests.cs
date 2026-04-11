@@ -472,7 +472,7 @@ public class FormatterTests
     [Fact]
     public void SearchResults_Json_IncludesLineNumber()
     {
-        // Ports: "JSON format includes line"
+        // JSON format includes line number
         var result = MakeSearchResult();
         result.Body = "line one\nline two\napi documentation\nline four";
         var json = SearchResultFormatter.ToJson([result], new FormatOptions { Query = "api" });
@@ -484,7 +484,7 @@ public class FormatterTests
     [Fact]
     public void SearchResults_Json_WithFull_IncludesBody()
     {
-        // Ports: "JSON format includes line with --full"
+        // JSON format includes body when --full is specified
         var result = MakeSearchResult();
         result.Body = "line one\nline two\napi documentation\nline four";
         var json = SearchResultFormatter.ToJson([result], new FormatOptions { Query = "api", Full = true });

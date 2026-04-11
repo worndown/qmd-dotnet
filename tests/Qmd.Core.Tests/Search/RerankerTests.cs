@@ -61,7 +61,7 @@ public class RerankerTests : IDisposable
     [Fact]
     public async Task Rerank_CachesResults()
     {
-        // Ports: "rerank caches results" — call rerank twice with same inputs, verify cache hit
+        // Call rerank twice with same inputs, verify cache hit
         var scoringLlm = new ScoringMockLlmService();
         var docs = new List<RerankDocument>
         {
@@ -85,7 +85,7 @@ public class RerankerTests : IDisposable
     [Fact]
     public async Task Rerank_DeduplicatesIdenticalChunksAcrossFiles()
     {
-        // Ports: "rerank deduplicates identical chunks across files"
+        // Rerank deduplicates identical chunks across files
         var scoringLlm = new ScoringMockLlmService();
         var docs = new List<RerankDocument>
         {

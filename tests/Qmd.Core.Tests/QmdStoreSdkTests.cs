@@ -1110,7 +1110,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task InlineConfig_DoesNotWriteFilesToDisk()
     {
-        // Ports: "inline config does not write any files to disk"
+        // Inline config does not write any files to disk
         var watchDir = Path.Combine(Path.GetTempPath(), $"qmd-no-write-{Guid.NewGuid()}");
         // Directory should not be created by in-memory store
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(
@@ -1128,7 +1128,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task InlineConfig_MutationsPersistWithinSession()
     {
-        // Ports: "inline config mutations persist within session"
+        // Inline config mutations persist within session
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(new CollectionConfig());
 
         await store.AddCollectionAsync("docs", "/docs", "**/*.md");
@@ -1145,7 +1145,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task TwoStores_DifferentInlineConfigs_Independent()
     {
-        // Ports: "two stores with different inline configs are independent"
+        // Two stores with different inline configs are independent
         var store1 = await QmdStoreFactory.CreateInMemoryAsync(
             new CollectionConfig
             {
@@ -1171,7 +1171,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task SearchStructured_PreExpandedLexQueries_ReturnsResults()
     {
-        // Ports: "search() with pre-expanded queries and rerank:false"
+        // Search with pre-expanded lex queries and rerank disabled
         // The .NET structured search requires an LLM service reference even for lex-only queries,
         // so we provide a stub that won't actually be called (SkipRerank + lex-only = no LLM invocations).
         await using var store = CreateSeededStoreWithMockLlm();
@@ -1193,7 +1193,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_IndexesFilesAndReturnsCorrectStats()
     {
-        // Ports: "indexes files and returns correct stats"
+        // Indexes files and returns correct stats
         var docsDir = CreateTempDocsDir();
         try
         {
@@ -1216,7 +1216,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_SecondRunShowsUnchanged()
     {
-        // Ports: "second update shows unchanged files"
+        // Second update shows unchanged files
         var docsDir = CreateTempDocsDir();
         try
         {
@@ -1238,7 +1238,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_OnProgressCallbackFires()
     {
-        // Ports: "update with onProgress callback fires"
+        // OnProgress callback fires during update
         var docsDir = CreateTempDocsDir();
         try
         {
@@ -1263,7 +1263,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_WithCollectionFilter_OnlyUpdatesFiltered()
     {
-        // Ports: "update with collection filter"
+        // Update with collection filter only indexes the specified collection
         var docsDir = CreateTempDocsDir();
         var notesDir = CreateTempDocsDir("notes");
         try
@@ -1292,7 +1292,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_MultipleCollections_IndexesBoth()
     {
-        // Ports: "update multiple collections"
+        // Update indexes multiple collections
         var docsDir = CreateTempDocsDir();
         var notesDir = CreateTempDocsDir("notes");
         try
@@ -1317,7 +1317,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Update_DocumentsSearchableAfterUpdate()
     {
-        // Ports: "documents are searchable after update"
+        // Documents are searchable after update
         var docsDir = CreateTempDocsDir();
         try
         {
@@ -1342,7 +1342,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task Embed_InvalidBatchLimits_Throws()
     {
-        // Ports: "store.embed rejects invalid batch limits"
+        // Embed rejects invalid batch limits
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(new CollectionConfig());
 
         var act1 = async () => await store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 });
@@ -1359,7 +1359,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task DbOnlyMode_ReopenWithSameConfig_PreservesData()
     {
-        // Ports: "reopen store with just dbPath after config+update session"
+        // Reopen store with just dbPath after a config+update session
         // Note: .NET ConfigSync always syncs config to DB, so we reopen with the same config.
         // The hash-skip path ensures no data is wiped (same config hash → skip sync → data preserved).
         var docsDir = CreateTempDocsDir();
@@ -1401,7 +1401,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task ConfigSync_SameHash_SkipsSync()
     {
-        // Ports: "config hash skip: second init with same config skips sync"
+        // Second init with same config skips sync (config hash skip)
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         var config = new CollectionConfig
         {
@@ -1430,7 +1430,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task CreateAsync_CreatesDatabaseFileOnDisk()
     {
-        // Ports: "creates database file on disk"
+        // Creates database file on disk
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         try
         {
@@ -1448,7 +1448,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task SearchLex_FindsDocumentsAcrossCollections()
     {
-        // Ports: "searchLex finds documents across collections"
+        // SearchLex finds documents across collections
         await using var store = CreateSeededStore();
         var results = await store.SearchLexAsync("authentication", new LexSearchOptions { Limit = 10 });
         // Auth appears in docs/auth.md and potentially notes
@@ -1462,7 +1462,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task YamlConfig_LoadsCollectionsFromFile()
     {
-        // Ports: "loads collections from YAML file"
+        // Loads collections from YAML file
         var configPath = Path.Combine(Path.GetTempPath(), $"qmd-cfg-{Guid.NewGuid()}.yml");
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         try
@@ -1486,7 +1486,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task YamlConfig_AddCollectionPersistsToFile()
     {
-        // Ports: "addCollection persists to YAML file"
+        // AddCollection persists to YAML file
         var configPath = Path.Combine(Path.GetTempPath(), $"qmd-cfg-{Guid.NewGuid()}.yml");
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         try
@@ -1511,7 +1511,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task YamlConfig_ContextPersistsToFile()
     {
-        // Ports: "context persists to YAML file"
+        // Context persists to YAML file
         var configPath = Path.Combine(Path.GetTempPath(), $"qmd-cfg-{Guid.NewGuid()}.yml");
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         try
@@ -1536,7 +1536,7 @@ public class QmdStoreSdkTests
     [Fact]
     public async Task YamlConfig_NonExistentFile_ReturnsEmptyCollections()
     {
-        // Ports: "non-existent config file returns empty collections"
+        // Non-existent config file returns empty collections
         var configPath = Path.Combine(Path.GetTempPath(), $"qmd-cfg-nonexistent-{Guid.NewGuid()}.yml");
         var dbPath = Path.Combine(Path.GetTempPath(), $"qmd-test-{Guid.NewGuid()}.sqlite");
         try

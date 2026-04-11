@@ -76,7 +76,7 @@ public class FuzzyMatcherTests : IDisposable
     [Fact]
     public void FindSimilarFiles_RespectsMaxDistance()
     {
-        // Ports: "findSimilarFiles respects maxDistance" — set maxDistance=1, verify tight filtering
+        // Set maxDistance=1, verify tight filtering
         // "abc.md" vs "abc.md" = 0, "abc.md" vs "xyz.md" = 3
         // With maxDistance=1, only "abc.md" should appear (distance 0 to itself)
         using var db = new SqliteDatabase(":memory:");
@@ -103,7 +103,7 @@ public class FuzzyMatcherTests : IDisposable
     [Fact]
     public void MatchFilesByGlob_MatchesPatterns()
     {
-        // Ports: "matchFilesByGlob matches patterns" — verify *.md matches markdown files
+        // Verify *.md matches markdown files
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 

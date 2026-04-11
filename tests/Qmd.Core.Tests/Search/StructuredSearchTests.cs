@@ -148,7 +148,7 @@ public class StructuredSearchTests : IDisposable
     [Fact]
     public async Task StructuredSearch_InternalWhitespacePreserved()
     {
-        // Ports: "internal whitespace preserved in query"
+        // Internal whitespace is preserved in query
         var searches = new List<ExpandedQuery>
         {
             new("lex", "multiple   spaces   between"),
@@ -163,7 +163,7 @@ public class StructuredSearchTests : IDisposable
     [Fact]
     public async Task StructuredSearch_ThrowsOnUnmatchedQuote()
     {
-        // Ports: "throws when lex query has unmatched quote"
+        // Throws when lex query has unmatched quote
         var searches = new List<ExpandedQuery>
         {
             new("lex", "unmatched \"quote here"),

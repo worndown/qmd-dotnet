@@ -207,7 +207,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_TitleBoostOutweighsHigherBodyFrequency()
     {
-        // Ports: "title boost outweighs higher body frequency"
+        // Title boost outweighs higher body frequency
         // Document with term in title but not body ranks higher than one with term in body 5x
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
@@ -250,7 +250,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_StrongSignalDetection_ScoreNormalizationCorrect()
     {
-        // Ports: "searchFTS scores: strong signal detection works with correct normalization"
+        // BM25 strong signal detection works with correct score normalization
         // BM25 IDF needs meaningful corpus depth for strong signal to fire.
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
