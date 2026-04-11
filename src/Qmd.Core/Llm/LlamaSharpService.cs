@@ -1,12 +1,11 @@
 using LLama;
 using LLama.Common;
 using LLama.Sampling;
-using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Qmd.Llm;
+namespace Qmd.Core.Llm;
 
 /// <summary>
 /// LLamaSharp implementation of ILlmService.

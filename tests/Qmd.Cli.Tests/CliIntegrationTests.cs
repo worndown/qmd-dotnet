@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Qmd.Core;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -7,7 +8,6 @@ using Qmd.Core.Formatting;
 using Qmd.Core.Indexing;
 using Qmd.Core.Models;
 using Qmd.Core.Store;
-using Qmd.Sdk;
 
 namespace Qmd.Cli.Tests;
 

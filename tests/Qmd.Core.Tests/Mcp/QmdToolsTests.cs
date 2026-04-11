@@ -1,11 +1,9 @@
-using System.Text.Json;
 using FluentAssertions;
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using Qmd.Core.Mcp;
 using Qmd.Core.Snippets;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp.Tests;
+namespace Qmd.Core.Tests.Mcp;
 
 public class QmdToolsTests : IAsyncLifetime
 {

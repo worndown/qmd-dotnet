@@ -1,8 +1,8 @@
 using FluentAssertions;
 using ModelContextProtocol.Protocol;
-using Qmd.Sdk;
+using Qmd.Core.Mcp;
 
-namespace Qmd.Mcp.Tests;
+namespace Qmd.Core.Tests.Mcp;
 
 /// <summary>
 /// Port of test/mcp.test.ts "qmd:// resource" describe block.

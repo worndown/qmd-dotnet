@@ -1,7 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
+using Qmd.Core.Mcp;
 using Qmd.Core.Paths;
-using Qmd.Mcp;
 
 namespace Qmd.Cli.Commands;
 

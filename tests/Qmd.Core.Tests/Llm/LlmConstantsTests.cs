@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Qmd.Core.Llm;
-using Qmd.Llm;
 
 namespace Qmd.Core.Tests.Llm;
 
@@ -72,7 +71,7 @@ public class LlmConstantsTests
         try
         {
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:custom/model/custom.gguf");
-            var service = new Qmd.Llm.LlamaSharpService(new Qmd.Llm.LlamaSharpOptions());
+            var service = new LlamaSharpService(new LlamaSharpOptions());
             service.EmbedModelName.Should().Be("hf:custom/model/custom.gguf");
         }
         finally
@@ -89,7 +88,7 @@ public class LlmConstantsTests
         try
         {
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:env/model/env.gguf");
-            var service = new Qmd.Llm.LlamaSharpService(new Qmd.Llm.LlamaSharpOptions
+            var service = new LlamaSharpService(new LlamaSharpOptions
             {
                 EmbedModel = "hf:config/model/config.gguf"
             });
@@ -109,7 +108,7 @@ public class LlmConstantsTests
         try
         {
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
-            var service = new Qmd.Llm.LlamaSharpService(new Qmd.Llm.LlamaSharpOptions());
+            var service = new LlamaSharpService(new LlamaSharpOptions());
             service.EmbedModelName.Should().Be(LlmConstants.DefaultEmbedModel);
         }
         finally

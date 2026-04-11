@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.RegularExpressions;
+using Qmd.Core;
 
 namespace Qmd.Cli.Commands;
 
@@ -36,7 +37,7 @@ public static class GetCommand
             }
 
             await using var store = await CliHelper.CreateStoreAsync();
-            var result = await store.GetAsync(file, new Qmd.Sdk.GetOptions { IncludeBody = true });
+            var result = await store.GetAsync(file, new GetOptions { IncludeBody = true });
             if (result.IsFound)
             {
                 var doc = result.Document!;

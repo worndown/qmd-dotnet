@@ -1,9 +1,8 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using Qmd.Core.Bench;
 
-namespace Qmd.Sdk.Bench;
+namespace Qmd.Core.Bench;
 
 /// <summary>
 /// Options for running a benchmark.

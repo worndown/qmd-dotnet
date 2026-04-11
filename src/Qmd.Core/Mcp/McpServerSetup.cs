@@ -9,9 +9,8 @@ using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Server;
 using Qmd.Core.Models;
 using Qmd.Core.Snippets;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp;
+namespace Qmd.Core.Mcp;
 
 /// <summary>
 /// Helper to set up the MCP server with stdio or HTTP transport.

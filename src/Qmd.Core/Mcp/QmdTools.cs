@@ -8,9 +8,8 @@ using Qmd.Core.Formatting;
 using Qmd.Core.Models;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Snippets;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp;
+namespace Qmd.Core.Mcp;
 
 /// <summary>
 /// MCP tools for QMD. Discovered via [McpServerToolType] attribute.

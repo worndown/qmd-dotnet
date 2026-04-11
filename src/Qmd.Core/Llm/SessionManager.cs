@@ -1,6 +1,4 @@
-using Qmd.Core.Llm;
-
-namespace Qmd.Llm;
+namespace Qmd.Core.Llm;
 
 /// <summary>
 /// Manages LLM model lifecycle with inactivity-based disposal.

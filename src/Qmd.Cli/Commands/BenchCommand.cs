@@ -1,7 +1,6 @@
 using System.CommandLine;
 using System.Text.Json;
 using Qmd.Core.Bench;
-using Qmd.Sdk.Bench;
 
 namespace Qmd.Cli.Commands;
 

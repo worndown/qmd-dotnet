@@ -3,7 +3,7 @@ using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Store;
 
-namespace Qmd.Sdk;
+namespace Qmd.Core;
 
 /// <summary>
 /// Options for creating a <see cref="IQmdStore"/> via <see cref="QmdStoreFactory"/>.

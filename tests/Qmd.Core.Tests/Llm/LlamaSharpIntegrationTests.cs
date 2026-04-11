@@ -4,7 +4,6 @@ using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
-using Qmd.Llm;
 
 namespace Qmd.Core.Tests.Llm;
 

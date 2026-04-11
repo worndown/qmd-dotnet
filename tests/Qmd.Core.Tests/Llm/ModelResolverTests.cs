@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Qmd.Llm;
+using Qmd.Core.Llm;
 
 namespace Qmd.Core.Tests.Llm;
 

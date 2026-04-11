@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Qmd.Cli.Commands;
+using Qmd.Core;
 using Qmd.Core.Models;
 
 namespace Qmd.Cli.Tests;
@@ -313,7 +314,7 @@ public class CliHelperTests
     [Fact]
     public async Task ResolveCollections_UsesProvidedCollections()
     {
-        await using var store = await Qmd.Sdk.QmdStoreFactory.CreateInMemoryAsync();
+        await using var store = await QmdStoreFactory.CreateInMemoryAsync();
         var result = await CliHelper.ResolveCollectionsAsync(store, ["docs", "code"]);
         result.Should().Equal("docs", "code");
     }
@@ -321,7 +322,7 @@ public class CliHelperTests
     [Fact]
     public async Task ResolveCollections_ReturnsNull_WhenNoCollections()
     {
-        await using var store = await Qmd.Sdk.QmdStoreFactory.CreateInMemoryAsync();
+        await using var store = await QmdStoreFactory.CreateInMemoryAsync();
         var result = await CliHelper.ResolveCollectionsAsync(store, []);
         // No collections configured → returns null (search all)
         result.Should().BeNull();
@@ -338,7 +339,7 @@ public class CliHelperTests
                 ["b"] = new Qmd.Core.Configuration.Collection { Path = "/b", IncludeByDefault = false },
             }
         };
-        await using var store = await Qmd.Sdk.QmdStoreFactory.CreateInMemoryAsync(config);
+        await using var store = await QmdStoreFactory.CreateInMemoryAsync(config);
         var result = await CliHelper.ResolveCollectionsAsync(store, []);
         result.Should().Contain("a");
         result.Should().NotContain("b");
