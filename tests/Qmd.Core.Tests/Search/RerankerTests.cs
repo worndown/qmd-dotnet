@@ -111,7 +111,6 @@ public class RerankerTests : IDisposable
     [Fact]
     public async Task Rerank_DedupMapsScoreBackToAllDuplicateFiles()
     {
-        // TS: "deduplicates identical document texts before scoring"
         // 3 docs: 2 share "shared chunk" text, 1 has "different chunk"
         // rankAll should be called with only unique texts ["shared chunk", "different chunk"]
         // Both files with "shared chunk" should receive the same score.

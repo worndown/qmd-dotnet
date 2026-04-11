@@ -242,7 +242,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void EasyQueries_HitRate_AtLeast80Percent_At3()
     {
-        // TS: "easy queries: ≥80% Hit@3"
+        // Easy queries should achieve ≥80% Hit@3
         var easyQueries = EvalQueries.Where(q => q.Difficulty == "easy");
         var hitRate = CalcHitRate(easyQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.8,
@@ -252,7 +252,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void MediumQueries_HitRate_AtLeast15Percent_At3()
     {
-        // TS: "medium queries: ≥15% Hit@3 (BM25 struggles with semantic)"
+        // Medium queries should achieve ≥15% Hit@3 (BM25 struggles with semantic queries)
         var mediumQueries = EvalQueries.Where(q => q.Difficulty == "medium");
         var hitRate = CalcHitRate(mediumQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
@@ -262,7 +262,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void HardQueries_HitRate_AtLeast15Percent_At5()
     {
-        // TS: "hard queries: ≥15% Hit@5 (BM25 baseline)"
+        // Hard queries should achieve ≥15% Hit@5 (BM25 baseline)
         var hardQueries = EvalQueries.Where(q => q.Difficulty == "hard");
         var hitRate = CalcHitRate(hardQueries, 5);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
@@ -272,7 +272,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void OverallHitRate_AtLeast40Percent_At3()
     {
-        // TS: "overall Hit@3 ≥40% (BM25 baseline)"
+        // Overall Hit@3 should be ≥40% (BM25 baseline)
         var hitRate = CalcHitRate(EvalQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.4,
             $"overall hit rate should be ≥40% @3, got {hitRate:P0}");

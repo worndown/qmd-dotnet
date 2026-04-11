@@ -647,7 +647,6 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public void Cleanup_OrphanedEntries()
     {
-        // TS: "cleans up orphaned entries"
         // Deactivate a document, then clean up
         DocumentOperations.DeactivateDocument(_coreStore.Db, "fixtures", "test2.md");
         var deleted = MaintenanceOperations.DeleteInactiveDocuments(_coreStore.Db);
@@ -727,7 +726,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task SearchOutput_Json_IncludesDocidAndQmdPath()
     {
-        // TS: "search --json includes qmd:// path, docid, and context"
+        // search --json output includes qmd:// path, docid, and context fields
         var results = await _store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 

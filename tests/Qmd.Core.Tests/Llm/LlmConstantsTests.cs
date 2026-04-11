@@ -40,7 +40,7 @@ public class LlmConstantsTests
     [Fact]
     public void EmbedContextSize_DefaultIs2048()
     {
-        // TS: "uses default expand context size when no config or env is set" — default is 2048
+        // Default is 2048 when no config or env variable overrides it
         LlmConstants.EmbedContextSize.Should().Be(2048);
     }
 

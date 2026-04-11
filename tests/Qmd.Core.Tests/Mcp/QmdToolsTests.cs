@@ -421,7 +421,6 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task MultiGet_IncludesContextInResults()
     {
-        // TS: "qmd_multi_get includes context in results"
         // The seeded store has context "/meetings" => "Meeting notes and transcripts" on the "docs" collection.
         // Multi-getting a meetings doc should include that context in the output.
         var result = await _seededTools.MultiGet("qmd://docs/meetings/meeting-2024-01.md");
@@ -436,7 +435,6 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Status_ShowsDocsNeedingEmbedding()
     {
-        // TS: "qmd_status shows documents needing embedding"
         // The seeded store has documents but no embeddings generated, so NeedsEmbedding > 0.
         var result = await _seededTools.Status();
         var text = GetText(result);
@@ -455,7 +453,6 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_VeryLongQuery_HandlesGracefully()
     {
-        // TS: "handles very long query"
         // Pass a 10K+ character query string and assert it doesn't crash.
         var longQuery = new string('a', 10_000) + " readme";
         var act = () => _seededTools.Query(longQuery);
@@ -469,7 +466,6 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_OnlyStopwords_HandlesGracefully()
     {
-        // TS: "handles query with only stopwords"
         // Pass common English stopwords — should return empty results or a graceful message, not throw.
         var result = await _seededTools.Query("the a an");
         result.Should().NotBeNull();

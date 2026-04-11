@@ -31,7 +31,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_ByDisplayPath_ReturnsContent()
     {
-        // TS: "reads document by display_path" — query for "readme.md" returns body containing "Project README"
+        // Query for "readme.md" by display path returns body containing "Project README"
         var result = await _resources.ReadDocument("docs/readme.md");
         var text = GetText(result);
         text.Should().Contain("Project README");
@@ -44,8 +44,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_BySuffixMatch_ResolvesPartialPath()
     {
-        // TS: "reads document by suffix match" — "meeting-2024-01.md" (without meetings/ prefix)
-        // resolves to "meetings/meeting-2024-01.md"
+        // "meeting-2024-01.md" (without meetings/ prefix) resolves to "meetings/meeting-2024-01.md"
         var result = await _resources.ReadDocument("docs/meetings/meeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
@@ -58,7 +57,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_Missing_ReturnsNotFound()
     {
-        // TS: "returns not found for missing document" — nonexistent.md returns null/not found
+        // nonexistent.md returns "Document not found"
         var result = await _resources.ReadDocument("nonexistent.md");
         var text = GetText(result);
         text.Should().Contain("Document not found");
@@ -71,8 +70,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_IncludesContextAsHtmlComment()
     {
-        // TS: "includes context in document body" — meetings doc has context "Meeting notes and transcripts"
-        // prepended as <!-- Context: Meeting notes and transcripts -->
+        // Meetings doc has context "Meeting notes and transcripts" prepended as an HTML comment
         var result = await _resources.ReadDocument("docs/meetings/meeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("<!-- Context: Meeting notes and transcripts -->");
@@ -85,8 +83,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_UrlEncodedPath_DecodesCorrectly()
     {
-        // TS: "reads document by URL-encoded path" — "meetings%2Fmeeting-2024-01.md" decodes to
-        // "meetings/meeting-2024-01.md" and returns the correct document
+        // "meetings%2Fmeeting-2024-01.md" decodes to "meetings/meeting-2024-01.md" and returns the correct document
         var result = await _resources.ReadDocument("docs/meetings%2Fmeeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
@@ -99,7 +96,7 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public void UrlDecoding_VariousEncodings_DecodeCorrectly()
     {
-        // TS: "handles URL-encoded special characters" — test various URL encodings
+        // Verifies various URL encodings decode correctly
         Uri.UnescapeDataString("readme.md").Should().Be("readme.md");
         Uri.UnescapeDataString("meetings%2Fmeeting-2024-01.md").Should().Be("meetings/meeting-2024-01.md");
         Uri.UnescapeDataString("api.md%3A10").Should().Be("api.md:10");
@@ -112,7 +109,6 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ListResources_ReturnsAllDocuments()
     {
-        // TS: "lists all documents"
         // QmdResources has no dedicated ListResources method, so we test via
         // the underlying store's MultiGetAsync with a broad glob pattern.
         // The seeded store has 6 docs: readme.md, api/guide.md, index.ts,
@@ -136,7 +132,6 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_DoubleEncodedUrl_DecodesCorrectly()
     {
-        // TS: "handles double-encoded URLs"
         // A double-encoded path like "meetings%252Fmeeting-2024-01.md" should
         // be decoded to "meetings/meeting-2024-01.md" and resolve to the correct doc.
         // The QmdResources.ReadDocument calls Uri.UnescapeDataString once,
@@ -154,7 +149,6 @@ public class QmdResourcesTests : IAsyncLifetime
     [Fact]
     public async Task ReadDocument_UrlEncodedSpaces_DecodesCorrectly()
     {
-        // TS: "handles URL-encoded paths with spaces"
         // Verify that URL-encoded spaces (%20) are decoded properly.
         // Since the seeded store doesn't have files with spaces, we verify
         // the decoding behavior directly: %20 should decode to a space,

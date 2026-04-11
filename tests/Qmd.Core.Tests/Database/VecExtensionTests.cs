@@ -58,7 +58,6 @@ public class VecExtensionTests : IDisposable
     [Fact]
     public void Verify_ThrowsWhenNotLoaded()
     {
-        // TS: "verifySqliteVecLoaded throws when sqlite-vec is not loaded"
         // On a fresh DB without loading the extension, Verify should throw
         using var db = new SqliteDatabase(":memory:");
         var act = () => VecExtension.Verify(db);
