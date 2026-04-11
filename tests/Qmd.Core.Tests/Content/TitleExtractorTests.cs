@@ -56,7 +56,7 @@ public class TitleExtractorTests
     }
 
     // =========================================================================
-    // extractTitle handles emoji heading (TS store.test.ts line 391)
+    // extractTitle handles emoji heading
     // =========================================================================
 
     [Fact]

@@ -4,7 +4,7 @@ namespace Qmd.Core.Paths;
 
 /// <summary>
 /// Filesystem path utilities for QMD.
-/// Supports Unix, Windows, and Git Bash (/c/Users → C:/Users) path formats.
+/// Supports Unix, Windows, and Git Bash (/c/Users -> C:/Users) path formats.
 /// All output paths are normalized to forward slashes for consistency with virtual paths.
 /// </summary>
 public static class QmdPaths

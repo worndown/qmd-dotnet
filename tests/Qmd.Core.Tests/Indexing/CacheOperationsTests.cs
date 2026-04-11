@@ -40,7 +40,7 @@ public class CacheOperationsTests : IDisposable
     }
 
     // =========================================================================
-    // Cache Key Tests (from store.test.ts:985-998)
+    // Cache Key Tests
     // =========================================================================
 
     [Fact]

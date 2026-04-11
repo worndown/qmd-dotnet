@@ -59,12 +59,9 @@ public class IntentProcessorTests
         IntentProcessor.ExtractIntentTerms("the and for").Should().BeEmpty();
     }
 
-    // --- Ported from TS intent.test.ts ---
-
     [Fact]
     public void ExtractIntentTerms_FiltersStopWords_TS()
     {
-        // TS: "looking for notes about latency optimization" → ["latency", "optimization"]
         var terms = IntentProcessor.ExtractIntentTerms("looking for notes about latency optimization");
         terms.Should().Equal("latency", "optimization");
     }
@@ -72,7 +69,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_FiltersCommonFunctionWords()
     {
-        // TS: "what is the best way to find" → ["best", "way"]
         var terms = IntentProcessor.ExtractIntentTerms("what is the best way to find");
         terms.Should().Equal("best", "way");
     }
@@ -80,7 +76,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_PreservesDomainTerms()
     {
-        // TS: "web performance latency page load times" → all survive
         var terms = IntentProcessor.ExtractIntentTerms("web performance latency page load times");
         terms.Should().Equal("web", "performance", "latency", "page", "load", "times");
     }
@@ -88,7 +83,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_HandlesSurroundingPunctuationWithUnicodeAwareness()
     {
-        // TS: "personal health, fitness, and endurance" → ["personal", "health", "fitness", "endurance"]
         var terms = IntentProcessor.ExtractIntentTerms("personal health, fitness, and endurance");
         terms.Should().Equal("personal", "health", "fitness", "endurance");
     }
@@ -96,7 +90,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_PreservesInternalHyphens()
     {
-        // TS: "self-hosted real-time (decision-making)" → ["self-hosted", "real-time", "decision-making"]
         var terms = IntentProcessor.ExtractIntentTerms("self-hosted real-time (decision-making)");
         terms.Should().Equal("self-hosted", "real-time", "decision-making");
     }
@@ -104,7 +97,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_ShortDomainTermsSurvive_API_SQL_LLM()
     {
-        // TS: "API design for LLM agents" → ["api", "design", "llm", "agents"]
         var terms = IntentProcessor.ExtractIntentTerms("API design for LLM agents");
         terms.Should().Equal("api", "design", "llm", "agents");
     }
@@ -112,7 +104,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_Preserves2CharDomainTerms_CI_CD_DB()
     {
-        // TS: "SQL CI CD DB" → contains all four
         var terms = IntentProcessor.ExtractIntentTerms("SQL CI CD DB");
         terms.Should().Contain("sql");
         terms.Should().Contain("ci");
@@ -123,7 +114,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_LowercasesAllTerms()
     {
-        // TS: "WebSocket HTTP REST" → ["websocket", "http", "rest"]
         var terms = IntentProcessor.ExtractIntentTerms("WebSocket HTTP REST");
         terms.Should().Contain("websocket");
         terms.Should().Contain("http");
@@ -133,7 +123,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_HandlesCppStylePunctuation()
     {
-        // TS: "C++, performance! optimization." → contains "performance", "optimization"
         var terms = IntentProcessor.ExtractIntentTerms("C++, performance! optimization.");
         terms.Should().Contain("performance");
         terms.Should().Contain("optimization");
@@ -142,7 +131,6 @@ public class IntentProcessorTests
     [Fact]
     public void ExtractIntentTerms_AllStopWordsReturnsEmpty()
     {
-        // TS: "the and or but in on at to for of with by" → []
         var terms = IntentProcessor.ExtractIntentTerms("the and or but in on at to for of with by");
         terms.Should().BeEmpty();
     }
@@ -164,9 +152,6 @@ public class IntentProcessorTests
         "Health performance: exercise regularly, sleep 8 hours, manage stress for endurance.",
     ];
 
-    /// <summary>
-    /// Mirrors the TS scoreChunk helper from intent.test.ts.
-    /// </summary>
     private static double ScoreChunk(string text, string query, string? intent = null)
     {
         var queryTerms = query.ToLowerInvariant()
@@ -233,12 +218,9 @@ public class IntentProcessorTests
     }
 
     // =========================================================================
-    // Strong-signal bypass logic (ported from TS)
+    // Strong-signal bypass logic
     // =========================================================================
 
-    /// <summary>
-    /// Mirrors the TS hasStrongSignal helper from intent.test.ts.
-    /// </summary>
     private static bool HasStrongSignal(double topScore, double secondScore, string? intent = null)
     {
         return intent == null

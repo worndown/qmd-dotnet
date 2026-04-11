@@ -6,7 +6,7 @@ namespace Qmd.Core.Chunking;
 /// Adapter bridging ILlmService.CountTokens() to ITokenizer,
 /// enabling token-accurate chunking via the embed model's tokenizer.
 /// </summary>
-public class LlmServiceTokenizer(ILlmService llmService) : ITokenizer
+internal class LlmServiceTokenizer(ILlmService llmService) : ITokenizer
 {
     public int CountTokens(string text) => llmService.CountTokens(text);
 }

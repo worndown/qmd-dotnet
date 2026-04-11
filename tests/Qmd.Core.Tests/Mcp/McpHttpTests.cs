@@ -15,7 +15,6 @@ namespace Qmd.Core.Tests.Mcp;
 /// <summary>
 /// Integration tests for the MCP HTTP transport.
 /// Starts a real HTTP server on an ephemeral port and sends requests.
-/// Port of TS test/mcp.test.ts:900-1077.
 /// </summary>
 public class McpHttpTests : IAsyncLifetime
 {

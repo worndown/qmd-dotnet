@@ -9,7 +9,7 @@ public class TokenChunkingTests
     private readonly ITokenizer _charTokenizer = new CharBasedTokenizer();
 
     // =========================================================================
-    // Group A: CharBasedTokenizer tests (ports of TS store.test.ts:499-556)
+    // Group A: CharBasedTokenizer tests
     // =========================================================================
 
     [Fact]

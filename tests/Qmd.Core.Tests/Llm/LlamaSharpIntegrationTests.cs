@@ -11,8 +11,6 @@ namespace Qmd.Core.Tests.Llm;
 /// Integration tests that require real LlamaSharp models (GPU/CPU).
 /// Run with: dotnet test --filter "Category=LLM"
 /// Skip with: dotnet test --filter "Category!=LLM"
-///
-/// Port of TS test/llm.test.ts, test/store.test.ts:499-556, and test/eval.test.ts.
 /// </summary>
 [Trait("Category", "LLM")]
 public class LlamaSharpIntegrationTests : IAsyncDisposable
@@ -31,7 +29,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     }
 
     // =========================================================================
-    // Embedding tests (port of llm.test.ts:200-300)
+    // Embedding tests
     // =========================================================================
 
     [Fact]
@@ -89,7 +87,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     }
 
     // =========================================================================
-    // Tokenization tests (port of store.test.ts:499-556)
+    // Tokenization tests
     // =========================================================================
 
     [Fact]
@@ -126,7 +124,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     }
 
     // =========================================================================
-    // Query expansion tests (port of llm.test.ts + mcp.test.ts)
+    // Query expansion tests
     // =========================================================================
 
     [Fact]
@@ -159,7 +157,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     }
 
     // =========================================================================
-    // Reranking tests (port of llm.test.ts)
+    // Reranking tests
     // =========================================================================
 
     [Fact]

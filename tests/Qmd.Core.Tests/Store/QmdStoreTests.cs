@@ -98,7 +98,7 @@ public class QmdStoreTests : IDisposable
     }
 
     // =========================================================================
-    // Edge Cases (ported from TS store.test.ts lines 2570-2668)
+    // Edge Cases
     // =========================================================================
 
     [Fact]
@@ -186,7 +186,7 @@ public class QmdStoreTests : IDisposable
     }
 
     // =========================================================================
-    // Content-Addressable Storage (ported from TS store.test.ts lines 2812-3017)
+    // Content-Addressable Storage
     // =========================================================================
 
     [Fact]
@@ -363,7 +363,7 @@ public class QmdStoreTests : IDisposable
     }
 
     // =========================================================================
-    // Multiple stores operate independently (TS store.test.ts — independent DBs)
+    // Multiple stores operate independently
     // =========================================================================
 
     [Fact]

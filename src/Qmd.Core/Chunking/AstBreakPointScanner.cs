@@ -4,18 +4,17 @@ using TreeSitter;
 
 namespace Qmd.Core.Chunking;
 
+public enum SupportedLanguage { TypeScript, Tsx, JavaScript, Python, Go, Rust }
+
 /// <summary>
 /// AST-aware break point extraction via tree-sitter.
-/// Ports getASTBreakPoints() from src/ast.ts.
 /// Degrades gracefully: unsupported languages or parse failures return empty lists.
 /// </summary>
-public static class AstBreakPointScanner
+internal static class AstBreakPointScanner
 {
     // =========================================================================
     // Language Detection
     // =========================================================================
-
-    public enum SupportedLanguage { TypeScript, Tsx, JavaScript, Python, Go, Rust }
 
     private static readonly Dictionary<string, SupportedLanguage> ExtensionMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -54,7 +53,7 @@ public static class AstBreakPointScanner
     };
 
     // =========================================================================
-    // Per-Language S-Expression Queries (verbatim from src/ast.ts:87-144)
+    // Per-Language S-Expression Queries
     // =========================================================================
 
     private static readonly Dictionary<SupportedLanguage, string> LanguageQueries = new()
@@ -118,7 +117,7 @@ public static class AstBreakPointScanner
     };
 
     // =========================================================================
-    // Score Map (from src/ast.ts:151-165)
+    // Score Map
     // =========================================================================
 
     private static readonly Dictionary<string, double> ScoreMap = new()

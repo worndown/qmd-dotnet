@@ -7,7 +7,6 @@ namespace Qmd.Core.Configuration;
 
 /// <summary>
 /// One-way sync from YAML config to SQLite database.
-/// Ports syncConfigToDb() from store.ts.
 /// </summary>
 public static class ConfigSync
 {
@@ -63,7 +62,7 @@ public static class ConfigSync
             }
         }
 
-        // Sync global context (delete row when null, matching TS behavior)
+        // Sync global context (delete row when null)
         if (config.GlobalContext != null)
         {
             db.Prepare(@"

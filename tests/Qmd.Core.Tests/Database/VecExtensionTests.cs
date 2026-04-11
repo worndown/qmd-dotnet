@@ -36,14 +36,11 @@ public class VecExtensionTests : IDisposable
 
         // After TryLoad, the flag should be set (not null)
         // On machines with vec0.dll: true; on CI without it: false
-        // TS equivalent: "verifySqliteVecLoaded succeeds when sqlite-vec is loaded"
-        // + "verifySqliteVecLoaded throws when sqlite-vec is not loaded"
     }
 
     [Fact]
     public void TryLoad_WhenAvailable_VerifySucceeds()
     {
-        // TS: "verifySqliteVecLoaded succeeds when sqlite-vec is loaded"
         using var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
@@ -61,7 +58,6 @@ public class VecExtensionTests : IDisposable
     [Fact]
     public void Verify_ThrowsWhenNotLoaded()
     {
-        // TS: "verifySqliteVecLoaded throws when sqlite-vec is not loaded"
         // On a fresh DB without loading the extension, Verify should throw
         using var db = new SqliteDatabase(":memory:");
         var act = () => VecExtension.Verify(db);

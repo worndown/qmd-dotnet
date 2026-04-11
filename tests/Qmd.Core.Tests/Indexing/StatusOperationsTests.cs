@@ -71,7 +71,7 @@ public class StatusOperationsTests : IDisposable
     }
 
     // =========================================================================
-    // getStatus reports collection info (TS store.test.ts line 2040)
+    // getStatus reports collection info
     // =========================================================================
 
     [Fact]

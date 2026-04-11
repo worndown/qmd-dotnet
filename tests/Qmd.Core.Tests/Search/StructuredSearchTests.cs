@@ -142,7 +142,7 @@ public class StructuredSearchTests : IDisposable
     }
 
     // =========================================================================
-    // Edge cases (TS structured-search.test.ts)
+    // Edge cases
     // =========================================================================
 
     [Fact]

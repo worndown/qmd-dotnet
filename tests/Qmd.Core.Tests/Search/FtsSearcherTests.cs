@@ -117,7 +117,7 @@ public class FtsSearcherTests : IDisposable
     }
 
     // =========================================================================
-    // Additional FTS tests (ported from TS store.test.ts lines 1135-1344)
+    // Additional FTS tests
     // =========================================================================
 
     [Fact]
@@ -201,7 +201,7 @@ public class FtsSearcherTests : IDisposable
     }
 
     // =========================================================================
-    // FTS title boost outweighs higher body frequency (TS store.test.ts line 1164)
+    // FTS title boost outweighs higher body frequency
     // =========================================================================
 
     [Fact]
@@ -244,7 +244,7 @@ public class FtsSearcherTests : IDisposable
     }
 
     // =========================================================================
-    // FTS strong signal detection (TS store.test.ts line 1372)
+    // FTS strong signal detection
     // =========================================================================
 
     [Fact]

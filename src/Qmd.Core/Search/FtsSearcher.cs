@@ -5,7 +5,7 @@ using Qmd.Core.Retrieval;
 
 namespace Qmd.Core.Search;
 
-public static class FtsSearcher
+internal static class FtsSearcher
 {
     /// <summary>
     /// BM25 full-text search via FTS5 with CTE-based query plan optimization.

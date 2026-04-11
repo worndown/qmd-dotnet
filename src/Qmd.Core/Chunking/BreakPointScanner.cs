@@ -3,7 +3,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Chunking;
 
-public static class BreakPointScanner
+internal static class BreakPointScanner
 {
     private static readonly (Regex Pattern, double Score, string Type)[] BreakPatterns =
     [

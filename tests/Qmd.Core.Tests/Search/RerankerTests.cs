@@ -55,7 +55,7 @@ public class RerankerTests : IDisposable
     }
 
     // =========================================================================
-    // rerank caches results (TS store.test.ts line 2516)
+    // rerank caches results
     // =========================================================================
 
     [Fact]
@@ -79,7 +79,7 @@ public class RerankerTests : IDisposable
     }
 
     // =========================================================================
-    // rerank deduplicates identical chunks across files (TS store.test.ts line 2531)
+    // rerank deduplicates identical chunks across files
     // =========================================================================
 
     [Fact]
@@ -105,13 +105,12 @@ public class RerankerTests : IDisposable
     }
 
     // =========================================================================
-    // "deduplicates identical document texts before scoring" (TS llm.test.ts)
+    // "deduplicates identical document texts before scoring"
     // =========================================================================
 
     [Fact]
     public async Task Rerank_DedupMapsScoreBackToAllDuplicateFiles()
     {
-        // TS: "deduplicates identical document texts before scoring"
         // 3 docs: 2 share "shared chunk" text, 1 has "different chunk"
         // rankAll should be called with only unique texts ["shared chunk", "different chunk"]
         // Both files with "shared chunk" should receive the same score.

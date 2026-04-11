@@ -6,7 +6,7 @@ namespace Qmd.Core.Database;
 /// SQLite implementation of IQmdDatabase using Microsoft.Data.Sqlite.
 /// Maintains a single open connection for the lifetime of the store.
 /// </summary>
-public class SqliteDatabase : IQmdDatabase
+internal class SqliteDatabase : IQmdDatabase
 {
     private readonly SqliteConnection _connection;
 

@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Qmd.Core.Models;
-using Qmd.Core.Paths;
 using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Formatting;
@@ -116,7 +115,7 @@ public static class SearchResultFormatter
             // Line 1: filepath with line number and docid
             var displayPath = r.DisplayPath;
 
-            // Only show :line if a query term actually matches in the snippet body (matches TS)
+            // Only show :line if a query term actually matches in the snippet body
             var lineInfo = "";
             if (snippet != null)
             {

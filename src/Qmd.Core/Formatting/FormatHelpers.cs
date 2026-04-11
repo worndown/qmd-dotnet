@@ -8,7 +8,7 @@ public static class FormatHelpers
     private static readonly bool NoColor =
         Environment.GetEnvironmentVariable("NO_COLOR") != null;
 
-    // ANSI escape codes matching TS terminal colors (qmd.ts:183-194)
+    // ANSI escape codes
     public static string Reset => NoColor ? "" : "\x1b[0m";
     public static string Dim => NoColor ? "" : "\x1b[2m";
     public static string Bold => NoColor ? "" : "\x1b[1m";
@@ -17,7 +17,7 @@ public static class FormatHelpers
     public static string Green => NoColor ? "" : "\x1b[32m";
 
     /// <summary>
-    /// Format score with color based on value (matches TS formatScore).
+    /// Format score with color based on value.
     /// Green >= 70%, yellow >= 40%, dim otherwise.
     /// </summary>
     public static string FormatScore(double score)
@@ -28,6 +28,7 @@ public static class FormatHelpers
         if (score >= 0.4) return $"{Yellow}{pct}%{Reset}";
         return $"{Dim}{pct}%{Reset}";
     }
+
     public static string EscapeCsv(string? value)
     {
         if (value == null) return "";

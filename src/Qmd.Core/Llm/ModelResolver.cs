@@ -4,7 +4,7 @@ namespace Qmd.Core.Llm;
 /// Resolves HuggingFace model URIs to local file paths.
 /// Downloads models on first use, caches with etag freshness.
 /// </summary>
-public class ModelResolver
+internal class ModelResolver
 {
     private readonly HttpClient _httpClient;
     private readonly string _cacheDir;

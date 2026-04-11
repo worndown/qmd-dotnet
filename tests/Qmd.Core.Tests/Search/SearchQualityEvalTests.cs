@@ -11,7 +11,6 @@ namespace Qmd.Core.Tests.Search;
 
 /// <summary>
 /// Search quality evaluation tests — verify BM25 ranking produces expected results.
-/// Port of test/eval.test.ts and test/eval-bm25.test.ts.
 /// </summary>
 public class SearchQualityEvalTests : IDisposable
 {
@@ -135,7 +134,7 @@ public class SearchQualityEvalTests : IDisposable
 }
 
 /// <summary>
-/// BM25 hit-rate evaluation tests — port of test/eval-bm25.test.ts.
+/// BM25 hit-rate evaluation tests.
 /// Seeds the same 6 synthetic documents from eval-docs/ and runs queries
 /// at different difficulty levels, asserting the same hit-rate thresholds.
 /// </summary>
@@ -144,7 +143,7 @@ public class Bm25HitRateEvalTests : IDisposable
     private readonly QmdStore _store;
 
     // =========================================================================
-    // Eval query fixtures — identical to eval-bm25.test.ts
+    // Eval query fixtures
     // =========================================================================
 
     private record EvalQuery(string Query, string ExpectedDoc, string Difficulty);
@@ -237,13 +236,13 @@ public class Bm25HitRateEvalTests : IDisposable
     }
 
     // =========================================================================
-    // Hit-rate tests — thresholds match eval-bm25.test.ts exactly
+    // Hit-rate tests — thresholds match eval-bm25.
     // =========================================================================
 
     [Fact]
     public void EasyQueries_HitRate_AtLeast80Percent_At3()
     {
-        // TS: "easy queries: ≥80% Hit@3"
+        // Easy queries should achieve ≥80% Hit@3
         var easyQueries = EvalQueries.Where(q => q.Difficulty == "easy");
         var hitRate = CalcHitRate(easyQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.8,
@@ -253,7 +252,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void MediumQueries_HitRate_AtLeast15Percent_At3()
     {
-        // TS: "medium queries: ≥15% Hit@3 (BM25 struggles with semantic)"
+        // Medium queries should achieve ≥15% Hit@3 (BM25 struggles with semantic queries)
         var mediumQueries = EvalQueries.Where(q => q.Difficulty == "medium");
         var hitRate = CalcHitRate(mediumQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
@@ -263,7 +262,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void HardQueries_HitRate_AtLeast15Percent_At5()
     {
-        // TS: "hard queries: ≥15% Hit@5 (BM25 baseline)"
+        // Hard queries should achieve ≥15% Hit@5 (BM25 baseline)
         var hardQueries = EvalQueries.Where(q => q.Difficulty == "hard");
         var hitRate = CalcHitRate(hardQueries, 5);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
@@ -273,7 +272,7 @@ public class Bm25HitRateEvalTests : IDisposable
     [Fact]
     public void OverallHitRate_AtLeast40Percent_At3()
     {
-        // TS: "overall Hit@3 ≥40% (BM25 baseline)"
+        // Overall Hit@3 should be ≥40% (BM25 baseline)
         var hitRate = CalcHitRate(EvalQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.4,
             $"overall hit rate should be ≥40% @3, got {hitRate:P0}");

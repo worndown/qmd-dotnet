@@ -6,9 +6,9 @@ namespace Qmd.Core.Retrieval;
 
 /// <summary>
 /// Resolves context strings for document files by matching global context
-/// and all applicable path prefix contexts. Ports getContextForFile() from store.ts.
+/// and all applicable path prefix contexts.
 /// </summary>
-public static class ContextResolver
+internal static class ContextResolver
 {
     /// <summary>
     /// Get the combined context for a file (global + all matching path prefixes, general to specific).

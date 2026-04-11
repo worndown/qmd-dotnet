@@ -1,5 +1,4 @@
 using Qmd.Core.Chunking;
-using Qmd.Core.Embedding;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Paths;
@@ -14,7 +13,7 @@ namespace Qmd.Core.Search;
 /// through FTS + vector search, RRF fusion, chunk selection, and reranking.
 /// Unlike HybridQueryService, this skips query expansion — the caller provides expansions.
 /// </summary>
-public static class StructuredSearchService
+internal static class StructuredSearchService
 {
     public static async Task<List<HybridQueryResult>> SearchAsync(
         QmdStore store,
@@ -187,7 +186,7 @@ public static class StructuredSearchService
             }
             else
             {
-                finalScore = 1.0 / rrfRank; // No reranking — use position-based score (matches TS)
+                finalScore = 1.0 / rrfRank; // No reranking — use position-based score
             }
 
             blended.Add(new HybridQueryResult

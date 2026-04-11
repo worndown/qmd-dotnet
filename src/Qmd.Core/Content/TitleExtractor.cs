@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Qmd.Core.Content;
 
-public static class TitleExtractor
+internal static class TitleExtractor
 {
     private static readonly Regex MdHeadingRegex = new(@"^##?\s+(.+)$", RegexOptions.Multiline | RegexOptions.Compiled);
     private static readonly Regex MdH2Regex = new(@"^##\s+(.+)$", RegexOptions.Multiline | RegexOptions.Compiled);

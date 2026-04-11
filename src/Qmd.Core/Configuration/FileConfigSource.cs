@@ -14,8 +14,7 @@ public class FileConfigSource : IConfigSource
         .IgnoreUnmatchedProperties()
         .Build();
 
-    // Build a value serializer so we can pair it with custom EmitterSettings
-    // that disable line wrapping (matching TS lineWidth: 0).
+    // Build a value serializer so we can pair it with custom EmitterSettings that disable line wrapping.
     private static readonly IValueSerializer ValueSerializer = new SerializerBuilder()
         .WithNamingConvention(UnderscoredNamingConvention.Instance)
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)

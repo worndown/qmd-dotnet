@@ -70,13 +70,13 @@ public class CliHelperTests
     [Fact]
     public void ParseStructuredQuery_ThrowsOnIntentOnly()
     {
-        // Only intent, no actual queries — TS throws an error
+        // Only intent, no actual queries
         var act = () => CliHelper.ParseStructuredQuery("intent: context only");
         act.Should().Throw<ArgumentException>().WithMessage("*cannot appear alone*");
     }
 
     // =========================================================================
-    // ParseStructuredQuery — plain queries (ported from TS)
+    // ParseStructuredQuery — plain queries
     // =========================================================================
 
     [Fact]
@@ -87,7 +87,7 @@ public class CliHelperTests
     }
 
     // =========================================================================
-    // ParseStructuredQuery — error cases (ported from TS)
+    // ParseStructuredQuery — error cases
     // =========================================================================
 
     [Fact]
@@ -123,7 +123,7 @@ public class CliHelperTests
     }
 
     // =========================================================================
-    // ParseStructuredQuery — whitespace handling (ported from TS)
+    // ParseStructuredQuery — whitespace handling
     // =========================================================================
 
     [Fact]
@@ -170,7 +170,7 @@ public class CliHelperTests
     }
 
     // =========================================================================
-    // ParseStructuredQuery — edge cases (ported from TS)
+    // ParseStructuredQuery — edge cases
     // =========================================================================
 
     [Fact]
@@ -198,7 +198,7 @@ public class CliHelperTests
     // =========================================================================
 
     // =========================================================================
-    // ParseStructuredQuery — intent edge cases (ported from TS intent.test.ts)
+    // ParseStructuredQuery — intent edge cases
     // =========================================================================
 
     [Fact]

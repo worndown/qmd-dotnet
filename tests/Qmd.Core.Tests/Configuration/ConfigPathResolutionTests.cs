@@ -3,9 +3,6 @@ using Qmd.Core.Configuration;
 
 namespace Qmd.Core.Tests.Configuration;
 
-/// <summary>
-/// Port of test/collections-config.test.ts
-/// </summary>
 public class ConfigPathResolutionTests : IDisposable
 {
     private readonly string? _originalConfigDir;
@@ -53,13 +50,13 @@ public class ConfigPathResolutionTests : IDisposable
     }
 
     // =========================================================================
-    // XDG_CONFIG_HOME tests (ported from test/collections-config.test.ts)
+    // XDG_CONFIG_HOME tests
     // =========================================================================
 
     [Fact]
     public void GetConfigDir_XdgConfigHome_UsedWhenQmdConfigDirNotSet()
     {
-        // TS: "XDG_CONFIG_HOME is used when QMD_CONFIG_DIR is not set"
+        // XDG_CONFIG_HOME is used when QMD_CONFIG_DIR is not set
         Environment.SetEnvironmentVariable("QMD_CONFIG_DIR", null);
         Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", "/xdg/config");
         var dir = ConfigManager.GetConfigDir();
@@ -69,7 +66,7 @@ public class ConfigPathResolutionTests : IDisposable
     [Fact]
     public void GetConfigDir_XdgConfigHome_AppendsQmdSubdirectory()
     {
-        // TS: "XDG_CONFIG_HOME appends qmd subdirectory"
+        // XDG_CONFIG_HOME appends qmd subdirectory
         Environment.SetEnvironmentVariable("QMD_CONFIG_DIR", null);
         Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", "/home/agent/.config");
         var dir = ConfigManager.GetConfigDir();
@@ -79,7 +76,7 @@ public class ConfigPathResolutionTests : IDisposable
     [Fact]
     public void GetConfigDir_QmdConfigDir_OverridesXdgConfigHome()
     {
-        // TS: "QMD_CONFIG_DIR overrides XDG_CONFIG_HOME"
+        // QMD_CONFIG_DIR overrides XDG_CONFIG_HOME
         Environment.SetEnvironmentVariable("QMD_CONFIG_DIR", "/override");
         Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", "/should-not-use");
         var dir = ConfigManager.GetConfigDir();

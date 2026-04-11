@@ -8,7 +8,7 @@ namespace Qmd.Core.Retrieval;
 /// Uses DotNet.Glob for in-memory glob matching against three path forms:
 /// virtual path (qmd://collection/path), relative path, and collection/path.
 /// </summary>
-public static class GlobMatcher
+internal static class GlobMatcher
 {
     public record GlobMatch(string VirtualPath, string DisplayPath, int BodyLength);
 

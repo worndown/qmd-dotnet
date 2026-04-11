@@ -12,7 +12,7 @@ namespace Qmd.Core.Search;
 /// <summary>
 /// 8-step hybrid query pipeline combining BM25, vector search, RRF fusion, and LLM reranking.
 /// </summary>
-public static class HybridQueryService
+internal static class HybridQueryService
 {
     public static async Task<List<HybridQueryResult>> HybridQueryAsync(
         QmdStore store,
@@ -223,7 +223,7 @@ public static class HybridQueryService
             }
             else
             {
-                finalScore = 1.0 / rrfRank; // No reranking — use position-based score (matches TS)
+                finalScore = 1.0 / rrfRank; // No reranking — use position-based score
             }
 
             blended.Add(new HybridQueryResult

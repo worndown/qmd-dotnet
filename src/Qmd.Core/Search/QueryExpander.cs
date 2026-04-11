@@ -11,7 +11,7 @@ namespace Qmd.Core.Search;
 /// Expands search queries via LLM with SQLite caching.
 /// Produces lex/vec/hyde query variants.
 /// </summary>
-public static class QueryExpander
+internal static class QueryExpander
 {
     public static async Task<List<ExpandedQuery>> ExpandQueryAsync(
         IQmdDatabase db,
@@ -46,7 +46,7 @@ public static class QueryExpander
             .Select(r => new ExpandedQuery(r.Type.ToString().ToLowerInvariant(), r.Text))
             .ToList();
 
-        // Cache result (only when non-empty, matching TS behavior)
+        // Cache result (only when non-empty)
         if (filtered.Count > 0)
         {
             var json = JsonSerializer.Serialize(filtered.Select(r => new { type = r.Type, query = r.Query }));

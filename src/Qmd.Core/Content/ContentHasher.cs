@@ -4,7 +4,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Content;
 
-public static class ContentHasher
+internal static class ContentHasher
 {
     public static string HashContent(string content)
     {

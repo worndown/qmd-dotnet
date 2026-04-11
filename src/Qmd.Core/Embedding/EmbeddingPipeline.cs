@@ -10,7 +10,7 @@ namespace Qmd.Core.Embedding;
 /// <summary>
 /// Generates vector embeddings for documents that need them.
 /// </summary>
-public static class EmbeddingPipeline
+internal static class EmbeddingPipeline
 {
     public static async Task<EmbedResult> GenerateEmbeddingsAsync(
         IQmdDatabase db,

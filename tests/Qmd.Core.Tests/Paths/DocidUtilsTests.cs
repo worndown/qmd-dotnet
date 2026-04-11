@@ -39,7 +39,7 @@ public class DocidUtilsTests
     }
 
     // =========================================================================
-    // normalizeDocid edge cases (from store.test.ts:3202-3210)
+    // normalizeDocid edge cases
     // =========================================================================
 
     [Fact]
@@ -58,7 +58,7 @@ public class DocidUtilsTests
     }
 
     // =========================================================================
-    // isDocid edge cases (from store.test.ts:3259-3268)
+    // isDocid edge cases
     // =========================================================================
 
     [Fact]

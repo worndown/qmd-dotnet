@@ -1,12 +1,10 @@
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Qmd.Core.Formatting;
 using Qmd.Core.Models;
-using Qmd.Core.Retrieval;
 using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Mcp;
@@ -15,7 +13,7 @@ namespace Qmd.Core.Mcp;
 /// MCP tools for QMD. Discovered via [McpServerToolType] attribute.
 /// </summary>
 [McpServerToolType]
-public class QmdTools
+internal class QmdTools
 {
     private static readonly JsonSerializerOptions McpJsonOpts = new()
     {
@@ -49,7 +47,7 @@ public class QmdTools
         CancellationToken ct = default)
     {
         var collections = collection?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-        // Use default collections when none specified (matches TS behavior)
+        // Use default collections when none specified
         var collList = collections is { Count: > 0 }
             ? collections
             : await _store.GetDefaultCollectionNamesAsync();
@@ -149,7 +147,6 @@ public class QmdTools
 
     /// <summary>
     /// Encode path segments for URI, preserving "/" separators.
-    /// Matches TS encodeQmdPath() behavior.
     /// </summary>
     private static string EncodeQmdPath(string path) =>
         string.Join("/", path.Split('/').Select(Uri.EscapeDataString));
@@ -248,7 +245,7 @@ public class QmdTools
             content.Add(new TextContentBlock { Text = sb.ToString() });
         }
 
-        // Add each document as a resource block (matches TS behavior)
+        // Add each document as a resource block
         foreach (var item in docs)
         {
             if (item.Skipped)

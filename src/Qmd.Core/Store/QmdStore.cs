@@ -15,9 +15,8 @@ namespace Qmd.Core.Store;
 
 /// <summary>
 /// Central facade connecting all QMD subsystems.
-/// Mirrors the TypeScript Store type from store.ts.
 /// </summary>
-public class QmdStore : IDisposable
+internal class QmdStore : IDisposable
 {
     public IQmdDatabase Db { get; }
     public string DbPath { get; }

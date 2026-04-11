@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Qmd.Core.Snippets;
 
-public static class IntentProcessor
+internal static class IntentProcessor
 {
     private static readonly Regex PunctuationStripRegex = new(
         @"^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$", RegexOptions.Compiled);

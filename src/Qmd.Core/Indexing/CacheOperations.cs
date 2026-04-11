@@ -5,7 +5,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Indexing;
 
-public static class CacheOperations
+internal static class CacheOperations
 {
     public static string GetCacheKey(string url, object body)
     {
@@ -26,7 +26,7 @@ public static class CacheOperations
         db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
             .Run(cacheKey, result, now);
 
-        // 1% random cleanup — prevent unbounded cache growth (matches TS behavior)
+        // 1% random cleanup — prevent unbounded cache growth
         if (Random.Shared.Next(100) == 0)
         {
             db.Prepare(@"

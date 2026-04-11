@@ -7,7 +7,7 @@ namespace Qmd.Core.Llm;
 /// Real tokenizer using LLamaSharp model weights.
 /// Replaces CharBasedTokenizer for token-accurate chunking.
 /// </summary>
-public class LlamaSharpTokenizer : ITokenizer
+internal class LlamaSharpTokenizer : ITokenizer
 {
     private readonly LLamaWeights _weights;
 

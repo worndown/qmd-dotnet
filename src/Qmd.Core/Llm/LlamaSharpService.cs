@@ -11,7 +11,7 @@ namespace Qmd.Core.Llm;
 /// LLamaSharp implementation of ILlmService.
 /// Manages model loading, embedding contexts, and inference.
 /// </summary>
-public class LlamaSharpService : ILlmService
+internal class LlamaSharpService : ILlmService
 {
     private readonly string _embedModelUri;
     private readonly string _generateModelUri;
@@ -618,7 +618,6 @@ content ::= [^\n]+
     /// <summary>
     /// Truncate text to fit within embedding context size, with 4-token safety margin.
     /// Uses the model's tokenizer when available; falls back to character estimate.
-    /// Matches TS truncateToContextSize() behavior.
     /// </summary>
     private string TruncateToEmbedContextSize(string text)
     {

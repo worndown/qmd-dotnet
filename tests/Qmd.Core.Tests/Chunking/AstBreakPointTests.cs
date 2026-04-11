@@ -257,7 +257,7 @@ function third() {}
     }
 
     // =========================================================================
-    // AST vs Regex Chunking Comparison (from ast-chunking.test.ts:59-150)
+    // AST vs Regex Chunking Comparison
     // =========================================================================
 
     /// <summary>
@@ -386,7 +386,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // AST Break Point Score Verification (from ast-chunking.test.ts:174-199)
+    // AST Break Point Score Verification
     // =========================================================================
 
     [Fact]
@@ -430,7 +430,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // Case-insensitive extension detection (TS ast.test.ts line 59)
+    // Case-insensitive extension detection
     // =========================================================================
 
     [Theory]
@@ -447,7 +447,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // Virtual qmd:// path detection (TS ast.test.ts line 64)
+    // Virtual qmd:// path detection
     // =========================================================================
 
     [Fact]
@@ -458,7 +458,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // MergeBreakPoints result sorted by position (TS ast-chunking.test.ts)
+    // MergeBreakPoints result sorted by position
     // =========================================================================
 
     [Fact]
@@ -480,7 +480,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // chunkDocumentWithBreakPoints equivalence (TS ast-chunking.test.ts)
+    // chunkDocumentWithBreakPoints equivalence
     // =========================================================================
 
     [Fact]
@@ -501,7 +501,7 @@ export function handler{i}(req: Request, res: Response): void {{
     }
 
     // =========================================================================
-    // Gap closure: break point positions match actual content (TS ast.test.ts)
+    // Gap closure: break point positions match actual content
     // =========================================================================
 
     [Fact]
@@ -524,7 +524,7 @@ export function hashPassword() { return ''; }
     }
 
     // =========================================================================
-    // Gap closure: Python captures method definitions inside classes (TS ast.test.ts)
+    // Gap closure: Python captures method definitions inside classes
     // =========================================================================
 
     [Fact]
@@ -557,7 +557,7 @@ def hash_password(password):
     }
 
     // =========================================================================
-    // Gap closure: Go function and method both score 90 (TS ast.test.ts)
+    // Gap closure: Go function and method both score 90
     // =========================================================================
 
     [Fact]
@@ -591,7 +591,7 @@ func HashPassword(password string) string {
     }
 
     // =========================================================================
-    // Gap closure: Rust struct, impl, and trait all score 100 (TS ast.test.ts)
+    // Gap closure: Rust struct, impl, and trait all score 100
     // =========================================================================
 
     [Fact]
@@ -637,7 +637,7 @@ fn hash_password(password: &str) -> String {
     }
 
     // =========================================================================
-    // Gap closure: returns empty for unknown extensions (TS ast.test.ts)
+    // Gap closure: returns empty for unknown extensions
     // =========================================================================
 
     [Fact]
@@ -648,7 +648,7 @@ fn hash_password(password: &str) -> String {
     }
 
     // =========================================================================
-    // Gap closure: handles empty content gracefully (TS ast.test.ts)
+    // Gap closure: handles empty content gracefully
     // =========================================================================
 
     [Fact]

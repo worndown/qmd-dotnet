@@ -4,19 +4,17 @@ using Qmd.Core.Llm;
 namespace Qmd.Core.Tests.Llm;
 
 /// <summary>
-/// Port of test/llm.test.ts "LlamaCpp model resolution" and "expand context size config" tests.
-/// Verifies that LlmConstants defaults match the TypeScript hardcoded values.
+/// Verifies that LlmConstants defaults match the hardcoded values.
 /// </summary>
 public class LlmConstantsTests
 {
     // =========================================================================
-    // "uses hardcoded default when no config or env is set" — verify exact model URIs
+    // Uses hardcoded default when no config or env is set — verify exact model URIs
     // =========================================================================
 
     [Fact]
     public void DefaultEmbedModel_MatchesTypeScriptHardcoded()
     {
-        // TS: HARDCODED_EMBED = "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf"
         LlmConstants.DefaultEmbedModel.Should().Be(
             "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf");
     }
@@ -24,7 +22,6 @@ public class LlmConstantsTests
     [Fact]
     public void DefaultRerankModel_MatchesTypeScriptHardcoded()
     {
-        // TS: HARDCODED_RERANK = "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf"
         LlmConstants.DefaultRerankModel.Should().Be(
             "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf");
     }
@@ -32,41 +29,38 @@ public class LlmConstantsTests
     [Fact]
     public void DefaultGenerateModel_MatchesTypeScriptHardcoded()
     {
-        // TS: HARDCODED_GENERATE = "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf"
         LlmConstants.DefaultGenerateModel.Should().Be(
             "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf");
     }
 
     // =========================================================================
-    // "context size config: uses default when no env" — verify default embed context size
+    // Verify default embed context size
     // =========================================================================
 
     [Fact]
     public void EmbedContextSize_DefaultIs2048()
     {
-        // TS: "uses default expand context size when no config or env is set" — default is 2048
+        // Default is 2048 when no config or env variable overrides it
         LlmConstants.EmbedContextSize.Should().Be(2048);
     }
 
     // =========================================================================
-    // Verify RerankContextSize matches TS reranker contextSize=4096
+    // Verify RerankContextSize matches reranker contextSize=4096
     // =========================================================================
 
     [Fact]
     public void RerankContextSize_DefaultIs4096()
     {
-        // TS reranker creates contexts with contextSize=4096 (from PR #150 and store.ts)
         LlmConstants.RerankContextSize.Should().Be(4096);
     }
 
     // =========================================================================
-    // Model resolution: env var overrides default (TS llm.test.ts)
+    // Model resolution: env var overrides default
     // =========================================================================
 
     [Fact]
     public void ModelResolution_EnvVarOverridesDefault()
     {
-        // Ports: "env var overrides hardcoded default"
         var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
         try
         {
@@ -83,7 +77,6 @@ public class LlmConstantsTests
     [Fact]
     public void ModelResolution_ConfigOverridesEnvVar()
     {
-        // Ports: "config overrides env var"
         var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
         try
         {
@@ -103,7 +96,7 @@ public class LlmConstantsTests
     [Fact]
     public void ModelResolution_DefaultWhenNoEnvOrConfig()
     {
-        // Ports: "uses hardcoded default when no config or env is set"
+        // uses hardcoded default when no config or env is set
         var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
         try
         {
@@ -118,17 +111,16 @@ public class LlmConstantsTests
     }
 
     // =========================================================================
-    // EmbeddingFormatter model resolution with env vars (TS llm.test.ts)
+    // EmbeddingFormatter model resolution with env vars
     // =========================================================================
 
     // =========================================================================
-    // Expand context size resolution (TS llm.test.ts "expand context size config")
+    // Expand context size resolution
     // =========================================================================
 
     [Fact]
     public void ExpandContextSize_UsesDefault_WhenNoEnvOrConfig()
     {
-        // Ports: "uses default expand context size"
         var original = Environment.GetEnvironmentVariable("QMD_EXPAND_CONTEXT_SIZE");
         try
         {
@@ -144,7 +136,6 @@ public class LlmConstantsTests
     [Fact]
     public void ExpandContextSize_EnvVarOverridesDefault()
     {
-        // Ports: "uses QMD_EXPAND_CONTEXT_SIZE when set"
         var original = Environment.GetEnvironmentVariable("QMD_EXPAND_CONTEXT_SIZE");
         try
         {
@@ -160,7 +151,6 @@ public class LlmConstantsTests
     [Fact]
     public void ExpandContextSize_ConfigOverridesEnvVar()
     {
-        // Ports: "config value overrides env var"
         var original = Environment.GetEnvironmentVariable("QMD_EXPAND_CONTEXT_SIZE");
         try
         {
@@ -176,7 +166,6 @@ public class LlmConstantsTests
     [Fact]
     public void ExpandContextSize_InvalidEnvVar_FallsBackToDefault()
     {
-        // Ports: "falls back to default and warns on invalid env var"
         var original = Environment.GetEnvironmentVariable("QMD_EXPAND_CONTEXT_SIZE");
         try
         {
@@ -192,7 +181,6 @@ public class LlmConstantsTests
     [Fact]
     public void ExpandContextSize_InvalidConfigValue_Throws()
     {
-        // Ports: "throws when config expandContextSize is invalid"
         var act = () => LlamaSharpService.ResolveExpandContextSize(0);
         act.Should().Throw<ArgumentException>().WithMessage("*Invalid expandContextSize*");
     }
@@ -200,7 +188,6 @@ public class LlmConstantsTests
     [Fact]
     public void EmbeddingFormatter_EnvVarAffectsQueryFormatting()
     {
-        // Ports: "QMD_EMBED_MODEL env var affects formatting"
         var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
         try
         {

@@ -10,7 +10,7 @@ namespace Qmd.Core.Search;
 /// Samples random document chunks, uses each as a query against the vector index,
 /// and collects inter-document cosine similarity scores to characterize the noise floor.
 /// </summary>
-public static class EmbeddingProfiler
+internal static class EmbeddingProfiler
 {
     public static async Task<EmbeddingProfile> ProfileAsync(
         IQmdDatabase db,

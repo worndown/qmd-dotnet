@@ -408,7 +408,7 @@ public class FormatterTests
     }
 
     // =========================================================================
-    // Markdown shows content even with empty query (TS parity)
+    // Markdown shows content even with empty query
     // =========================================================================
 
     [Fact]
@@ -466,7 +466,7 @@ public class FormatterTests
     }
 
     // =========================================================================
-    // JSON includes line number (TS formatter.test.ts)
+    // JSON includes line number
     // =========================================================================
 
     [Fact]

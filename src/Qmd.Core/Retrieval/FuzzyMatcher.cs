@@ -2,7 +2,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Retrieval;
 
-public static class FuzzyMatcher
+internal static class FuzzyMatcher
 {
     /// <summary>
     /// Classic Levenshtein distance (edit distance) between two strings.

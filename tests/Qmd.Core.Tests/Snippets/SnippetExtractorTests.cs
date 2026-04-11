@@ -82,10 +82,6 @@ Line six about troubleshooting.";
             .Should().Be(TestBody.Split('\n').Length);
     }
 
-    // =========================================================================
-    // Ported from TS intent.test.ts: "extractSnippet with intent — disambiguation"
-    // =========================================================================
-
     private const string DisambiguationBody =
         "# Notes on Various Topics\n" +
         "\n" +
@@ -104,7 +100,7 @@ Line six about troubleshooting.";
     [Fact]
     public void ExtractSnippet_WithoutIntent_AnchorsOnQueryTermsOnly()
     {
-        // TS: "performance" appears in title and multiple sections — should anchor on first match
+        // "performance" appears in title and multiple sections — anchors on first match
         var result = SnippetExtractor.ExtractSnippet(DisambiguationBody, "performance", 500);
         result.Snippet.Should().Contain("Performance");
     }
@@ -142,7 +138,7 @@ Line six about troubleshooting.";
     [Fact]
     public void ExtractSnippet_IntentDoesNotOverrideStrongQueryMatch()
     {
-        // TS: Query "Core Web Vitals" is very specific — intent shouldn't pull away
+        // Query "Core Web Vitals" is very specific — intent should not override the strong query match
         var result = SnippetExtractor.ExtractSnippet(
             DisambiguationBody, "Core Web Vitals", 500,
             null, null,
@@ -170,14 +166,10 @@ Line six about troubleshooting.";
         result.Snippet.Length.Should().BeGreaterThan(0);
     }
 
-    // =========================================================================
-    // Ported from TS intent.test.ts: "extractSnippet intent weight behavior"
-    // =========================================================================
-
     [Fact]
     public void ExtractSnippet_IntentBreaksTieWhenQueryMatchesAllLinesEqually()
     {
-        // TS: Document where query term appears on every line but intent terms differ
+        // Document where query term appears on every line but intent terms differ
         var body = "performance metrics for team velocity\n" +
                    "performance metrics for web latency\n" +
                    "performance metrics for athletic endurance";
@@ -194,14 +186,9 @@ Line six about troubleshooting.";
         withIntent.Snippet.Should().Contain("web latency");
     }
 
-    // =========================================================================
-    // Ported from TS store.test.ts: snippet extraction edge cases
-    // =========================================================================
-
     [Fact]
     public void ExtractSnippet_ReturnsBeginningWhenNoMatch()
     {
-        // TS: body = "First line\nSecond line\nThird line", query = "nonexistent"
         var body = "First line\nSecond line\nThird line";
         var result = SnippetExtractor.ExtractSnippet(body, "nonexistent", 500);
         result.Line.Should().Be(1);
@@ -211,7 +198,6 @@ Line six about troubleshooting.";
     [Fact]
     public void ExtractSnippet_LinesBeforeLinesAfterCorrect()
     {
-        // TS: "L1\nL2\nL3\nL4 match\nL5\nL6\nL7\nL8\nL9\nL10"
         var body = "L1\nL2\nL3\nL4 match\nL5\nL6\nL7\nL8\nL9\nL10";
         var result = SnippetExtractor.ExtractSnippet(body, "match", 500);
         result.Line.Should().Be(4); // "L4 match" is line 4
@@ -223,7 +209,6 @@ Line six about troubleshooting.";
     [Fact]
     public void ExtractSnippet_AtDocumentStartShows0Before()
     {
-        // TS: "First line keyword\nSecond\nThird\nFourth\nFifth"
         var body = "First line keyword\nSecond\nThird\nFourth\nFifth";
         var result = SnippetExtractor.ExtractSnippet(body, "keyword", 500);
         result.Line.Should().Be(1);
@@ -235,7 +220,6 @@ Line six about troubleshooting.";
     [Fact]
     public void ExtractSnippet_AtDocumentEndShows0After()
     {
-        // TS: "First\nSecond\nThird\nFourth\nFifth keyword"
         var body = "First\nSecond\nThird\nFourth\nFifth keyword";
         var result = SnippetExtractor.ExtractSnippet(body, "keyword", 500);
         result.Line.Should().Be(5);
@@ -255,10 +239,6 @@ Line six about troubleshooting.";
         result.Snippet.Should().Contain("@@ -1,1 @@ (0 before, 0 after)");
         result.Snippet.Should().Contain("Single line with keyword");
     }
-
-    // =========================================================================
-    // Ported from TS intent.test.ts: "intent constants"
-    // =========================================================================
 
     [Fact]
     public void IntentWeightSnippet_Is_0_3()

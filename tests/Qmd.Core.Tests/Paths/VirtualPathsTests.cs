@@ -69,7 +69,7 @@ public class VirtualPathsTests
     }
 
     // =========================================================================
-    // normalizeVirtualPath edge cases (from store.test.ts:3046-3065)
+    // normalizeVirtualPath edge cases
     // =========================================================================
 
     [Fact]
@@ -101,7 +101,7 @@ public class VirtualPathsTests
     }
 
     // =========================================================================
-    // isVirtualPath edge cases (from store.test.ts:3085-3111)
+    // isVirtualPath edge cases
     // =========================================================================
 
     [Fact]
@@ -127,7 +127,7 @@ public class VirtualPathsTests
     }
 
     // =========================================================================
-    // parseVirtualPath edge cases (from store.test.ts:3125-3130)
+    // parseVirtualPath edge cases
     // =========================================================================
 
     [Fact]

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Qmd.Core.Search;
 
-public static class QueryValidator
+internal static class QueryValidator
 {
     public static string? ValidateSemanticQuery(string query)
     {

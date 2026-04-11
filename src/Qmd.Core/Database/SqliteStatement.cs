@@ -7,7 +7,7 @@ namespace Qmd.Core.Database;
 /// SQLite implementation of IStatement using Microsoft.Data.Sqlite.
 /// Wraps a SqliteCommand for the prepare/run/get/all pattern.
 /// </summary>
-public class SqliteStatement : IStatement
+internal class SqliteStatement : IStatement
 {
     private readonly SqliteConnection _connection;
     private readonly string _sql;

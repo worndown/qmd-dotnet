@@ -3,7 +3,7 @@ namespace Qmd.Core.Database;
 /// <summary>
 /// Manages sqlite-vec extension loading and vector table operations.
 /// </summary>
-public static class VecExtension
+internal static class VecExtension
 {
     private static bool? _isAvailable;
 

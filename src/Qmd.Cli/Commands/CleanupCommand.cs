@@ -28,6 +28,7 @@ public static class CleanupCommand
                     SELECT name FROM store_collections
                 )
             ").Run().Changes;
+
             if (orphanedDocs > 0)
                 AnsiConsole.MarkupLine($"[green]\u2713[/] Removed {orphanedDocs} documents from deleted collections");
 
