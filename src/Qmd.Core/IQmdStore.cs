@@ -2,7 +2,7 @@ using Qmd.Core.Configuration;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
 
-namespace Qmd.Sdk;
+namespace Qmd.Core;
 
 /// <summary>
 /// Public interface for QMD store.

@@ -3,9 +3,8 @@ using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Store;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp.Tests;
+namespace Qmd.Core.Tests.Mcp;
 
 /// <summary>
 /// Creates in-memory stores seeded with test documents for MCP tool testing.

@@ -7,7 +7,7 @@ using Qmd.Core.Retrieval;
 using Qmd.Core.Search;
 using Qmd.Core.Store;
 
-namespace Qmd.Sdk;
+namespace Qmd.Core;
 
 /// <summary>
 /// Implementation wrapping Qmd.Core.Store.QmdStore.

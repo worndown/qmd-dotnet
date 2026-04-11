@@ -2,9 +2,8 @@ using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Qmd.Core.Formatting;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp;
+namespace Qmd.Core.Mcp;
 
 /// <summary>
 /// MCP resources for QMD. Provides qmd:// URI access to documents.

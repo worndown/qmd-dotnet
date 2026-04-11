@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Qmd.Cli\Qmd.Cli.csproj" />
-    <ProjectReference Include="..\..\src\Qmd.Sdk\Qmd.Sdk.csproj" />
     <ProjectReference Include="..\..\src\Qmd.Core\Qmd.Core.csproj" />
   </ItemGroup>
 

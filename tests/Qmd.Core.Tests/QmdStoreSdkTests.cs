@@ -1,14 +1,11 @@
 using FluentAssertions;
 using Qmd.Core.Configuration;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Store;
-using Qmd.Sdk;
 
-namespace Qmd.Sdk.Tests;
+namespace Qmd.Core.Tests;
 
 public class QmdStoreSdkTests
 {

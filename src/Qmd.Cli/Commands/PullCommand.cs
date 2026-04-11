@@ -1,6 +1,5 @@
 using System.CommandLine;
 using Qmd.Core.Llm;
-using Qmd.Llm;
 using Spectre.Console;
 
 namespace Qmd.Cli.Commands;

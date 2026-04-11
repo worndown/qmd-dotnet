@@ -3,8 +3,6 @@ using Qmd.Core.Bench;
 using Qmd.Core.Configuration;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
-using Qmd.Sdk;
-using Qmd.Sdk.Bench;
 
 namespace Qmd.Core.Tests.Bench;
 

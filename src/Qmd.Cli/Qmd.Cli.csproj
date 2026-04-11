@@ -17,9 +17,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Qmd.Core\Qmd.Core.csproj" />
-		<ProjectReference Include="..\Qmd.Sdk\Qmd.Sdk.csproj" />
-		<ProjectReference Include="..\Qmd.Llm\Qmd.Llm.csproj" />
-		<ProjectReference Include="..\Qmd.Mcp\Qmd.Mcp.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

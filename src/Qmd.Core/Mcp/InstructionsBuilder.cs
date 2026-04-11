@@ -1,8 +1,7 @@
 using System.Text;
 using Qmd.Core.Models;
-using Qmd.Sdk;
 
-namespace Qmd.Mcp;
+namespace Qmd.Core.Mcp;
 
 /// <summary>
 /// Builds dynamic LLM instructions from index state.

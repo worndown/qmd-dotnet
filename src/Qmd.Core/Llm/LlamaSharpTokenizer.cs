@@ -1,7 +1,7 @@
 using LLama;
 using Qmd.Core.Chunking;
 
-namespace Qmd.Llm;
+namespace Qmd.Core.Llm;
 
 /// <summary>
 /// Real tokenizer using LLamaSharp model weights.

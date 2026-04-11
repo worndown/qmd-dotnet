@@ -1,6 +1,5 @@
 using Qmd.Core.Database;
 using Qmd.Core.Models;
-using Qmd.Core.Paths;
 
 namespace Qmd.Core.Retrieval;
 

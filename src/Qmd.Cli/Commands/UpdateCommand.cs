@@ -1,8 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using Qmd.Cli.Progress;
-using Qmd.Core.Models;
-using Qmd.Sdk;
+using Qmd.Core;
 using Spectre.Console;
 
 namespace Qmd.Cli.Commands;

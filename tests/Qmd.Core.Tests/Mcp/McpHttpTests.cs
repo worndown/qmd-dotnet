@@ -8,8 +8,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Qmd.Core.Mcp;
 
-namespace Qmd.Mcp.Tests;
+namespace Qmd.Core.Tests.Mcp;
 
 /// <summary>
 /// Integration tests for the MCP HTTP transport.

@@ -1,6 +1,4 @@
-using Qmd.Core.Llm;
-
-namespace Qmd.Llm;
+namespace Qmd.Core.Llm;
 
 /// <summary>
 /// Resolves HuggingFace model URIs to local file paths.
