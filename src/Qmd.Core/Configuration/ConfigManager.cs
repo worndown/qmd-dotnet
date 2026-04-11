@@ -4,7 +4,6 @@ namespace Qmd.Core.Configuration;
 
 /// <summary>
 /// Manages QMD configuration: collections, contexts, config path resolution.
-/// Consolidates all functions from collections.ts into one class.
 /// </summary>
 public class ConfigManager
 {
@@ -26,8 +25,7 @@ public class ConfigManager
     {
         if (name.Contains('/') || name.Contains('\\'))
         {
-            // Resolve relative paths to absolute, replace separators with _,
-            // strip leading _ (matches TS setConfigIndexName behavior)
+            // Resolve relative paths to absolute, replace separators with _, strip leading _ 
             var resolved = Path.GetFullPath(name);
             _indexName = resolved
                 .Replace("/", "_")
@@ -51,7 +49,7 @@ public class ConfigManager
         var envDir = Environment.GetEnvironmentVariable("QMD_CONFIG_DIR");
         if (!string.IsNullOrEmpty(envDir)) return envDir;
 
-        // XDG_CONFIG_HOME support (matches TS behavior)
+        // XDG_CONFIG_HOME support
         var xdgConfig = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
         if (!string.IsNullOrEmpty(xdgConfig)) return Path.Combine(xdgConfig, "qmd");
 

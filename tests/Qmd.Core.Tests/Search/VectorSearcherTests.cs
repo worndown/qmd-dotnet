@@ -21,7 +21,7 @@ public class VectorSearcherTests : IDisposable
     public void Dispose() => _db.Dispose();
 
     // =========================================================================
-    // searchVec returns empty when no vector index (TS store.test.ts line 2350)
+    // searchVec returns empty when no vector index
     // =========================================================================
 
     [Fact]

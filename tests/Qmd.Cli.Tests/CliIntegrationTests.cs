@@ -12,7 +12,7 @@ using Qmd.Core.Store;
 namespace Qmd.Cli.Tests;
 
 /// <summary>
-/// CLI integration tests ported from test/cli.test.ts.
+/// CLI integration tests.
 /// Instead of spawning processes, we invoke SDK methods directly
 /// against an in-memory store with seeded data.
 /// </summary>
@@ -114,7 +114,6 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_BM25_FindsMeetingDocument()
     {
-        // TS: "searches for documents with BM25"
         var results = await _store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
         results.Should().Contain(r => r.Title.ToLower().Contains("meeting")
@@ -124,7 +123,6 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_WithLimit_RespectsLimit()
     {
-        // TS: "searches with limit option"
         var results = await _store.SearchLexAsync("test", new LexSearchOptions { Limit = 1 });
         results.Should().HaveCountLessThanOrEqualTo(1);
     }
@@ -132,7 +130,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_WithLargeLimit_ReturnsAll()
     {
-        // TS: "searches with all results option" — --all passes a large limit
+        // --all passes a large limit
         var results = await _store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
         results.Should().NotBeEmpty();
     }
@@ -140,7 +138,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_NonMatching_ReturnsEmpty()
     {
-        // TS: "returns no results message for non-matching query"
+        // returns no results message for non-matching query
         var results = await _store.SearchLexAsync("xyznonexistent123");
         results.Should().BeEmpty();
     }
@@ -148,7 +146,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_WithCollectionFilter_OnlyReturnsMatchingCollection()
     {
-        // TS: "filters search by collection name"
+        // Filters search by collection name.
         // Create a store with two collections
         var config = new CollectionConfig
         {
@@ -175,7 +173,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_JsonFormat_ReturnsValidJson()
     {
-        // TS: "search with --json flag outputs JSON"
+        // search with --json flag outputs JSON
         var results = await _store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
@@ -190,7 +188,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_FilesFormat_ContainsFilePaths()
     {
-        // TS: "search with --files flag outputs file paths"
+        // search with --files flag outputs file paths
         var results = await _store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
 
@@ -201,20 +199,20 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_CsvFormat_HasCorrectHeader()
     {
-        // TS: "returns CSV header only for non-matching query with --csv"
+        // returns CSV header only for non-matching query with --csv
         var emptyResults = new List<SearchResult>();
         var csv = SearchResultFormatter.ToCsv(emptyResults);
         csv.Trim().Should().Be("docid,score,file,title,context,line,snippet");
     }
 
     // =========================================================================
-    // Get behavior (5 tests) — ported from "CLI Get Command"
+    // Get behavior
     // =========================================================================
 
     [Fact]
     public async Task Get_RetrievesDocumentByPath()
     {
-        // TS: "retrieves document content by path"
+        // retrieves document content by path
         var result = await _store.GetAsync("readme.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Project");
@@ -223,7 +221,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Get_RetrievesFromSubdirectory()
     {
-        // TS: "retrieves document from subdirectory"
+        // retrieves document from subdirectory
         var result = await _store.GetAsync("notes/meeting.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Team Meeting");
@@ -232,7 +230,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Get_HandlesNonExistentFile()
     {
-        // TS: "handles non-existent file"
+        // handles non-existent file
         var result = await _store.GetAsync("nonexistent.md");
         result.IsFound.Should().BeFalse();
         result.NotFound.Should().NotBeNull();
@@ -241,7 +239,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Get_WithVirtualPathFormat()
     {
-        // TS: "get with qmd://collection/path format"
+        // get with qmd://collection/path format
         var result = await _store.GetAsync("qmd://fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
@@ -250,7 +248,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Get_WithPathLineFormat()
     {
-        // TS: "get with path:line format"
+        // get with path:line format
         // The GetDocumentBodyAsync supports line slicing
         var body = await _store.GetDocumentBodyAsync("fixtures/test1.md",
             new BodyOptions { FromLine = 3, MaxLines = 2 });
@@ -260,13 +258,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Collection management (7 tests) — ported from "CLI Collection Commands"
+    // Collection management
     // =========================================================================
 
     [Fact]
     public async Task Collection_ListsCollections()
     {
-        // TS: "lists collections"
+        // lists collections
         var collections = await _store.ListCollectionsAsync();
         collections.Should().NotBeEmpty();
         collections.Should().Contain(c => c.Name == "fixtures");
@@ -275,7 +273,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_RemovesCollection()
     {
-        // TS: "removes a collection"
+        // removes a collection
         var config = new CollectionConfig
         {
             Collections = new()
@@ -296,7 +294,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_HandlesRemovingNonExistent()
     {
-        // TS: "handles removing non-existent collection"
+        // handles removing non-existent collection
         var removed = await _store.RemoveCollectionAsync("nonexistent");
         removed.Should().BeFalse();
     }
@@ -304,7 +302,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_RenamesCollection()
     {
-        // TS: "renames a collection"
+        // renames a collection
         var config = new CollectionConfig
         {
             Collections = new()
@@ -326,7 +324,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_HandlesRenamingNonExistent()
     {
-        // TS: "handles renaming non-existent collection"
+        // handles renaming non-existent collection
         var renamed = await _store.RenameCollectionAsync("nonexistent", "newname");
         renamed.Should().BeFalse();
     }
@@ -334,7 +332,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_HandlesRenamingToExistingName()
     {
-        // TS: "handles renaming to existing collection name"
+        // handles renaming to existing collection name
         var config = new CollectionConfig
         {
             Collections = new()
@@ -354,7 +352,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Collection_MultipleCollectionsAdded()
     {
-        // TS: "multiple collections added"
+        // multiple collections added
         var (store, _) = CreateFreshStore();
         await using var __ = store;
 
@@ -368,13 +366,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Context management (6 tests) — ported from "CLI Context Management"
+    // Context management
     // =========================================================================
 
     [Fact]
     public async Task Context_AddGlobalWithSlash()
     {
-        // TS: "add global context with /"
+        // add global context with /
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -392,7 +390,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Context_ListContexts()
     {
-        // TS: "list contexts"
+        // list contexts
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -411,7 +409,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Context_AddToVirtualPath()
     {
-        // TS: "add context to virtual path"
+        // add context to virtual path
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -432,7 +430,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Context_RemoveGlobal()
     {
-        // TS: "remove global context"
+        // remove global context
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -451,7 +449,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Context_RemoveVirtualPath()
     {
-        // TS: "remove virtual path context"
+        // remove virtual path context
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -472,7 +470,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Context_FailsToRemoveNonExistent()
     {
-        // TS: "fails to remove non-existent context"
+        // fails to remove non-existent context
         var (store, _) = CreateFreshStore(new CollectionConfig
         {
             Collections = new()
@@ -487,13 +485,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Update behavior (2 tests) — ported from "CLI Update Command"
+    // Update behavior
     // =========================================================================
 
     [Fact]
     public async Task Update_ReturnsStats()
     {
-        // TS: "updates all collections"
+        // updates all collections.
         // We can't do a real filesystem reindex in memory, but we can verify
         // the update mechanism works with a temp directory.
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-cli-test-{Guid.NewGuid()}");
@@ -527,7 +525,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Update_DocumentsSearchableAfterUpdate()
     {
-        // TS: "documents searchable after update" — update then search
+        // documents searchable after update — update then search
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-cli-test-{Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
 
@@ -558,13 +556,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // ls behavior (3 tests) — ported from "CLI ls Command"
+    // ls behavior
     // =========================================================================
 
     [Fact]
     public async Task Ls_ListsAllCollections()
     {
-        // TS: "lists all collections"
+        // lists all collections
         var collections = await _store.ListCollectionsAsync();
         collections.Should().NotBeEmpty();
         collections.Select(c => c.Name).Should().Contain("fixtures");
@@ -573,7 +571,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Ls_ListsFilesInCollection()
     {
-        // TS: "lists files in a collection"
+        // lists files in a collection
         // MultiGetAsync with a glob pattern lists files in a collection
         var (docs, errors) = await _store.MultiGetAsync("qmd://fixtures/*.md");
         docs.Should().NotBeEmpty();
@@ -583,7 +581,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Ls_HandlesNonExistentCollection()
     {
-        // TS: "handles non-existent collection"
+        // handles non-existent collection
         var (docs, errors) = await _store.MultiGetAsync("qmd://nonexistent/*.md");
         docs.Should().BeEmpty();
         errors.Should().NotBeEmpty();
@@ -601,7 +599,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [InlineData(OutputFormat.Files)]
     public void OutputFormat_DispatcherProducesOutput(OutputFormat format)
     {
-        // TS: format dispatcher tests — verify SearchResultFormatter.Format works
+        // format dispatcher tests — verify SearchResultFormatter.Format works
         var result = new SearchResult
         {
             Filepath = "qmd://fixtures/readme.md",
@@ -626,7 +624,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public void OutputFormat_EmptyJson_ReturnsEmptyArray()
     {
-        // TS: "returns empty JSON array for non-matching query with --json"
+        // returns empty JSON array for non-matching query with --json
         var json = SearchResultFormatter.ToJson([]);
         json.Trim().Should().Be("[]");
     }
@@ -634,7 +632,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public void OutputFormat_EmptyXml_ReturnsEmptyContainer()
     {
-        // TS: "returns empty XML container for non-matching query with --xml"
+        // returns empty XML container for non-matching query with --xml
         var xml = SearchResultFormatter.ToXml([]);
         xml.Trim().Should().BeEmpty();
         // Note: TS expects "<results></results>" but the .NET formatter
@@ -643,7 +641,7 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Cleanup (1 test) — ported from "CLI Cleanup Command"
+    // Cleanup
     // =========================================================================
 
     [Fact]
@@ -747,7 +745,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task SearchOutput_Csv_HasCorrectHeaderAndData()
     {
-        // TS: "search --csv includes qmd:// path, docid, and context"
+        // search --csv includes qmd:// path, docid, and context
         var results = await _store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
@@ -760,7 +758,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task SearchOutput_Md_IncludesDocid()
     {
-        // TS: "search --md includes docid and context"
+        // search --md includes docid and context
         var results = await _store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
@@ -771,7 +769,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task SearchOutput_Xml_IncludesQmdPathAndDocid()
     {
-        // TS: "search --xml includes qmd:// path, docid, and context"
+        // search --xml includes qmd:// path, docid, and context
         var results = await _store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
@@ -782,7 +780,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task SearchOutput_Files_IncludesDocidAndScore()
     {
-        // TS: "search --files includes qmd:// path, docid, and context"
+        // search --files includes qmd:// path, docid, and context
         var results = await _store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
 
@@ -791,13 +789,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Status behavior (1 test) — ported from "CLI Status Command"
+    // Status behavior
     // =========================================================================
 
     [Fact]
     public async Task Status_ShowsIndexInfo()
     {
-        // TS: "shows index status" — call GetStatusAsync, verify output shape
+        // shows index status — call GetStatusAsync, verify output shape
         var status = await _store.GetStatusAsync();
         status.Should().NotBeNull();
         status.TotalDocuments.Should().BeGreaterThan(0);
@@ -806,13 +804,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Get with various path formats (2 tests) — ported from "get command path normalization"
+    // Get with various path formats
     // =========================================================================
 
     [Fact]
     public async Task Get_WithCollectionSlashPathFormat()
     {
-        // TS: "get with collection/path format (no scheme)"
+        // get with collection/path format (no scheme)
         var result = await _store.GetAsync("fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
@@ -821,20 +819,20 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Get_WithDoubleSlashFormat()
     {
-        // TS: "get with //collection/path format"
+        // get with //collection/path format
         var result = await _store.GetAsync("//fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
     }
 
     // =========================================================================
-    // Ignore patterns (3 tests) — ported from "collection ignore patterns"
+    // Ignore patterns
     // =========================================================================
 
     [Fact]
     public async Task IgnorePatterns_ExcludeMatchingFilesFromIndexing()
     {
-        // TS: "ignore patterns exclude matching files from indexing"
+        // ignore patterns exclude matching files from indexing
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-ignore-test-{Guid.NewGuid()}");
         Directory.CreateDirectory(Path.Combine(tempDir, "notes"));
         Directory.CreateDirectory(Path.Combine(tempDir, "sessions"));
@@ -880,7 +878,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task IgnorePatterns_IgnoredFilesNotSearchable()
     {
-        // TS: "ignored files are not searchable"
+        // ignored files are not searchable
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-ignore-search-{Guid.NewGuid()}");
         Directory.CreateDirectory(Path.Combine(tempDir, "sessions"));
         Directory.CreateDirectory(Path.Combine(tempDir, "notes"));
@@ -920,7 +918,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task IgnorePatterns_CollectionWithoutIgnoreIndexesAllFiles()
     {
-        // TS: "collection without ignore indexes all files"
+        // collection without ignore indexes all files
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-noignore-{Guid.NewGuid()}");
         Directory.CreateDirectory(Path.Combine(tempDir, "notes"));
         Directory.CreateDirectory(Path.Combine(tempDir, "sessions"));
@@ -960,13 +958,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Deactivate stale docs (1 test) — ported from "CLI Update Command"
+    // Deactivate stale docs
     // =========================================================================
 
     [Fact]
     public async Task Update_DeactivatesStaleDocsWhenCollectionHasZeroMatchingFiles()
     {
-        // TS: "deactivates stale docs when collection has zero matching files"
+        // deactivates stale docs when collection has zero matching files
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-stale-{Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
 
@@ -1015,13 +1013,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Search options (ported from TS cli.test.ts)
+    // Search options
     // =========================================================================
 
     [Fact]
     public async Task Search_WithAllOption_ReturnsAllResults()
     {
-        // TS: "searches with all results option" — search with large limit
+        // searches with all results option — search with large limit
         var results = await _store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
         results.Should().NotBeEmpty();
     }
@@ -1029,7 +1027,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_EmptyResults_JsonReturnsEmptyArray()
     {
-        // TS: "returns empty JSON array for non-matching query with --json"
+        // returns empty JSON array for non-matching query with --json
         var results = await _store.SearchLexAsync("xyznonexistent");
         results.Should().BeEmpty();
         var json = SearchResultFormatter.ToJson(results);
@@ -1039,7 +1037,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_EmptyResults_CsvReturnsHeaderOnly()
     {
-        // TS: "returns CSV header only for non-matching query with --csv"
+        // returns CSV header only for non-matching query with --csv
         var results = await _store.SearchLexAsync("xyznonexistent");
         var csv = SearchResultFormatter.ToCsv(results);
         // .NET CSV formatter returns header row even for empty results
@@ -1050,7 +1048,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_EmptyResults_XmlReturnsEmpty()
     {
-        // TS: "returns empty XML container for non-matching query with --xml"
+        // returns empty XML container for non-matching query with --xml
         var results = await _store.SearchLexAsync("xyznonexistent");
         var xml = SearchResultFormatter.ToXml(results);
         // .NET XML formatter returns empty string for empty results (no wrapper element)
@@ -1058,13 +1056,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Multi-get CLI (ported from TS cli.test.ts)
+    // Multi-get CLI
     // =========================================================================
 
     [Fact]
     public async Task MultiGet_ByGlobPattern_ReturnsResults()
     {
-        // TS: "retrieves multiple documents by pattern"
+        // retrieves multiple documents by pattern
         var (docs, errors) = await _store.MultiGetAsync("qmd://fixtures/notes/*.md",
             new MultiGetOptions { IncludeBody = true });
         docs.Count.Should().BeGreaterThanOrEqualTo(2);
@@ -1073,7 +1071,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task MultiGet_ByCommaSeparatedPaths_ReturnsResults()
     {
-        // TS: "retrieves documents by comma-separated paths"
+        // retrieves documents by comma-separated paths
         var (docs1, _) = await _store.MultiGetAsync("qmd://fixtures/readme.md");
         var (docs2, _) = await _store.MultiGetAsync("qmd://fixtures/notes/meeting.md");
         docs1.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -1081,13 +1079,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Ignore patterns — additional tests (ported from TS cli.test.ts)
+    // Ignore patterns — additional tests
     // =========================================================================
 
     [Fact]
     public async Task IgnorePatterns_NonIgnoredFilesStillSearchable()
     {
-        // TS: "non-ignored files are searchable"
+        // non-ignored files are searchable
         var tempDir = Path.Combine(Path.GetTempPath(), $"qmd-ignore-search2-{Guid.NewGuid()}");
         Directory.CreateDirectory(Path.Combine(tempDir, "notes"));
         Directory.CreateDirectory(Path.Combine(tempDir, "sessions"));
@@ -1127,7 +1125,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public void MakeTerminalLink_ReturnsPlainText_WhenNoEditorUri()
     {
-        // TS: "termLink returns plain text when stdout is not a TTY"
+        // termLink returns plain text when stdout is not a TTY
         var result = FormatHelpers.MakeTerminalLink("docs/api.md:12", null, "/tmp/docs/api.md", 12);
         result.Should().Be("docs/api.md:12");
     }
@@ -1135,7 +1133,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public void MakeTerminalLink_EmitsOsc8Hyperlink_WhenEditorUriProvided()
     {
-        // TS: "termLink emits OSC 8 hyperlinks when stdout is a TTY"
+        // termLink emits OSC 8 hyperlinks when stdout is a TTY
         // Note: MakeTerminalLink uses NoColor check internally. This tests the URI expansion logic.
         var editorUri = "vscode://file/{path}:{line}";
         var filePath = "/tmp/docs/api.md";
@@ -1150,13 +1148,13 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Embed validation (ported from TS cli.test.ts)
+    // Embed validation
     // =========================================================================
 
     [Fact]
     public async Task Embed_InvalidMaxDocsPerBatch_Fails()
     {
-        // TS: "rejects invalid --max-docs-per-batch"
+        // rejects invalid --max-docs-per-batch
         var act = async () => await _store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 });
         await act.Should().ThrowAsync<Exception>();
     }
@@ -1164,7 +1162,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Embed_InvalidMaxBatchMb_Fails()
     {
-        // TS: "rejects invalid --max-batch-mb"
+        // rejects invalid --max-batch-mb
         var act = async () => await _store.EmbedAsync(new EmbedPipelineOptions { MaxBatchBytes = 0 });
         await act.Should().ThrowAsync<Exception>();
     }

@@ -85,14 +85,13 @@ internal static class CliHelper
 
     /// <summary>
     /// Determine default result limit based on output format.
-    /// TS uses 5 for CLI, 20 for --json and --files.
+    /// 5 for CLI, 20 for --json and --files.
     /// </summary>
     public static int DefaultLimitForFormat(OutputFormat format) =>
         format is OutputFormat.Json or OutputFormat.Files ? 20 : 5;
 
     /// <summary>
     /// Print format-appropriate empty output for search commands.
-    /// Ports printEmptySearchResults() from TS CLI.
     /// </summary>
     public static void PrintEmptySearchResults(OutputFormat format, string? scoreHint = null)
     {
@@ -122,7 +121,6 @@ internal static class CliHelper
     /// <summary>
     /// Parse structured query syntax: lines prefixed with lex:, vec:, hyde:, intent:
     /// Returns null if the query doesn't contain structured prefixes.
-    /// Ports parseStructuredQuery() from structured-search.test.ts.
     /// </summary>
     public static ParsedStructuredQuery? ParseStructuredQuery(string query)
     {

@@ -126,7 +126,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     // =========================================================================
-    // findDocument by display_path (TS store.test.ts line 1448)
+    // findDocument by display_path
     // =========================================================================
 
     [Fact]
@@ -138,7 +138,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     // =========================================================================
-    // findDocument includes context from path_contexts (TS store.test.ts line 1545)
+    // findDocument includes context from path_contexts
     // =========================================================================
 
     [Fact]
@@ -172,7 +172,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     // =========================================================================
-    // findDocument includes hierarchical contexts (TS store.test.ts line 1563)
+    // findDocument includes hierarchical contexts
     // =========================================================================
 
     [Fact]
@@ -217,7 +217,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     // =========================================================================
-    // findDocument expands ~ to home directory (TS store.test.ts line 1529)
+    // findDocument expands ~ to home directory
     // =========================================================================
 
     [Fact]

@@ -1,7 +1,7 @@
 ﻿namespace Qmd.Core.Chunking;
 
 /// <summary>
-/// Approximate tokenizer: 3 chars per token (matches TS avgCharsPerToken for mixed content).
+/// Approximate tokenizer: 3 chars per token.
 /// </summary>
 internal class CharBasedTokenizer : ITokenizer
 {

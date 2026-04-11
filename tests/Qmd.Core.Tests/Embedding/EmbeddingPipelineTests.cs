@@ -130,7 +130,7 @@ public class EmbeddingPipelineTests : IDisposable
     }
 
     // =========================================================================
-    // Embedding Batching (from store.test.ts:2671-2806)
+    // Embedding Batching
     // =========================================================================
 
     [Fact]

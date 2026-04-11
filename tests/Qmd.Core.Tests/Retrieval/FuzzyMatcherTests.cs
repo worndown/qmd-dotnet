@@ -70,7 +70,7 @@ public class FuzzyMatcherTests : IDisposable
     }
 
     // =========================================================================
-    // Fuzzy matching — respects maxDistance (TS store.test.ts line 2110)
+    // Fuzzy matching — respects maxDistance
     // =========================================================================
 
     [Fact]
@@ -97,7 +97,7 @@ public class FuzzyMatcherTests : IDisposable
     }
 
     // =========================================================================
-    // Glob matching — matchFilesByGlob (TS store.test.ts line 2130)
+    // Glob matching — matchFilesByGlob
     // =========================================================================
 
     [Fact]

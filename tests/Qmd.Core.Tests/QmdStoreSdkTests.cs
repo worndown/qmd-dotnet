@@ -1104,7 +1104,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // Inline config isolation (TS sdk.test.ts "inline config isolation")
+    // Inline config isolation
     // =========================================================================
 
     [Fact]
@@ -1165,7 +1165,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // Search unified API (TS sdk.test.ts "search")
+    // Search unified API
     // =========================================================================
 
     [Fact]
@@ -1187,7 +1187,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // Update via SDK (TS sdk.test.ts "update")
+    // Update via SDK
     // =========================================================================
 
     [Fact]
@@ -1336,7 +1336,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // Embed via SDK (TS sdk.test.ts "embed")
+    // Embed via SDK
     // =========================================================================
 
     [Fact]
@@ -1353,7 +1353,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // DB-only mode: reopen with just dbPath (TS sdk.test.ts)
+    // DB-only mode: reopen with just dbPath
     // =========================================================================
 
     [Fact]
@@ -1424,7 +1424,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // Misc (TS sdk.test.ts)
+    // Misc
     // =========================================================================
 
     [Fact]
@@ -1456,7 +1456,7 @@ public class QmdStoreSdkTests
     }
 
     // =========================================================================
-    // YAML config file mode (TS sdk.test.ts "YAML config file mode")
+    // YAML config file mode
     // =========================================================================
 
     [Fact]

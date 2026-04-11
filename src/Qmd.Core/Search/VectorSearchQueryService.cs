@@ -6,7 +6,7 @@ using Qmd.Core.Store;
 namespace Qmd.Core.Search;
 
 /// <summary>
-/// Vector search with query expansion — ports vectorSearchQuery() from store.ts.
+/// Vector search with query expansion.
 /// Expands query via LLM, filters to vec/hyde variants, runs vector search
 /// for original + each expanded variant, deduplicates by filepath (best score).
 /// </summary>

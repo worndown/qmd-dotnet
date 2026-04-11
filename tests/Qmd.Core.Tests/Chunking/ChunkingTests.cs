@@ -333,7 +333,7 @@ public class ChunkingTests
     }
 
     // =========================================================================
-    // Smart Chunking Integration (from store.test.ts:773-858)
+    // Smart Chunking Integration
     // =========================================================================
 
     [Fact]

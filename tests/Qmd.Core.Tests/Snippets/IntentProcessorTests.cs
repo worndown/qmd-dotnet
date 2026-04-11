@@ -59,8 +59,6 @@ public class IntentProcessorTests
         IntentProcessor.ExtractIntentTerms("the and for").Should().BeEmpty();
     }
 
-    // --- Ported from TS intent.test.ts ---
-
     [Fact]
     public void ExtractIntentTerms_FiltersStopWords_TS()
     {
@@ -164,9 +162,6 @@ public class IntentProcessorTests
         "Health performance: exercise regularly, sleep 8 hours, manage stress for endurance.",
     ];
 
-    /// <summary>
-    /// Mirrors the TS scoreChunk helper from intent.test.ts.
-    /// </summary>
     private static double ScoreChunk(string text, string query, string? intent = null)
     {
         var queryTerms = query.ToLowerInvariant()
@@ -233,12 +228,9 @@ public class IntentProcessorTests
     }
 
     // =========================================================================
-    // Strong-signal bypass logic (ported from TS)
+    // Strong-signal bypass logic
     // =========================================================================
 
-    /// <summary>
-    /// Mirrors the TS hasStrongSignal helper from intent.test.ts.
-    /// </summary>
     private static bool HasStrongSignal(double topScore, double secondScore, string? intent = null)
     {
         return intent == null

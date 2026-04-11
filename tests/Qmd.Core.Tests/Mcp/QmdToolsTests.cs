@@ -217,7 +217,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Get Tool — additional tests (ported from TS mcp.test.ts)
+    // Get Tool — additional tests
     // =========================================================================
 
     [Fact]
@@ -264,7 +264,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // MultiGet Tool — additional tests (ported from TS mcp.test.ts)
+    // MultiGet Tool — additional tests
     // =========================================================================
 
     [Fact]
@@ -310,7 +310,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Edge Cases (ported from TS mcp.test.ts)
+    // Edge Cases
     // =========================================================================
 
     [Fact]
@@ -365,7 +365,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // MCP Spec Compliance (ported from TS mcp.test.ts)
+    // MCP Spec Compliance
     // =========================================================================
 
     [Fact]
@@ -415,7 +415,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // MultiGet — context inclusion (ported from TS mcp.test.ts)
+    // MultiGet — context inclusion
     // =========================================================================
 
     [Fact]
@@ -430,7 +430,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Status — embedding count (ported from TS mcp.test.ts)
+    // Status — embedding count
     // =========================================================================
 
     [Fact]
@@ -449,7 +449,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Query — very long query (ported from TS mcp.test.ts)
+    // Query — very long query
     // =========================================================================
 
     [Fact]
@@ -463,7 +463,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     // =========================================================================
-    // Query — only stopwords (ported from TS mcp.test.ts)
+    // Query — only stopwords
     // =========================================================================
 
     [Fact]

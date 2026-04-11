@@ -186,7 +186,7 @@ internal class QmdStoreImpl : IQmdStore
         var result = _configManager.RemoveCollection(name);
         if (result)
         {
-            // Delete documents belonging to this collection (matches TS store.ts removeCollection)
+            // Delete documents belonging to this collection
             _store.Db.Prepare("DELETE FROM documents WHERE collection = $1").Run(name);
             // Clean up orphaned content and vectors
             MaintenanceOperations.CleanupOrphanedContent(_store.Db);

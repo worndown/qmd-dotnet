@@ -5,7 +5,6 @@ using Qmd.Core.Mcp;
 namespace Qmd.Core.Tests.Mcp;
 
 /// <summary>
-/// Port of test/mcp.test.ts "qmd:// resource" describe block.
 /// Tests QmdResources.ReadDocument which wraps IQmdStore.GetAsync.
 /// </summary>
 public class QmdResourcesTests : IAsyncLifetime

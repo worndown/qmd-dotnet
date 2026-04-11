@@ -61,7 +61,7 @@ public static class CollectionCommand
             await using var store = await CliHelper.CreateStoreAsync();
             await store.AddCollectionAsync(name, path, mask,
                 ignore.Length > 0 ? ignore.ToList() : null);
-            // Auto-index the new collection (matches TS behavior)
+            // Auto-index the new collection
             Console.WriteLine($"Indexing '{name}'...");
             var result = await store.UpdateAsync(new UpdateOptions { Collections = [name] });
             Console.WriteLine($"Collection '{name}' added. Indexed {result.Indexed} files.");

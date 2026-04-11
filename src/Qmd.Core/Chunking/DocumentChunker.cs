@@ -97,7 +97,6 @@ internal static class DocumentChunker
     /// Two-stage adaptive token-based chunking.
     /// Stage 1: Char-based chunking with 3 chars/token estimate (AST-aware when filepath provided).
     /// Stage 2: Token validation and adaptive re-splitting for chunks exceeding the limit.
-    /// Cancellation throws OperationCanceledException (unlike TS which returns partial results).
     /// </summary>
     public static List<TokenizedChunk> ChunkDocumentByTokens(
         ITokenizer tokenizer,

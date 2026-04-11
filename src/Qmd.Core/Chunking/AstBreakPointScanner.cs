@@ -53,7 +53,7 @@ internal static class AstBreakPointScanner
     };
 
     // =========================================================================
-    // Per-Language S-Expression Queries (verbatim from src/ast.ts:87-144)
+    // Per-Language S-Expression Queries
     // =========================================================================
 
     private static readonly Dictionary<SupportedLanguage, string> LanguageQueries = new()
@@ -117,7 +117,7 @@ internal static class AstBreakPointScanner
     };
 
     // =========================================================================
-    // Score Map (from src/ast.ts:151-165)
+    // Score Map
     // =========================================================================
 
     private static readonly Dictionary<string, double> ScoreMap = new()

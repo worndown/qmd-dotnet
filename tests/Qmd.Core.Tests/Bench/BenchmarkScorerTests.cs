@@ -5,7 +5,6 @@ namespace Qmd.Core.Tests.Bench;
 
 /// <summary>
 /// Tests for the benchmark scoring functions.
-/// Port of test/bench-score.test.ts.
 /// </summary>
 public class BenchmarkScorerTests
 {

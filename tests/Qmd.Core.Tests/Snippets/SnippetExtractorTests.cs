@@ -82,10 +82,6 @@ Line six about troubleshooting.";
             .Should().Be(TestBody.Split('\n').Length);
     }
 
-    // =========================================================================
-    // Ported from TS intent.test.ts: "extractSnippet with intent — disambiguation"
-    // =========================================================================
-
     private const string DisambiguationBody =
         "# Notes on Various Topics\n" +
         "\n" +
@@ -170,10 +166,6 @@ Line six about troubleshooting.";
         result.Snippet.Length.Should().BeGreaterThan(0);
     }
 
-    // =========================================================================
-    // Ported from TS intent.test.ts: "extractSnippet intent weight behavior"
-    // =========================================================================
-
     [Fact]
     public void ExtractSnippet_IntentBreaksTieWhenQueryMatchesAllLinesEqually()
     {
@@ -193,10 +185,6 @@ Line six about troubleshooting.";
         // Intent terms "web", "latency" match line 2
         withIntent.Snippet.Should().Contain("web latency");
     }
-
-    // =========================================================================
-    // Ported from TS store.test.ts: snippet extraction edge cases
-    // =========================================================================
 
     [Fact]
     public void ExtractSnippet_ReturnsBeginningWhenNoMatch()
@@ -255,10 +243,6 @@ Line six about troubleshooting.";
         result.Snippet.Should().Contain("@@ -1,1 @@ (0 before, 0 after)");
         result.Snippet.Should().Contain("Single line with keyword");
     }
-
-    // =========================================================================
-    // Ported from TS intent.test.ts: "intent constants"
-    // =========================================================================
 
     [Fact]
     public void IntentWeightSnippet_Is_0_3()
