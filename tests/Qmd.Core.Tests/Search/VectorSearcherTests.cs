@@ -27,7 +27,7 @@ public class VectorSearcherTests : IDisposable
     [Fact]
     public async Task SearchVec_ReturnsEmpty_WhenNoVectorIndex()
     {
-        // Ports: "searchVec returns empty when no vector index" — call SearchVecAsync on DB without vectors_vec table
+        // SearchVecAsync on DB without vectors_vec table returns empty
         var config = new CollectionConfig
         {
             Collections = new() { ["docs"] = new Collection { Path = "/docs" } }

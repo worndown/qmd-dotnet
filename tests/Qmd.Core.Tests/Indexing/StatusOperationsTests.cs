@@ -77,7 +77,7 @@ public class StatusOperationsTests : IDisposable
     [Fact]
     public void GetStatus_ReportsCollectionInfo()
     {
-        // Ports: "getStatus reports collection info" — verify collections list includes name, path, doc_count
+        // Verify collections list includes name, path, doc_count
         SeedCollection("testcol", "/test/path");
 
         // Seed with explicit pattern

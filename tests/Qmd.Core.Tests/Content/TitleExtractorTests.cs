@@ -62,7 +62,7 @@ public class TitleExtractorTests
     [Fact]
     public void ExtractTitle_HandlesEmojiHeading()
     {
-        // Ports: "extractTitle handles emoji heading" — "# 📝 Notes" should be skipped like plain "Notes"
+        // "# 📝 Notes" should be skipped like plain "Notes"
         var content = "# 📝 Notes\n\n## Meeting Summary\n\nContent";
         TitleExtractor.ExtractTitle(content, "file.md")
             .Should().Be("Meeting Summary");

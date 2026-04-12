@@ -369,7 +369,7 @@ public class QmdStoreTests : IDisposable
     [Fact]
     public void MultipleStores_OperateIndependently()
     {
-        // Ports: "multiple stores operate independently" — two separate DBs don't share data
+        // Two separate DBs don't share data
         using var store1 = new QmdStore(new SqliteDatabase(":memory:"));
         using var store2 = new QmdStore(new SqliteDatabase(":memory:"));
 

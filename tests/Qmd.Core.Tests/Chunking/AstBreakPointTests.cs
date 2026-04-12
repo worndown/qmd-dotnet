@@ -442,7 +442,7 @@ export function handler{i}(req: Request, res: Response): void {{
     [InlineData("src/App.TSX", SupportedLanguage.Tsx)]
     public void DetectLanguage_CaseInsensitive_ReturnsCorrectLanguage(string filepath, SupportedLanguage expected)
     {
-        // Ports: "is case-insensitive for extensions"
+        // Language detection is case-insensitive for extensions
         AstBreakPointScanner.DetectLanguage(filepath).Should().Be(expected);
     }
 
@@ -453,7 +453,7 @@ export function handler{i}(req: Request, res: Response): void {{
     [Fact]
     public void DetectLanguage_WorksWithVirtualQmdPaths()
     {
-        // Ports: "works with virtual qmd:// paths"
+        // Language detection works with virtual qmd:// paths
         AstBreakPointScanner.DetectLanguage("qmd://myproject/src/auth.ts").Should().Be(SupportedLanguage.TypeScript);
     }
 
@@ -464,7 +464,7 @@ export function handler{i}(req: Request, res: Response): void {{
     [Fact]
     public void MergeBreakPoints_ResultSortedByPosition()
     {
-        // Ports: "result is sorted by position" — explicit sort assertion
+        // Explicit sort assertion: merged result is ordered by position
         var regex = new List<BreakPoint>
         {
             new(50, 1, "newline"),
@@ -486,7 +486,7 @@ export function handler{i}(req: Request, res: Response): void {{
     [Fact]
     public void ChunkDocumentWithBreakPoints_EquivalentToChunkDocument()
     {
-        // Ports: "produces identical output to chunkDocument for the same content"
+        // Produces identical output to chunkDocument for the same content
         var content = string.Concat(Enumerable.Repeat("Lorem ipsum dolor sit amet. ", 100));
 
         var regularChunks = DocumentChunker.ChunkDocument(content);
@@ -507,7 +507,7 @@ export function handler{i}(req: Request, res: Response): void {{
     [Fact]
     public void GetASTBreakPoints_TypeScript_PositionsMatchSourceText()
     {
-        // Ports: "break point positions match actual content positions"
+        // Break point positions match actual content positions
         var content = @"import { Database } from './db';
 
 export class AuthService {
@@ -530,7 +530,7 @@ export function hashPassword() { return ''; }
     [Fact]
     public void GetASTBreakPoints_Python_CapturesMethodDefsInsideClass()
     {
-        // Ports: "captures method definitions inside classes"
+        // Captures method definitions inside classes
         // Should capture __init__, authenticate, and validate_token as func
         var content = @"import os
 from typing import Optional
@@ -563,7 +563,7 @@ def hash_password(password):
     [Fact]
     public void GetASTBreakPoints_Go_FuncAndMethodBothScore90()
     {
-        // Ports: "function and method both score 90"
+        // Go function and method both score 90
         var content = @"package main
 
 import ""fmt""
@@ -597,7 +597,7 @@ func HashPassword(password string) string {
     [Fact]
     public void GetASTBreakPoints_Rust_StructImplTraitAllScore100()
     {
-        // Ports: "struct, impl, and trait all score 100"
+        // Rust struct, impl, and trait all score 100
         var content = @"use std::collections::HashMap;
 
 struct AuthService {
@@ -643,7 +643,7 @@ fn hash_password(password: &str) -> String {
     [Fact]
     public void GetASTBreakPoints_UnknownExtension_ReturnsEmpty()
     {
-        // Ports: "returns empty array for unknown extensions"
+        // Returns empty array for unknown extensions
         AstBreakPointScanner.GetASTBreakPoints("data,here", "file.csv").Should().BeEmpty();
     }
 
@@ -654,7 +654,7 @@ fn hash_password(password: &str) -> String {
     [Fact]
     public void GetASTBreakPoints_EmptyContent_ReturnsEmpty()
     {
-        // Ports: "handles empty content gracefully"
+        // Handles empty content gracefully
         AstBreakPointScanner.GetASTBreakPoints("", "empty.ts").Should().BeEmpty();
     }
 }
