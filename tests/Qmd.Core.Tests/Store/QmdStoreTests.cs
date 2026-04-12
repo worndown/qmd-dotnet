@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Qmd.Core.Chunking;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -74,7 +75,7 @@ public class QmdStoreTests : IDisposable
     public void Store_Chunking()
     {
         var content = new string('A', 10000);
-        var chunks = _store.ChunkDocument(content, 1000, 0);
+        var chunks = DocumentChunker.ChunkDocument(content, 1000, 0);
         chunks.Should().HaveCountGreaterThan(1);
     }
 

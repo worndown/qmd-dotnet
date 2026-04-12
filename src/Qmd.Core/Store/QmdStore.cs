@@ -101,9 +101,6 @@ internal class QmdStore : IQmdStore, IDisposable
     public ActiveDocumentRow? FindActiveDocument(string collection, string path) =>
         DocumentOperations.FindActiveDocument(Db, collection, path);
 
-    public void UpdateDocumentTitle(long id, string title, string modifiedAt) =>
-        DocumentOperations.UpdateDocumentTitle(Db, id, title, modifiedAt);
-
     public void UpdateDocument(long id, string title, string hash, string modifiedAt) =>
         DocumentOperations.UpdateDocument(Db, id, title, hash, modifiedAt);
 
@@ -122,31 +119,6 @@ internal class QmdStore : IQmdStore, IDisposable
         FtsSearcher.SearchFTS(Db, query, limit, collections);
 
     // =========================================================================
-    // Chunking
-    // =========================================================================
-    public List<TextChunk> ChunkDocument(string content, int maxChars = ChunkConstants.ChunkSizeChars,
-        int overlapChars = ChunkConstants.ChunkOverlapChars) =>
-        DocumentChunker.ChunkDocument(content, maxChars, overlapChars);
-
-    public List<TextChunk> ChunkDocument(string content, string? filepath,
-        ChunkStrategy strategy = ChunkStrategy.Regex,
-        int maxChars = ChunkConstants.ChunkSizeChars,
-        int overlapChars = ChunkConstants.ChunkOverlapChars) =>
-        DocumentChunker.ChunkDocument(content, filepath, strategy, maxChars, overlapChars);
-
-    public List<TokenizedChunk> ChunkDocumentByTokens(
-        string content,
-        int maxTokens = ChunkConstants.ChunkSizeTokens,
-        int overlapTokens = ChunkConstants.ChunkOverlapTokens,
-        int windowTokens = ChunkConstants.ChunkWindowTokens,
-        string? filepath = null,
-        ChunkStrategy chunkStrategy = ChunkStrategy.Regex,
-        CancellationToken cancellationToken = default) =>
-        DocumentChunker.ChunkDocumentByTokens(
-            Tokenizer, content, maxTokens, overlapTokens, windowTokens,
-            filepath, chunkStrategy, cancellationToken);
-
-    // =========================================================================
     // Retrieval
     // =========================================================================
     public List<string> FindSimilarFiles(string query, int maxDistance = 3, int limit = 5) =>
@@ -157,7 +129,6 @@ internal class QmdStore : IQmdStore, IDisposable
     // =========================================================================
     public IndexStatus GetStatus() => StatusOperations.GetStatus(Db);
     public IndexHealthInfo GetIndexHealth() => StatusOperations.GetIndexHealth(Db);
-    public int GetHashesNeedingEmbedding() => StatusOperations.GetHashesNeedingEmbedding(Db);
 
     // =========================================================================
     // Maintenance
@@ -180,30 +151,6 @@ internal class QmdStore : IQmdStore, IDisposable
     public Task<List<SearchResult>> SearchVecAsync(string query, string model,
         int limit = 20, List<string>? collections = null, float[]? precomputedEmbedding = null, CancellationToken ct = default) =>
         VectorSearcher.SearchVecAsync(Db, query, model, LlmService, precomputedEmbedding, limit, collections, ct);
-
-    public void InsertEmbedding(string hash, int seq, int pos, float[] embedding, string model, string embeddedAt) =>
-        EmbeddingOperations.InsertEmbedding(Db, hash, seq, pos, embedding, model, embeddedAt);
-
-    public List<PendingEmbeddingDoc> GetPendingEmbeddingDocs() =>
-        EmbeddingOperations.GetPendingEmbeddingDocs(Db);
-
-    public void ClearAllEmbeddings() => EmbeddingOperations.ClearAllEmbeddings(Db);
-
-    public void EnsureVecTable(int dimensions) => VecExtension.EnsureVecTable(Db, dimensions);
-
-    public async Task<EmbedResult> GenerateEmbeddingsAsync(ILlmService llmService, EmbedPipelineOptions? options = null) =>
-        await EmbeddingPipeline.GenerateEmbeddingsAsync(Db, llmService, options, dims => EnsureVecTable(dims));
-
-    // =========================================================================
-    // Hybrid Search (internal overloads taking explicit llmService)
-    // =========================================================================
-    public async Task<List<HybridQueryResult>> HybridQueryAsync(ILlmService llmService,
-        string query, HybridQueryOptions? options = null, CancellationToken ct = default) =>
-        await HybridQueryService.HybridQueryAsync(this, llmService, query, options, ct);
-
-    public async Task<List<ExpandedQuery>> ExpandQueryAsync(ILlmService llmService,
-        string query, string? intent = null, CancellationToken ct = default) =>
-        await QueryExpander.ExpandQueryAsync(Db, llmService, query, null, intent, ct);
 
     // =========================================================================
     // Context Resolution
@@ -264,7 +211,7 @@ internal class QmdStore : IQmdStore, IDisposable
 
     public async Task<List<ExpandedQuery>> ExpandQueryAsync(string query, ExpandQuerySdkOptions? options = null, CancellationToken ct = default)
     {
-        return await ExpandQueryAsync(GetLlmService(), query, options?.Intent, ct);
+        return await QueryExpander.ExpandQueryAsync(Db, GetLlmService(), query, null, options?.Intent, ct);
     }
 
     public async Task<List<HybridQueryResult>> HybridQueryAsync(string query, HybridQueryOptions? options = null, CancellationToken ct = default)
@@ -497,7 +444,8 @@ internal class QmdStore : IQmdStore, IDisposable
 
     public async Task<EmbedResult> EmbedAsync(EmbedPipelineOptions? options = null, CancellationToken ct = default)
     {
-        return await GenerateEmbeddingsAsync(GetLlmService(), options);
+        return await EmbeddingPipeline.GenerateEmbeddingsAsync(Db, GetLlmService(), options,
+            dims => VecExtension.EnsureVecTable(Db, dims));
     }
 
     // =========================================================================
