@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Qmd.Core.Skills;
+namespace Qmd.Cli.Skills;
 
 internal record EmbeddedSkillFile(string RelativePath, string Content);
 

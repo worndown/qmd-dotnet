@@ -1,4 +1,5 @@
 using System.CommandLine;
+using Qmd.Cli.Formatting;
 using Qmd.Core;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
@@ -22,7 +23,7 @@ internal static class CliHelper
         var dbPath = IndexName != null
             ? QmdPaths.GetDefaultDbPath(IndexName)
             : QmdPaths.GetDefaultDbPath();
-        return await QmdStoreFactory.CreateAsync(new StoreOptions { DbPath = dbPath, LlmService = new LlamaSharpService() });
+        return await QmdStoreFactory.CreateAsync(new StoreOptions { DbPath = dbPath, LlmService = LlmServiceFactory.Create() });
     }
 
     public static OutputFormat ParseFormat(string format) => format.ToLowerInvariant() switch

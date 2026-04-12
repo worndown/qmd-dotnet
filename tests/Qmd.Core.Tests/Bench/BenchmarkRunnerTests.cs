@@ -341,5 +341,8 @@ public class BenchmarkRunnerTests : IAsyncDisposable
 
         public Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
+
+        public Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
+            => throw new NotSupportedException();
     }
 }

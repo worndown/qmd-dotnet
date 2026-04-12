@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Qmd.Core.Content;
 using Qmd.Core.Models;
 using Qmd.Core.Snippets;
 
@@ -132,7 +133,7 @@ public static class McpServerSetup
                     title = r.Title,
                     score = Math.Round(r.Score * 100) / 100,
                     context = r.Context,
-                    snippet = Qmd.Core.Formatting.FormatHelpers.AddLineNumbers(snippet.Snippet, snippet.Line),
+                    snippet = TextUtils.AddLineNumbers(snippet.Snippet, snippet.Line),
                 };
             });
 

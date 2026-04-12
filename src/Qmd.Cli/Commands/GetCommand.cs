@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.RegularExpressions;
+using Qmd.Cli.Formatting;
 using Qmd.Core;
 
 namespace Qmd.Cli.Commands;
@@ -57,7 +58,7 @@ public static class GetCommand
                     }
 
                     if (lineNumbers)
-                        Console.WriteLine(Qmd.Core.Formatting.FormatHelpers.AddLineNumbers(body, fromLine ?? 1));
+                        Console.WriteLine(FormatHelpers.AddLineNumbers(body, fromLine ?? 1));
                     else
                         Console.WriteLine(body);
                 }

@@ -116,6 +116,39 @@ internal class QmdStore : IQmdStore, IDisposable
     public void VacuumDatabase() => MaintenanceOperations.VacuumDatabase(Db);
     public int DeleteLLMCache() => MaintenanceOperations.DeleteLLMCache(Db);
 
+    public Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
+    {
+        options ??= new CleanupOptions();
+
+        int cacheDeleted = 0, inactiveDeleted = 0, orphanedCollectionDocs = 0, orphanedContent = 0, orphanedVectors = 0;
+
+        if (options.DeleteCache)
+            cacheDeleted = MaintenanceOperations.DeleteLLMCache(Db);
+
+        if (options.CleanOrphans)
+            orphanedCollectionDocs = MaintenanceOperations.DeleteOrphanedCollectionDocuments(Db);
+
+        if (options.DeleteInactive)
+            inactiveDeleted = MaintenanceOperations.DeleteInactiveDocuments(Db);
+
+        if (options.CleanOrphans)
+        {
+            orphanedContent = MaintenanceOperations.CleanupOrphanedContent(Db);
+            orphanedVectors = MaintenanceOperations.CleanupOrphanedVectors(Db);
+        }
+
+        if (options.Vacuum)
+            MaintenanceOperations.VacuumDatabase(Db);
+
+        return Task.FromResult(new CleanupResult(
+            CacheEntriesDeleted: cacheDeleted,
+            InactiveDocsDeleted: inactiveDeleted,
+            OrphanedCollectionDocsDeleted: orphanedCollectionDocs,
+            OrphanedContentDeleted: orphanedContent,
+            OrphanedVectorsDeleted: orphanedVectors,
+            Vacuumed: options.Vacuum));
+    }
+
     #endregion
 
     #region Cache

@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="qmd" />
     <InternalsVisibleTo Include="Qmd.Cli.Tests" />
     <InternalsVisibleTo Include="Qmd.Core.Tests" />
   </ItemGroup>

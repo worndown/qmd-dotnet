@@ -3,7 +3,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Snippets;
 
-internal static class SnippetExtractor
+public static class SnippetExtractor
 {
     public const double IntentWeightSnippet = 0.3;
     public const double IntentWeightChunk = 0.5;

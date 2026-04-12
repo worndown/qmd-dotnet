@@ -14,12 +14,11 @@ public static class PullCommand
         cmd.SetAction(async (ParseResult parseResult, CancellationToken token) =>
         {
             var refresh = parseResult.GetValue(refreshOpt);
-            var resolver = new ModelResolver();
             var models = new[]
             {
-                ("embed", LlmConstants.DefaultEmbedModel),
-                ("rerank", LlmConstants.DefaultRerankModel),
-                ("generate", LlmConstants.DefaultGenerateModel),
+                ("embed",    LlmServiceFactory.DefaultEmbedModel),
+                ("rerank",   LlmServiceFactory.DefaultRerankModel),
+                ("generate", LlmServiceFactory.DefaultGenerateModel),
             };
 
             foreach (var (role, uri) in models)
@@ -27,8 +26,8 @@ public static class PullCommand
                 AnsiConsole.MarkupLine($"[yellow]{role}:[/] {uri}");
                 try
                 {
-                    var path = await resolver.ResolveModelFileAsync(uri, refresh,
-                        msg => AnsiConsole.MarkupLine($"  [grey]{msg}[/]"));
+                    var path = await LlmServiceFactory.ResolveModelAsync(uri, refresh,
+                        msg => AnsiConsole.MarkupLine($"  [grey]{msg}[/]"), token);
                     AnsiConsole.MarkupLine($"  [green]OK[/] {path}");
                 }
                 catch (Exception ex)

@@ -1,9 +1,9 @@
 using System.Text.Json;
 using FluentAssertions;
-using Qmd.Core.Formatting;
+using Qmd.Cli.Formatting;
 using Qmd.Core.Models;
 
-namespace Qmd.Core.Tests.Formatting;
+namespace Qmd.Cli.Tests.Formatting;
 
 public class FormatterTests
 {
