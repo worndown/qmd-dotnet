@@ -70,11 +70,8 @@ internal class QmdStore : IQmdStore, IDisposable
     #endregion
 
     public IQmdDatabase Db { get; }
-
     public string DbPath { get; }
-
     public ITokenizer Tokenizer { get; set; } = new CharBasedTokenizer();
-
     public ILlmService? LlmService { get; set; }
 
     private ILlmService GetLlmService() =>
@@ -112,60 +109,24 @@ internal class QmdStore : IQmdStore, IDisposable
 
     #endregion
 
-    // =========================================================================
-    // Search
-    // =========================================================================
-    public List<SearchResult> SearchFTS(string query, int limit = 20, List<string>? collections = null) =>
-        FtsSearcher.SearchFTS(Db, query, limit, collections);
+    #region Maintenance
 
-    // =========================================================================
-    // Retrieval
-    // =========================================================================
-    public List<string> FindSimilarFiles(string query, int maxDistance = 3, int limit = 5) =>
-        FuzzyMatcher.FindSimilarFiles(Db, query, maxDistance, limit);
-
-    // =========================================================================
-    // Indexing & Status
-    // =========================================================================
-    public IndexStatus GetStatus() => StatusOperations.GetStatus(Db);
-    public IndexHealthInfo GetIndexHealth() => StatusOperations.GetIndexHealth(Db);
-
-    // =========================================================================
-    // Maintenance
-    // =========================================================================
     public int DeleteInactiveDocuments() => MaintenanceOperations.DeleteInactiveDocuments(Db);
     public int CleanupOrphanedContent() => MaintenanceOperations.CleanupOrphanedContent(Db);
     public void VacuumDatabase() => MaintenanceOperations.VacuumDatabase(Db);
     public int DeleteLLMCache() => MaintenanceOperations.DeleteLLMCache(Db);
 
-    // =========================================================================
-    // Cache
-    // =========================================================================
+    #endregion
+
+    #region Cache
+
     public string? GetCachedResult(string cacheKey) => CacheOperations.GetCachedResult(Db, cacheKey);
     public void SetCachedResult(string cacheKey, string result) => CacheOperations.SetCachedResult(Db, cacheKey, result);
     public void ClearCache() => CacheOperations.ClearCache(Db);
 
-    // =========================================================================
-    // LLM & Embeddings
-    // =========================================================================
-    public Task<List<SearchResult>> SearchVecAsync(string query, string model,
-        int limit = 20, List<string>? collections = null, float[]? precomputedEmbedding = null, CancellationToken ct = default) =>
-        VectorSearcher.SearchVecAsync(Db, query, model, LlmService, precomputedEmbedding, limit, collections, ct);
+    #endregion
 
-    // =========================================================================
-    // Context Resolution
-    // =========================================================================
-    public string? GetContextForFile(string filepath) =>
-        ContextResolver.GetContextForFile(Db, filepath);
-
-    // =========================================================================
-    // Config Sync
-    // =========================================================================
-    public void SyncConfig(CollectionConfig config) => ConfigSync.SyncToDb(Db, config);
-
-    // =========================================================================
-    // IQmdStore — Search
-    // =========================================================================
+    #region Search
 
     public async Task<List<HybridQueryResult>> SearchAsync(SearchOptions options, CancellationToken ct = default)
     {
@@ -219,9 +180,16 @@ internal class QmdStore : IQmdStore, IDisposable
         return await HybridQueryService.HybridQueryAsync(this, GetLlmService(), query, options, ct);
     }
 
-    // =========================================================================
-    // IQmdStore — Retrieval
-    // =========================================================================
+    public List<SearchResult> SearchFTS(string query, int limit = 20, List<string>? collections = null) =>
+        FtsSearcher.SearchFTS(Db, query, limit, collections);
+
+    public Task<List<SearchResult>> SearchVecAsync(string query, string model,
+        int limit = 20, List<string>? collections = null, float[]? precomputedEmbedding = null, CancellationToken ct = default) =>
+        VectorSearcher.SearchVecAsync(Db, query, model, LlmService, precomputedEmbedding, limit, collections, ct);
+
+    #endregion
+
+    #region Retrieval
 
     public Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null)
     {
@@ -243,21 +211,6 @@ internal class QmdStore : IQmdStore, IDisposable
         options ??= new MultiGetOptions();
         var (docs, errors) = MultiGetService.FindDocuments(Db, pattern, options.IncludeBody, options.MaxBytes);
         return Task.FromResult((docs, errors));
-    }
-
-    public Task<string?> GetContextForFileAsync(string filepath)
-    {
-        return Task.FromResult(GetContextForFile(filepath));
-    }
-
-    public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
-    {
-        return Task.FromResult(FindSimilarFiles(query, maxDistance, limit));
-    }
-
-    public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
-    {
-        return Task.FromResult(GetActiveDocumentPaths(collection));
     }
 
     public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null)
@@ -297,9 +250,30 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(results);
     }
 
-    // =========================================================================
-    // IQmdStore — Collections
-    // =========================================================================
+    public Task<string?> GetContextForFileAsync(string filepath)
+    {
+        return Task.FromResult(GetContextForFile(filepath));
+    }
+
+    public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
+    {
+        return Task.FromResult(FindSimilarFiles(query, maxDistance, limit));
+    }
+
+    public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+    {
+        return Task.FromResult(GetActiveDocumentPaths(collection));
+    }
+
+    public string? GetContextForFile(string filepath) =>
+        ContextResolver.GetContextForFile(Db, filepath);
+
+    public List<string> FindSimilarFiles(string query, int maxDistance = 3, int limit = 5) =>
+        FuzzyMatcher.FindSimilarFiles(Db, query, maxDistance, limit);
+
+    #endregion
+
+    #region Collections
 
     public Task AddCollectionAsync(string name, string path, string pattern = "**/*.md", List<string>? ignore = null)
     {
@@ -354,9 +328,11 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(result);
     }
 
-    // =========================================================================
-    // IQmdStore — Context
-    // =========================================================================
+    public void SyncConfig(CollectionConfig config) => ConfigSync.SyncToDb(Db, config);
+
+    #endregion
+
+    #region Context
 
     public Task<bool> AddContextAsync(string collection, string pathPrefix, string text)
     {
@@ -389,9 +365,9 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(_configManager.ListAllContexts());
     }
 
-    // =========================================================================
-    // IQmdStore — Indexing
-    // =========================================================================
+    #endregion
+
+    #region Indexing
 
     public async Task<ReindexResult> UpdateAsync(UpdateOptions? options = null, CancellationToken ct = default)
     {
@@ -448,18 +424,18 @@ internal class QmdStore : IQmdStore, IDisposable
             dims => VecExtension.EnsureVecTable(Db, dims));
     }
 
-    // =========================================================================
-    // IQmdStore — Diagnostics
-    // =========================================================================
+    #endregion
+
+    #region Diagnostics
 
     public async Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
     {
         return await EmbeddingProfiler.ProfileAsync(Db, GetLlmService(), options, ct);
     }
 
-    // =========================================================================
-    // IQmdStore — Health
-    // =========================================================================
+    #endregion
+
+    #region Health
 
     public Task<IndexStatus> GetStatusAsync()
     {
@@ -471,9 +447,12 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(GetIndexHealth());
     }
 
-    // =========================================================================
-    // Lifecycle
-    // =========================================================================
+    public IndexStatus GetStatus() => StatusOperations.GetStatus(Db);
+    public IndexHealthInfo GetIndexHealth() => StatusOperations.GetIndexHealth(Db);
+
+    #endregion
+
+    #region Lifecycle
 
     public async ValueTask DisposeAsync()
     {
@@ -488,4 +467,6 @@ internal class QmdStore : IQmdStore, IDisposable
         Db.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    #endregion
 }
