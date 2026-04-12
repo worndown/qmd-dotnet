@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Qmd.Cli.Commands;
+using Qmd.Cli.Formatting;
 using Qmd.Core;
 using Qmd.Core.Models;
 

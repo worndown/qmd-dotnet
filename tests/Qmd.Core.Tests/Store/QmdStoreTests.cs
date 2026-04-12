@@ -1,9 +1,7 @@
 using FluentAssertions;
 using Qmd.Core.Chunking;
 using Qmd.Core.Configuration;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Store;
 
@@ -95,12 +93,10 @@ public class QmdStoreTests : IDisposable
         _store.InsertContent(hash, "Content", "2025-01-01");
         _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
         _store.DeactivateDocument("docs", "a.md");
-        _store.DeleteInactiveDocuments().Should().Be(1);
-    }
 
-    // =========================================================================
-    // Edge Cases
-    // =========================================================================
+        var result = _store.CleanupAsync().Result;
+        result.OrphanedCollectionDocsDeleted.Should().Be(1);
+    }
 
     [Fact]
     public void EdgeCase_HandlesEmptyDatabaseGracefully()
@@ -185,10 +181,6 @@ public class QmdStoreTests : IDisposable
         var results = store.SearchFTS("searchterm", 20);
         results.Should().HaveCount(10);
     }
-
-    // =========================================================================
-    // Content-Addressable Storage
-    // =========================================================================
 
     [Fact]
     public void CAS_SameContentGetsSameHashFromMultipleCollections()
@@ -363,10 +355,6 @@ public class QmdStoreTests : IDisposable
         rows[0]["hash"]!.ToString().Should().Be(newHash);
     }
 
-    // =========================================================================
-    // Multiple stores operate independently
-    // =========================================================================
-
     [Fact]
     public void MultipleStores_OperateIndependently()
     {
@@ -399,10 +387,6 @@ public class QmdStoreTests : IDisposable
         store1.SearchFTS("store 2", 10).Should().BeEmpty();
         store2.SearchFTS("store 1", 10).Should().BeEmpty();
     }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
 
     private static void SeedCollectionForStore(QmdStore store, string name, string path)
     {

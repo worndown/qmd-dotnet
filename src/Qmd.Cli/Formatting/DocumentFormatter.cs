@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Qmd.Core.Models;
 
-namespace Qmd.Core.Formatting;
+namespace Qmd.Cli.Formatting;
 
 public static class DocumentFormatter
 {

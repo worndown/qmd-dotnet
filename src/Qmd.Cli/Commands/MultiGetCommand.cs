@@ -1,6 +1,6 @@
 using System.CommandLine;
 using Qmd.Core;
-using Qmd.Core.Formatting;
+using Qmd.Cli.Formatting;
 using Qmd.Core.Models;
 
 namespace Qmd.Cli.Commands;

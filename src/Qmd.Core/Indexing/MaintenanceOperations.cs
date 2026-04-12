@@ -9,6 +9,15 @@ internal static class MaintenanceOperations
         return db.Prepare("DELETE FROM documents WHERE active = 0").Run().Changes;
     }
 
+    public static int DeleteOrphanedCollectionDocuments(IQmdDatabase db)
+    {
+        return db.Prepare(@"
+            DELETE FROM documents WHERE collection NOT IN (
+                SELECT name FROM store_collections
+            )
+        ").Run().Changes;
+    }
+
     public static int CleanupOrphanedContent(IQmdDatabase db)
     {
         return db.Prepare(@"

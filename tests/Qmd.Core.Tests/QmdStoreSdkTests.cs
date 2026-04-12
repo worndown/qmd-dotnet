@@ -9,9 +9,8 @@ namespace Qmd.Core.Tests;
 
 public class QmdStoreSdkTests
 {
-    // =========================================================================
-    // Helpers
-    // =========================================================================
+    #region Helpers
+
     private static void TryDeleteFile(string path)
     {
         try
@@ -27,9 +26,18 @@ public class QmdStoreSdkTests
         }
     }
 
-    // =========================================================================
-    // Helper: seed documents into a store (mirrors McpTestHelper.Seed pattern)
-    // =========================================================================
+    private static void TryCleanupDir(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path)) Directory.Delete(path, true);
+        }
+        catch (IOException)
+        {
+            // Best-effort cleanup
+        }
+    }
+
     private static void Seed(QmdStore store, string collection, string path, string content, string timestamp)
     {
         var hash = store.HashContent(content);
@@ -135,9 +143,9 @@ public class QmdStoreSdkTests
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
-    // =========================================================================
-    // createStore variations
-    // =========================================================================
+    #endregion
+
+    #region Create store variations
 
     [Fact]
     public async Task CreateInMemory_InitializesStore()
@@ -183,9 +191,9 @@ public class QmdStoreSdkTests
         TryDeleteFile(dbPath);
     }
 
-    // =========================================================================
-    // Collection management
-    // =========================================================================
+    #endregion
+
+    #region Collection management
 
     [Fact]
     public async Task AddAndListCollections()
@@ -245,60 +253,6 @@ public class QmdStoreSdkTests
         // Other collection should be unaffected
         var notesFiles = await store.ListFilesAsync("notes");
         notesFiles.Should().NotBeEmpty();
-    }
-
-    // =========================================================================
-    // ListFiles
-    // =========================================================================
-
-    [Fact]
-    public async Task ListFiles_ReturnsAllFilesInCollection()
-    {
-        await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
-        files.Should().HaveCount(3);
-        // SDK Seed stores paths as qmd://collection/path
-        files.Select(f => f.Path).Should().Contain(p => p.Contains("readme.md"));
-        files.Select(f => f.Path).Should().Contain(p => p.Contains("auth.md"));
-        files.Select(f => f.Path).Should().Contain(p => p.Contains("api.md"));
-    }
-
-    [Fact]
-    public async Task ListFiles_WithPathPrefix_FiltersResults()
-    {
-        await using var store = CreateSeededStore();
-        // "notes" collection has meeting-2025-01.md and ideas.md
-        var allNotes = await store.ListFilesAsync("notes");
-        allNotes.Should().HaveCountGreaterThan(1);
-
-        // Filter by prefix — SDK Seed stores paths as qmd://notes/meeting...
-        var meetings = await store.ListFilesAsync("notes", "qmd://notes/meeting");
-        meetings.Should().NotBeEmpty();
-        meetings.Should().AllSatisfy(f => f.Path.Should().Contain("meeting"));
-    }
-
-    [Fact]
-    public async Task ListFiles_WithNonMatchingPrefix_ReturnsEmpty()
-    {
-        await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs", "nonexistent/");
-        files.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task ListFiles_ReturnsBodyLength()
-    {
-        await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
-        files.Should().AllSatisfy(f => f.BodyLength.Should().BeGreaterThan(0));
-    }
-
-    [Fact]
-    public async Task ListFiles_OrdersByPath()
-    {
-        await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
-        files.Select(f => f.Path).Should().BeInAscendingOrder();
     }
 
     [Fact]
@@ -361,9 +315,63 @@ public class QmdStoreSdkTests
         names.Should().HaveCount(2);
     }
 
-    // =========================================================================
-    // Context management
-    // =========================================================================
+    #endregion
+
+    #region List files
+
+    [Fact]
+    public async Task ListFiles_ReturnsAllFilesInCollection()
+    {
+        await using var store = CreateSeededStore();
+        var files = await store.ListFilesAsync("docs");
+        files.Should().HaveCount(3);
+        // SDK Seed stores paths as qmd://collection/path
+        files.Select(f => f.Path).Should().Contain(p => p.Contains("readme.md"));
+        files.Select(f => f.Path).Should().Contain(p => p.Contains("auth.md"));
+        files.Select(f => f.Path).Should().Contain(p => p.Contains("api.md"));
+    }
+
+    [Fact]
+    public async Task ListFiles_WithPathPrefix_FiltersResults()
+    {
+        await using var store = CreateSeededStore();
+        // "notes" collection has meeting-2025-01.md and ideas.md
+        var allNotes = await store.ListFilesAsync("notes");
+        allNotes.Should().HaveCountGreaterThan(1);
+
+        // Filter by prefix — SDK Seed stores paths as qmd://notes/meeting...
+        var meetings = await store.ListFilesAsync("notes", "qmd://notes/meeting");
+        meetings.Should().NotBeEmpty();
+        meetings.Should().AllSatisfy(f => f.Path.Should().Contain("meeting"));
+    }
+
+    [Fact]
+    public async Task ListFiles_WithNonMatchingPrefix_ReturnsEmpty()
+    {
+        await using var store = CreateSeededStore();
+        var files = await store.ListFilesAsync("docs", "nonexistent/");
+        files.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ListFiles_ReturnsBodyLength()
+    {
+        await using var store = CreateSeededStore();
+        var files = await store.ListFilesAsync("docs");
+        files.Should().AllSatisfy(f => f.BodyLength.Should().BeGreaterThan(0));
+    }
+
+    [Fact]
+    public async Task ListFiles_OrdersByPath()
+    {
+        await using var store = CreateSeededStore();
+        var files = await store.ListFilesAsync("docs");
+        files.Select(f => f.Path).Should().BeInAscendingOrder();
+    }
+
+    #endregion
+
+    #region Context management
 
     [Fact]
     public async Task GlobalContext_SetAndGet()
@@ -534,9 +542,9 @@ public class QmdStoreSdkTests
         contexts[0].Context.Should().Be("New context");
     }
 
-    // =========================================================================
-    // searchLex (BM25) — seeded data
-    // =========================================================================
+    #endregion
+
+    #region SearchLex (BM25)
 
     [Fact]
     public async Task SearchLex_ReturnsResultsForMatchingQuery()
@@ -597,9 +605,9 @@ public class QmdStoreSdkTests
         results.Should().BeEmpty();
     }
 
-    // =========================================================================
-    // HybridQueryAsync (low-level pipeline)
-    // =========================================================================
+    #endregion
+
+    #region HybridQueryAsync (low-level pipeline)
 
     [Fact]
     public async Task HybridQueryAsync_ReturnsResults()
@@ -630,9 +638,9 @@ public class QmdStoreSdkTests
         }
     }
 
-    // =========================================================================
-    // GetContextForFileAsync
-    // =========================================================================
+    #endregion
+
+    #region GetContextForFileAsync
 
     [Fact]
     public async Task GetContextForFile_ReturnsNull_WhenNoContext()
@@ -680,9 +688,9 @@ public class QmdStoreSdkTests
         context.Should().Be("Documentation files");
     }
 
-    // =========================================================================
-    // FindSimilarFilesAsync
-    // =========================================================================
+    #endregion
+
+    #region FindSimilarFilesAsync
 
     [Fact]
     public async Task FindSimilarFiles_FindsCloseMatches()
@@ -708,9 +716,9 @@ public class QmdStoreSdkTests
         similar.Should().BeEmpty();
     }
 
-    // =========================================================================
-    // GetActiveDocumentPathsAsync
-    // =========================================================================
+    #endregion
+
+    #region GetActiveDocumentPathsAsync
 
     [Fact]
     public async Task GetActiveDocumentPaths_ReturnsPaths()
@@ -731,9 +739,9 @@ public class QmdStoreSdkTests
         paths.Should().BeEmpty();
     }
 
-    // =========================================================================
-    // get and multiGet
-    // =========================================================================
+    #endregion
+
+    #region Get and MultiGet
 
     [Fact]
     public async Task Get_RetrievesDocumentByPath()
@@ -789,9 +797,9 @@ public class QmdStoreSdkTests
         docs.Count.Should().BeGreaterThan(0);
     }
 
-    // =========================================================================
-    // Index health
-    // =========================================================================
+    #endregion
+
+    #region Index health
 
     [Fact]
     public async Task GetStatus_ReturnsHealth()
@@ -843,9 +851,9 @@ public class QmdStoreSdkTests
         names.Should().NotContain("b");
     }
 
-    // =========================================================================
-    // Lifecycle
-    // =========================================================================
+    #endregion
+
+    #region Lifecycle
 
     [Fact]
     public async Task DisposeAsync_DoesNotThrow()
@@ -887,9 +895,9 @@ public class QmdStoreSdkTests
         names.Should().NotContain("docs");
     }
 
-    // =========================================================================
-    // Config initialization
-    // =========================================================================
+    #endregion
+
+    #region Config initialization
 
     [Fact]
     public async Task InlineConfig_WithGlobalContextPreserved()
@@ -968,9 +976,9 @@ public class QmdStoreSdkTests
         collections.Should().HaveCount(2);
     }
 
-    // =========================================================================
-    // DB-only mode (config sync + persistence via file-based store)
-    // =========================================================================
+    #endregion
+
+    #region DB-only mode (config sync + persistence via file-based store)
 
     [Fact]
     public async Task ConfigSync_PopulatesStoreCollectionsTable()
@@ -987,6 +995,7 @@ public class QmdStoreSdkTests
                 },
             }
         };
+
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(config);
 
         // Verify collections are in the DB via listCollections
@@ -1098,9 +1107,9 @@ public class QmdStoreSdkTests
         TryDeleteFile(dbPath);
     }
 
-    // =========================================================================
-    // Inline config isolation
-    // =========================================================================
+    #endregion
+
+    #region Inline config isolation
 
     [Fact]
     public async Task InlineConfig_DoesNotWriteFilesToDisk()
@@ -1159,9 +1168,9 @@ public class QmdStoreSdkTests
         names.Should().NotContain("docs");
     }
 
-    // =========================================================================
-    // Search unified API
-    // =========================================================================
+    #endregion
+
+    #region Search structured
 
     [Fact]
     public async Task SearchStructured_PreExpandedLexQueries_ReturnsResults()
@@ -1171,19 +1180,19 @@ public class QmdStoreSdkTests
         // so we provide a stub that won't actually be called (SkipRerank + lex-only = no LLM invocations).
         await using var store = CreateSeededStoreWithMockLlm();
         var results = await store.SearchStructuredAsync(
-            new List<Qmd.Core.Models.ExpandedQuery>
+            new List<ExpandedQuery>
             {
                 new("lex", "authentication JWT"),
                 new("lex", "login session"),
             },
-            new Qmd.Core.Models.StructuredSearchOptions { SkipRerank = true },
+            new StructuredSearchOptions { SkipRerank = true },
             CancellationToken.None);
         results.Count.Should().BeGreaterThan(0);
     }
 
-    // =========================================================================
-    // Update via SDK
-    // =========================================================================
+    #endregion
+
+    #region Update
 
     [Fact]
     public async Task Update_IndexesFilesAndReturnsCorrectStats()
@@ -1330,9 +1339,9 @@ public class QmdStoreSdkTests
         finally { TryCleanupDir(docsDir); }
     }
 
-    // =========================================================================
-    // Embed via SDK
-    // =========================================================================
+    #endregion
+
+    #region Embed
 
     [Fact]
     public async Task Embed_InvalidBatchLimits_Throws()
@@ -1347,9 +1356,9 @@ public class QmdStoreSdkTests
         await act2.Should().ThrowAsync<Exception>();
     }
 
-    // =========================================================================
-    // DB-only mode: reopen with just dbPath
-    // =========================================================================
+    #endregion
+
+    #region DB-only mode: reopen with just dbPath
 
     [Fact]
     public async Task DbOnlyMode_ReopenWithSameConfig_PreservesData()
@@ -1418,9 +1427,9 @@ public class QmdStoreSdkTests
         finally { TryDeleteFile(dbPath); }
     }
 
-    // =========================================================================
-    // Misc
-    // =========================================================================
+    #endregion
+
+    #region Misc
 
     [Fact]
     public async Task CreateAsync_CreatesDatabaseFileOnDisk()
@@ -1450,9 +1459,9 @@ public class QmdStoreSdkTests
         results.Count.Should().BeGreaterThanOrEqualTo(1);
     }
 
-    // =========================================================================
-    // YAML config file mode
-    // =========================================================================
+    #endregion
+
+    #region YAML config file mode
 
     [Fact]
     public async Task YamlConfig_LoadsCollectionsFromFile()
@@ -1548,9 +1557,9 @@ public class QmdStoreSdkTests
         finally { TryDeleteFile(dbPath); }
     }
 
-    // =========================================================================
-    // Helpers for Update tests: creates temp directories with fixture files
-    // =========================================================================
+    #endregion
+
+    #region Helpers for Update tests: creates temp directories with fixture files
 
     private static string CreateTempDocsDir(string prefix = "docs")
     {
@@ -1562,15 +1571,5 @@ public class QmdStoreSdkTests
         return dir;
     }
 
-    private static void TryCleanupDir(string path)
-    {
-        try
-        {
-            if (Directory.Exists(path)) Directory.Delete(path, true);
-        }
-        catch (IOException)
-        {
-            // Best-effort cleanup
-        }
-    }
+    #endregion
 }

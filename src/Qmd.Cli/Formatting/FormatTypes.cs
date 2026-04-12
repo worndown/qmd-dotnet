@@ -1,4 +1,4 @@
-namespace Qmd.Core.Models;
+namespace Qmd.Cli.Formatting;
 
 public enum OutputFormat { Cli, Csv, Md, Xml, Files, Json }
 

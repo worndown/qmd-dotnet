@@ -227,6 +227,14 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="ct">Cancellation token.</param>
     Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default);
 
+    /// <summary>
+    /// Perform database maintenance: clear the LLM response cache, remove inactive and
+    /// orphaned documents, clean up dangling content and vector rows, and vacuum the database.
+    /// </summary>
+    /// <param name="options">Which maintenance steps to run (all enabled by default).</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default);
+
     #endregion
 
     #region Health
@@ -244,7 +252,7 @@ public interface IQmdStore : IAsyncDisposable
     #endregion
 }
 
-#region SDK-specific option types
+#region Specific option types
 
 /// <summary>
 /// Options for <see cref="IQmdStore.SearchAsync"/>: hybrid search with query expansion and reranking.
@@ -385,6 +393,25 @@ public class UpdateOptions
 
     /// <summary>Callback invoked with progress during re-indexing.</summary>
     public Action<ReindexProgress>? OnProgress { get; init; }
+}
+
+/// <summary>
+/// Options for <see cref="IQmdStore.CleanupAsync"/>: which maintenance steps to perform.
+/// All steps are enabled by default.
+/// </summary>
+public class CleanupOptions
+{
+    /// <summary>Clear the LLM response cache table.</summary>
+    public bool DeleteCache { get; init; } = true;
+
+    /// <summary>Delete soft-deleted (inactive) document records.</summary>
+    public bool DeleteInactive { get; init; } = true;
+
+    /// <summary>Remove documents whose collection no longer exists, plus orphaned content and vector rows.</summary>
+    public bool CleanOrphans { get; init; } = true;
+
+    /// <summary>Run SQLite VACUUM to reclaim disk space after deletions.</summary>
+    public bool Vacuum { get; init; } = true;
 }
 
 #endregion

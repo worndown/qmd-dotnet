@@ -1,5 +1,5 @@
 using System.CommandLine;
-using Qmd.Core.Skills;
+using Qmd.Cli.Skills;
 
 namespace Qmd.Cli.Commands;
 

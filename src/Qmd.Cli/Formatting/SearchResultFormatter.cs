@@ -3,7 +3,7 @@ using System.Text.Json;
 using Qmd.Core.Models;
 using Qmd.Core.Snippets;
 
-namespace Qmd.Core.Formatting;
+namespace Qmd.Cli.Formatting;
 
 public static class SearchResultFormatter
 {

@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Qmd.Core.Formatting;
+namespace Qmd.Cli.Formatting;
 
-public static class FormatHelpers
+internal static class FormatHelpers
 {
     private static readonly bool NoColor =
         Environment.GetEnvironmentVariable("NO_COLOR") != null;

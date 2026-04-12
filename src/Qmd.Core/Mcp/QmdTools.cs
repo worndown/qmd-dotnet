@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Qmd.Core.Formatting;
+using Qmd.Core.Content;
 using Qmd.Core.Models;
 using Qmd.Core.Snippets;
 
@@ -118,7 +118,7 @@ internal class QmdTools
                 title = r.Title,
                 score = Math.Round(r.Score * 100) / 100,
                 context = r.Context,
-                snippet = FormatHelpers.AddLineNumbers(snippet.Snippet, snippet.Line),
+                snippet = TextUtils.AddLineNumbers(snippet.Snippet, snippet.Line),
             };
         }).ToList();
 
@@ -192,7 +192,7 @@ internal class QmdTools
             new BodyOptions { FromLine = parsedFromLine, MaxLines = maxLines }) ?? "";
 
         if (lineNumbers)
-            body = FormatHelpers.AddLineNumbers(body, parsedFromLine ?? 1);
+            body = TextUtils.AddLineNumbers(body, parsedFromLine ?? 1);
 
         var text = body;
         if (doc.Context != null)
@@ -264,7 +264,7 @@ internal class QmdTools
                         body += $"\n[... truncated {lines.Length - maxLines.Value} more lines]";
                     }
                 }
-                if (lineNumbers) body = FormatHelpers.AddLineNumbers(body);
+                if (lineNumbers) body = TextUtils.AddLineNumbers(body);
 
                 // Prepend context comment if available
                 if (item.Doc.Context != null)

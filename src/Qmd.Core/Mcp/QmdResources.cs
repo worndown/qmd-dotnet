@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Qmd.Core.Formatting;
+using Qmd.Core.Content;
 
 namespace Qmd.Core.Mcp;
 
@@ -36,7 +36,7 @@ internal class QmdResources
         }
 
         var doc = result.Document!;
-        var text = FormatHelpers.AddLineNumbers(doc.Body ?? "");
+        var text = TextUtils.AddLineNumbers(doc.Body ?? "");
         if (doc.Context != null)
             text = $"<!-- Context: {doc.Context} -->\n\n" + text;
 

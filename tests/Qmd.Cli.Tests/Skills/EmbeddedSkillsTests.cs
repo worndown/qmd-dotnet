@@ -1,7 +1,7 @@
 using FluentAssertions;
-using Qmd.Core.Skills;
+using Qmd.Cli.Skills;
 
-namespace Qmd.Core.Tests.Skills;
+namespace Qmd.Cli.Tests.Skills;
 
 public class EmbeddedSkillsTests
 {
