@@ -51,9 +51,8 @@ public class CliIntegrationTests : IAsyncLifetime
         };
 
         var db = new SqliteDatabase(":memory:");
-        _coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        _coreStore.SyncConfig(configManager.LoadConfig());
+        _coreStore = new QmdStore(db, configManager);
 
         // Seed data matching the TS test fixtures
         Seed("fixtures", "readme.md",
@@ -74,7 +73,7 @@ public class CliIntegrationTests : IAsyncLifetime
         Seed("fixtures", "test2.md",
             "# Test Document 2\n\nThis is the second test document.\n");
 
-        _store = new QmdStoreImpl(_coreStore, configManager);
+        _store = _coreStore;
         return Task.CompletedTask;
     }
 
@@ -91,11 +90,9 @@ public class CliIntegrationTests : IAsyncLifetime
     {
         config ??= new CollectionConfig();
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        coreStore.SyncConfig(configManager.LoadConfig());
-        var store = new QmdStoreImpl(coreStore, configManager);
-        return (store, coreStore);
+        var store = new QmdStore(db, configManager);
+        return (store, store);
     }
 
     private static void SeedDoc(QmdStore coreStore, string collection, string path, string content)

@@ -31,46 +31,43 @@ internal static class McpTestHelper
         };
 
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        coreStore.SyncConfig(configManager.LoadConfig());
+        var store = new QmdStore(db, configManager, new MockLlmService());
 
         var now = DateTime.UtcNow.ToString("o");
 
-        Seed(coreStore, "docs", "readme.md",
+        Seed(store, "docs", "readme.md",
             "# Project README\n\nThis is the main readme file.\nIt contains project documentation.\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10",
             now);
 
-        Seed(coreStore, "docs", "api/guide.md",
+        Seed(store, "docs", "api/guide.md",
             "# API Guide\n\nHow to use the API.\nEndpoint: GET /health\nEndpoint: POST /query",
             now);
 
-        Seed(coreStore, "code", "index.ts",
+        Seed(store, "code", "index.ts",
             "import { serve } from 'bun';\n\nconst server = serve({ port: 3000 });\nconsole.log('listening');",
             now);
 
-        Seed(coreStore, "docs", "meetings/meeting-2024-01.md",
+        Seed(store, "docs", "meetings/meeting-2024-01.md",
             "# January Meeting Notes\n\nDiscussed Q1 goals and roadmap.\n\n## Action Items\n\n- Review budget\n- Hire new team members",
             now);
 
-        Seed(coreStore, "docs", "meetings/meeting-2024-02.md",
+        Seed(store, "docs", "meetings/meeting-2024-02.md",
             "# February Meeting Notes\n\nFollowed up on Q1 progress.\n\n## Updates\n\n- Budget approved\n- Two candidates interviewed",
             now);
 
         // Large document (~15KB) for size-filtering tests
         var largeContent = string.Join("\n", Enumerable.Range(1, 500).Select(i => $"Line {i}: Lorem ipsum dolor sit amet"));
-        Seed(coreStore, "docs", "large-file.md", largeContent, now);
+        Seed(store, "docs", "large-file.md", largeContent, now);
 
-        return new QmdStoreImpl(coreStore, configManager, new MockLlmService());
+        return store;
     }
 
     public static IQmdStore CreateEmptyStore()
     {
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(new CollectionConfig()));
-        coreStore.SyncConfig(configManager.LoadConfig());
-        return new QmdStoreImpl(coreStore, configManager, new MockLlmService());
+        return new QmdStore(db, configManager, new MockLlmService());
     }
 
     /// <summary>
