@@ -252,7 +252,7 @@ public interface IQmdStore : IAsyncDisposable
     #endregion
 }
 
-#region SDK-specific option types
+#region Specific option types
 
 /// <summary>
 /// Options for <see cref="IQmdStore.SearchAsync"/>: hybrid search with query expansion and reranking.

@@ -112,9 +112,6 @@ internal class QmdStore : IQmdStore, IDisposable
     #region Maintenance
 
     public int DeleteInactiveDocuments() => MaintenanceOperations.DeleteInactiveDocuments(Db);
-    public int CleanupOrphanedContent() => MaintenanceOperations.CleanupOrphanedContent(Db);
-    public void VacuumDatabase() => MaintenanceOperations.VacuumDatabase(Db);
-    public int DeleteLLMCache() => MaintenanceOperations.DeleteLLMCache(Db);
 
     public Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
     {
