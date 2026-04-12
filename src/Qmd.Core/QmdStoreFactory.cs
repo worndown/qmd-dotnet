@@ -58,9 +58,6 @@ public static class QmdStoreFactory
         if (options.Config != null && options.ConfigPath != null)
             throw new ArgumentException("Provide either ConfigPath or Config, not both.");
 
-        var store = new QmdStore(options.DbPath);
-
-        // Set up config manager
         ConfigManager configManager;
         if (options.Config != null)
         {
@@ -75,11 +72,8 @@ public static class QmdStoreFactory
             configManager = new ConfigManager();
         }
 
-        // Sync config to DB
-        store.SyncConfig(configManager.LoadConfig());
-
-        var impl = new QmdStoreImpl(store, configManager, options.LlmService);
-        return Task.FromResult<IQmdStore>(impl);
+        var store = new QmdStore(options.DbPath, configManager, options.LlmService);
+        return Task.FromResult<IQmdStore>(store);
     }
 
     /// <summary>
@@ -91,12 +85,8 @@ public static class QmdStoreFactory
     public static Task<IQmdStore> CreateInMemoryAsync(CollectionConfig? config = null, ILlmService? llmService = null)
     {
         var db = new SqliteDatabase(":memory:");
-        var store = new QmdStore(db);
-
         var configManager = new ConfigManager(new InlineConfigSource(config ?? new CollectionConfig()));
-        store.SyncConfig(configManager.LoadConfig());
-
-        var impl = new QmdStoreImpl(store, configManager, llmService);
-        return Task.FromResult<IQmdStore>(impl);
+        var store = new QmdStore(db, configManager, llmService);
+        return Task.FromResult<IQmdStore>(store);
     }
 }

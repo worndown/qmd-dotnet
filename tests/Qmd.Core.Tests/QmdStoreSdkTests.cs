@@ -50,27 +50,26 @@ public class QmdStoreSdkTests
         };
 
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        coreStore.SyncConfig(configManager.LoadConfig());
+        var store = new QmdStore(db, configManager);
 
         var now = DateTime.UtcNow.ToString("o");
 
-        Seed(coreStore, "docs", "readme.md",
+        Seed(store, "docs", "readme.md",
             "# Getting Started\n\nThis is the getting started guide for the project.\n", now);
-        Seed(coreStore, "docs", "auth.md",
+        Seed(store, "docs", "auth.md",
             "# Authentication\n\nAuthentication uses JWT tokens for session management.\nUsers log in with email and password.\n", now);
-        Seed(coreStore, "docs", "api.md",
+        Seed(store, "docs", "api.md",
             "# API Reference\n\n## Endpoints\n\n### POST /login\nAuthenticate a user.\n\n### GET /users\nList all users.\n", now);
 
-        Seed(coreStore, "notes", "meeting-2025-01.md",
+        Seed(store, "notes", "meeting-2025-01.md",
             "# January Planning Meeting\n\nDiscussed Q1 roadmap and resource allocation.\n", now);
-        Seed(coreStore, "notes", "meeting-2025-02.md",
+        Seed(store, "notes", "meeting-2025-02.md",
             "# February Standup\n\nReviewed sprint progress. Authentication feature is on track.\n", now);
-        Seed(coreStore, "notes", "ideas.md",
+        Seed(store, "notes", "ideas.md",
             "# Project Ideas\n\n- Build a search engine\n- Create a knowledge base\n- Implement vector search\n", now);
 
-        return new QmdStoreImpl(coreStore, configManager);
+        return store;
     }
 
     private static IQmdStore CreateSeededStoreWithMockLlm()
@@ -85,27 +84,26 @@ public class QmdStoreSdkTests
         };
 
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        coreStore.SyncConfig(configManager.LoadConfig());
+        var store = new QmdStore(db, configManager, new StubLlmService());
 
         var now = DateTime.UtcNow.ToString("o");
 
-        Seed(coreStore, "docs", "readme.md",
+        Seed(store, "docs", "readme.md",
             "# Getting Started\n\nThis is the getting started guide for the project.\n", now);
-        Seed(coreStore, "docs", "auth.md",
+        Seed(store, "docs", "auth.md",
             "# Authentication\n\nAuthentication uses JWT tokens for session management.\nUsers log in with email and password.\n", now);
-        Seed(coreStore, "docs", "api.md",
+        Seed(store, "docs", "api.md",
             "# API Reference\n\n## Endpoints\n\n### POST /login\nAuthenticate a user.\n\n### GET /users\nList all users.\n", now);
 
-        Seed(coreStore, "notes", "meeting-2025-01.md",
+        Seed(store, "notes", "meeting-2025-01.md",
             "# January Planning Meeting\n\nDiscussed Q1 roadmap and resource allocation.\n", now);
-        Seed(coreStore, "notes", "meeting-2025-02.md",
+        Seed(store, "notes", "meeting-2025-02.md",
             "# February Standup\n\nReviewed sprint progress. Authentication feature is on track.\n", now);
-        Seed(coreStore, "notes", "ideas.md",
+        Seed(store, "notes", "ideas.md",
             "# Project Ideas\n\n- Build a search engine\n- Create a knowledge base\n- Implement vector search\n", now);
 
-        return new QmdStoreImpl(coreStore, configManager, new StubLlmService());
+        return store;
     }
 
     /// <summary>
@@ -670,17 +668,14 @@ public class QmdStoreSdkTests
             }
         };
         var db = new SqliteDatabase(":memory:");
-        var coreStore = new QmdStore(db);
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        coreStore.SyncConfig(configManager.LoadConfig());
+        await using var store = new QmdStore(db, configManager);
 
         // Insert document with relative path (matching what ContextResolver expects)
         var body = "# Readme\n\nTest content.";
-        var hash = coreStore.HashContent(body);
-        coreStore.InsertContent(hash, body, "2025-01-01");
-        coreStore.InsertDocument("docs", "readme.md", "Readme", hash, "2025-01-01", "2025-01-01");
-
-        await using IQmdStore store = new QmdStoreImpl(coreStore, configManager);
+        var hash = store.HashContent(body);
+        store.InsertContent(hash, body, "2025-01-01");
+        store.InsertDocument("docs", "readme.md", "Readme", hash, "2025-01-01", "2025-01-01");
         var context = await store.GetContextForFileAsync("/test/docs/readme.md");
         context.Should().Be("Documentation files");
     }
