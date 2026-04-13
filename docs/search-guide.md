@@ -117,6 +117,44 @@ qmd query "async error handling" --no-rerank --collection python-docs
 
 ---
 
+## Understanding reranking
+
+### What it is
+
+After `query` merges its keyword and vector results into a ranked list, it passes the top candidates to an LLM reranker (Qwen3-Reranker-0.6B). The reranker reads each candidate — the full query text and the document chunk together — and outputs a calibrated relevance score between 0 and 1.
+
+This is fundamentally different from how the initial ranking works:
+
+- **Vector search** computes embeddings for the query and each document *independently*, then measures how close they are in vector space. It never reads the query and document together.
+- **The reranker** reads the query and document *as a pair*. It can understand whether the document actually answers the question, not just whether it uses similar vocabulary.
+
+### Why it improves results
+
+Vector similarity is a good filter but a poor judge of relevance. A document that uses the same terminology as your query might score highly in vector search even if it doesn't address your question. The reranker catches this by evaluating the pair directly.
+
+The `query` command uses a three-stage pipeline for this reason:
+
+1. **BM25 + vector search** cast a wide net — fast retrieval of up to `--candidate-limit` candidates (default: 40)
+2. **RRF fusion** merges and re-orders those candidates using rank positions
+3. **Reranking** re-scores the merged list by actual relevance and surfaces the best results
+
+The first two stages are fast but approximate. The reranker is slow but precise — it runs LLM inference once per candidate. This is why `query` is the most accurate mode and also the slowest.
+
+### When to skip it
+
+Use `--no-rerank` when:
+- You need faster results and approximate RRF ordering is good enough
+- The reranker model hasn't been downloaded yet (`qmd pull`)
+- You're scripting or batch-processing and latency matters
+
+```bash
+qmd query "database migration" --no-rerank   # faster, raw RRF scores
+```
+
+Without `--no-rerank`, expect a few seconds of reranking time per query on CPU (less on GPU with CUDA 12).
+
+---
+
 ## Output formats
 
 All search commands support the same output formats via `--format` or shorthand flags:
