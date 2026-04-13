@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-13
+
 ### Search
 
 - Mitigate vector search false positives when BM25 returns no matches: vector-score gate (cosine < 0.55), reranker gate (score < 0.1), score cap at best raw vector similarity, and post-fusion confidence gap filter (50%).
@@ -29,7 +31,7 @@
 - Added Hybrid Search Guide (`docs/hybrid-search-guide.md`).
 - Added eval corpus under `evals/`.
 
-## [1.0.0] - 2024-04-10
+## [1.0.0] - 2026-04-10
 
 Initial .NET port of **qmd v2.1.0**.
 
