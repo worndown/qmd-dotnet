@@ -1,116 +1,161 @@
 # qmd-dotnet
 
-An unofficial .NET port of [qmd](https://github.com/tobi/qmd) by [Tobi Lutke](https://github.com/tobi) — a local, on-device search engine for markdown documents.
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/worndown/qmd-dotnet/releases)
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![NuGet](https://img.shields.io/nuget/v/Qmd.Core)](https://www.nuget.org/packages/Qmd.Core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-This is not a fork. It is written from scratch in C# and reproduces the functionality of the original TypeScript tool. Based on **qmd version 2.1.0**.
+An unofficial .NET port of [qmd](https://github.com/tobi/qmd) by [Tobi Lutke](https://github.com/tobi) — a local search engine for markdown documents.
 
-## Platform
+This is not a fork. It is written from scratch in C# and reproduces the functionality of the original TypeScript tool. **v1.0.0** matches qmd v2.1.0 functionality. Subsequent releases may diverge — this port evolves independently and there are no plans to track upstream changes.
 
-**Windows only.** This port was built for personal use and does not include Linux or macOS support. If you'd like to add support for other platforms, contributions are welcome.
+**Windows only.** If you'd like to contribute Linux or macOS support, contributions are welcome.
+
+---
+
+## What is qmd good for?
+
+### For end users — the CLI
+
+qmd turns your local markdown files into a searchable knowledge base. Everything runs locally: the models, the index, and the search — no cloud services, no API keys, no data leaving your machine.
+
+- Search personal notes, project wikis, or documentation using keyword or semantic queries
+- Index files across multiple directories and search across all of them simultaneously
+- Connect to AI assistants like Claude via a local MCP server, so they can retrieve from your documents
+- GPU-accelerated via CUDA 12, with automatic CPU fallback
+
+### For developers — the NuGet package
+
+In addition to the CLI, this project publishes a NuGet package (`Qmd.Core`) that you can use to embed qmd's search capabilities directly into your .NET applications or services.
+
+- `IQmdStore` provides a typed API for BM25, vector, and hybrid search
+- Includes query expansion, LLM reranking, and collection management
+- SQLite-backed — a single file, zero infrastructure
+
+```bash
+dotnet add package Qmd.Core
+```
+
+---
+
+## Quick start
+
+### 1. Download and install
+
+Download `qmd-win-x64.zip` from [GitHub Releases](https://github.com/worndown/qmd-dotnet/releases), unzip it, and add the folder to your `PATH`.
+
+Verify the install:
+```bash
+qmd --version
+```
+
+### 2. Pull models
+
+```bash
+qmd pull
+```
+
+Downloads the three local LLM models used for embeddings, reranking, and query expansion (~1.5 GB, cached — only needed once).
+
+### 3. Create a collection
+
+```bash
+qmd collection add C:\path\to\my\notes --name notes
+```
+
+Scans the directory for `*.md` files and registers them in the index.
+
+### 4. Add context (optional, but recommended)
+
+```bash
+qmd context add qmd://notes/ "Personal engineering notes and architecture decisions"
+```
+
+Context descriptions help the LLM components understand what each collection contains, improving search relevance.
+
+### 5. Generate embeddings
+
+```bash
+qmd embed
+```
+
+Generates vector embeddings for all indexed documents. Required for `vsearch` and `query`.
+
+### 6. Search
+
+```bash
+# Keyword search — fast, exact terms
+qmd search "API versioning"
+
+# Semantic search — finds by meaning
+qmd vsearch "how to structure REST endpoints"
+
+# Hybrid search — most accurate, uses LLM reranking
+qmd query "consistency vs availability in distributed systems"
+```
+
+---
+
+## How it works
+
+qmd operates in two phases: an indexing phase that builds the search store, and a query phase that retrieves results.
+
+```mermaid
+flowchart LR
+    subgraph INDEX["Indexing phase"]
+        direction LR
+        A[Markdown files\non disk] -->|qmd update| B[(Document index\nSQLite FTS5)]
+        B -->|qmd embed| C[(Vector store\nsqlite-vec)]
+    end
+
+    subgraph QUERY["Query phase"]
+        direction LR
+        Q[User query] --> SEL{Search mode}
+        SEL -->|search| BM25[BM25\nkeyword]
+        SEL -->|vsearch| VEC[Vector\ncosine sim]
+        SEL -->|query| HYB[BM25 + Vector\nRRF fusion]
+        HYB --> RR[LLM reranker\nQwen3-0.6B]
+        BM25 --> RES[Results]
+        VEC --> RES
+        RR --> RES
+    end
+
+    C -.->|embeddings| VEC
+    C -.->|embeddings| HYB
+    B -.->|FTS5 index| BM25
+    B -.->|FTS5 index| HYB
+```
+
+- **`search`** — BM25 full-text search, fast, no models required
+- **`vsearch`** — vector cosine similarity, finds results by meaning
+- **`query`** — hybrid: BM25 + vector results merged via RRF, then ranked by an LLM reranker
+
+---
 
 ## Features
 
-- **Hybrid search** — BM25 full-text search, vector semantic search, and hybrid mode with reciprocal rank fusion
-- **Local LLM inference** — uses [LLamaSharp](https://github.com/SciSharp/LLamaSharp) (llama.cpp) for embeddings, re-ranking, and query expansion
-- **CUDA and CPU** — GPU-accelerated via CUDA 12, with automatic CPU fallback
-- **MCP server** — exposes search tools via Model Context Protocol for AI assistant integration
+- **Hybrid search** — BM25 full-text, vector semantic, and hybrid mode with reciprocal rank fusion
+- **Local LLM inference** — [LLamaSharp](https://github.com/SciSharp/LLamaSharp) (llama.cpp) for embeddings, reranking, and query expansion
+- **CUDA 12 and CPU** — GPU-accelerated with automatic CPU fallback
+- **MCP server** — exposes search tools via Model Context Protocol for AI assistant integration (stdio and HTTP)
 - **Multiple output formats** — CLI, JSON, CSV, Markdown, XML
 
-## Search Commands
+---
 
-QMD provides three search commands. Each trades speed for depth.
+## Documentation
 
-### `search` — Keyword Search
+- [Search Guide](docs/search-guide.md) — Choosing between search modes, output formats, and tuning `--min-score`
+- [Command Reference](docs/commands.md) — Complete CLI reference for all commands and options
+- [Hybrid Search Internals](docs/hybrid-search-guide.md) — RRF fusion, scoring, safeguards, benchmarking, and threshold calibration
 
-Uses BM25 full-text search (SQLite FTS5) for exact term matching. Fast and precise — returns results only when query terms appear in the documents. Returns nothing when terms are absent from the corpus.
-
-```bash
-qmd search "API versioning" [--limit N] [--min-score N] [--collection C]
-```
-
-### `vsearch` — Semantic Search
-
-Finds documents by meaning using an embedding model (embeddinggemma-300M) and cosine similarity via sqlite-vec. Supports LLM-powered query expansion to generate alternative phrasings. Good for conceptual queries, synonyms, and "how do I..." questions.
-
-```bash
-qmd vsearch "how to structure endpoints" [--limit N] [--min-score 0.5] [--intent "..."] [--collection C]
-```
-
-Default `--min-score` is **0.5**, set above the noise floor for the default embedding model.
-
-### `query` — Hybrid Search
-
-Combines keyword and vector search through RRF fusion, then refines results with an LLM reranker (Qwen3-Reranker-0.6B). Includes query expansion, chunk-level matching, and multiple relevance safeguards. Most accurate, but slowest due to LLM inference.
-
-```bash
-qmd query "consistency vs availability" [--limit N] [--min-score 0.2] [--no-rerank] [--explain] [--collection C]
-```
-
-Default `--min-score` is **0.2**. Use `--no-rerank` to skip the LLM reranker for faster results. Use `--explain` to see per-document scoring breakdowns.
-
-## How Scoring Works
-
-### Fusion (RRF)
-
-The `query` command uses Reciprocal Rank Fusion ([Cormack et al., SIGIR 2009](https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf)) to merge ranked lists from keyword and vector search:
-
-```
-contribution = weight / (k + rank + 1)     k = 60, rank is 0-indexed
-```
-
-A top-rank bonus is added: **+0.05** for rank 1, **+0.02** for ranks 2-3. Documents appearing in multiple lists accumulate contributions from each.
-
-### Weights
-
-The first two ranked lists (typically the original BM25 results and the first query expansion variant) receive **2x weight**. Remaining lists from further query expansions receive **1x weight**. Weights are currently fixed and not configurable via CLI.
-
-### Score Blending
-
-After RRF ranking, top candidates are re-scored by the LLM reranker. The final score blends position with the reranker's relevance judgment:
-
-```
-rrfWeight = 0.75 (ranks 1-3) | 0.60 (ranks 4-10) | 0.40 (ranks 11+)
-finalScore = rrfWeight * (1 / rrfRank) + (1 - rrfWeight) * rerankScore
-```
-
-Top-ranked results lean more on their RRF position; lower-ranked results lean more on the reranker.
-
-## Limitations and Expectations
-
-QMD runs entirely on-device with small models — embeddinggemma at 300M parameters for embeddings and Qwen3-Reranker at 0.6B parameters for reranking — backed by sqlite-vec for vector storage. It works well for searching personal and project document collections, but it is not comparable to cloud search services powered by trillion-parameter models and purpose-built vector databases.
-
-### Why false positives can occur
-
-Embedding models produce a **noise floor**: unrelated documents in the same language typically share ~0.45 cosine similarity due to structural patterns in the embedding space (a well-documented phenomenon called anisotropy). When the `query` command receives no keyword matches, only vector search contributes to the fusion, and RRF's purely positional scoring can inflate results that aren't genuinely relevant.
-
-### Built-in safeguards
-
-1. **Vector-score gate** — returns empty when BM25 finds nothing and all vector scores are below 0.55
-2. **Reranker gate** — returns empty when BM25 finds nothing and the best reranker score is below 0.1
-3. **Score cap** — clamps blended scores to the best raw vector similarity when BM25 is absent
-4. **Confidence gap filter** — drops results scoring below 50% of the top result
-5. **Raised defaults** — `vsearch --min-score 0.5`, `query --min-score 0.2` (overridable)
-
-For details on how these work and the underlying research, see [How QMD Search Works](docs/hybrid-search-guide.md).
-
-## Benchmarking
-
-QMD includes tools to measure and calibrate search quality:
-
-- **`qmd profile-embeddings`** — profiles the embedding model's similarity distribution on your indexed corpus, helping you set an optimal `--min-score` threshold
-- **`qmd bench <fixture.json>`** — runs queries through all search backends (bm25, vector, hybrid, full) and measures precision, recall, MRR, F1, and latency against expected results
-
-See [How QMD Search Works](docs/hybrid-search-guide.md) for full instructions on creating benchmark fixtures and interpreting results.
-
-## Divergence from upstream
-
-Future changes in this repository may diverge from the original qmd. There are no plans to backport future qmd updates — this port will evolve independently in its own direction.
+---
 
 ## Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
 - Windows 10/11
 - CUDA 12 toolkit (optional, for GPU acceleration)
+
+> The self-contained binary from GitHub Releases does not require .NET to be installed. If you are building from source, you will need the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
 
 ## Building
 
@@ -126,6 +171,8 @@ dotnet publish src/Qmd.Cli/Qmd.Cli.csproj -c Release -r win-x64 --self-contained
 ```
 
 The published output will be in `src/Qmd.Cli/bin/Release/net8.0/win-x64/publish/`.
+
+---
 
 ## License
 
