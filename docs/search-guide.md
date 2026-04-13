@@ -148,13 +148,7 @@ Score semantics differ by command:
 - **`vsearch`** — Cosine similarity in [0, 1]. Default is 0.5, which is above the noise floor for the default embedding model. See note on anisotropy below.
 - **`query`** — Blended RRF/reranker score. Default is 0.2. This mode has additional built-in safeguards on top of `--min-score`.
 
-**Using `qmd profile-embeddings` to calibrate:**
-
-```bash
-qmd profile-embeddings --sample-size 200
-```
-
-This samples random chunk pairs from your indexed corpus and reports the cosine similarity distribution. Use the **P75** percentile as a starting point for `vsearch --min-score`. For example, if P75 is 0.52, set `--min-score 0.52`.
+See [Calibrating Search Thresholds](profile-embeddings.md) for a step-by-step guide to running `qmd profile-embeddings` and interpreting the output.
 
 ---
 

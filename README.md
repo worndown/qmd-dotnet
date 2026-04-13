@@ -146,6 +146,7 @@ flowchart LR
 
 - [Search Guide](docs/search-guide.md) — Choosing between search modes, output formats, and tuning `--min-score`
 - [Command Reference](docs/commands.md) — Complete CLI reference for all commands and options
+- [Calibrating Search Thresholds](docs/profile-embeddings.md) — Using `profile-embeddings` to find the right `--min-score` for your corpus
 - [Hybrid Search Internals](docs/hybrid-search-guide.md) — RRF fusion, scoring, safeguards, benchmarking, and threshold calibration
 
 ---
