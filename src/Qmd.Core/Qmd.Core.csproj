@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Qmd.Core</RootNamespace>
+    <Authors>worndown</Authors>
+    <!-- Prevent LLamaSharp native binaries (~500 MB) from being bundled in the .nupkg.
+         The backends inject Content items via build/*.props; this stops them from entering
+         the package. Consumers still get them via NuGet dependency restore. -->
+    <IncludeContentInPack>false</IncludeContentInPack>
   </PropertyGroup>
 
   <ItemGroup>
