@@ -43,11 +43,28 @@ jobs:
         run: Compress-Archive -Path ./publish/* -DestinationPath ./qmd-win-x64.zip
         shell: pwsh
 
+      - name: Extract changelog notes
+        id: changelog
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          NOTES=$(awk \
+            "/^## \[${VERSION}\]/{found=1; next} found && /^## \[/{exit} found{print}" \
+            CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            echo "ERROR: No changelog entry found for version ${VERSION}" >&2
+            exit 1
+          fi
+          EOF_DELIM=$(openssl rand -hex 8)
+          echo "NOTES<<${EOF_DELIM}" >> $GITHUB_OUTPUT
+          echo "${NOTES}" >> $GITHUB_OUTPUT
+          echo "${EOF_DELIM}" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: qmd-win-x64.zip
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.NOTES }}
 
       - name: Push to NuGet
         shell: bash
