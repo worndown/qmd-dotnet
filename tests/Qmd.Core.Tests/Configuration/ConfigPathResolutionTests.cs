@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Configuration;
 
 namespace Qmd.Core.Tests.Configuration;
@@ -48,10 +48,6 @@ public class ConfigPathResolutionTests : IDisposable
         var path = mgr.GetConfigFilePath();
         path.Should().EndWith("custom.yml");
     }
-
-    // =========================================================================
-    // XDG_CONFIG_HOME tests
-    // =========================================================================
 
     [Fact]
     public void GetConfigDir_XdgConfigHome_UsedWhenQmdConfigDirNotSet()

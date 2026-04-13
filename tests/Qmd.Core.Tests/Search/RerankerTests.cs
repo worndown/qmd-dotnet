@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
@@ -54,10 +54,6 @@ public class RerankerTests : IDisposable
         results.Should().AllSatisfy(r => r.File.Should().NotBeNullOrEmpty());
     }
 
-    // =========================================================================
-    // rerank caches results
-    // =========================================================================
-
     [Fact]
     public async Task Rerank_CachesResults()
     {
@@ -77,10 +73,6 @@ public class RerankerTests : IDisposable
         // The LLM should have been called only once (second call hits cache)
         scoringLlm.RerankCallCount.Should().Be(1);
     }
-
-    // =========================================================================
-    // rerank deduplicates identical chunks across files
-    // =========================================================================
 
     [Fact]
     public async Task Rerank_DeduplicatesIdenticalChunksAcrossFiles()
@@ -103,10 +95,6 @@ public class RerankerTests : IDisposable
         // And the deduplicated call should only have 1 unique text
         scoringLlm.LastRerankDocCount.Should().Be(1);
     }
-
-    // =========================================================================
-    // "deduplicates identical document texts before scoring"
-    // =========================================================================
 
     [Fact]
     public async Task Rerank_DedupMapsScoreBackToAllDuplicateFiles()

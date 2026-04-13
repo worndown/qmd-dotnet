@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Cli.Formatting;
 using Qmd.Core;
 using Qmd.Core.Configuration;
@@ -18,9 +18,6 @@ namespace Qmd.Cli.Tests;
 /// </summary>
 public class CliIntegrationTests : IAsyncLifetime
 {
-    // =========================================================================
-    // Shared seeded store (disposed per-test via IAsyncLifetime)
-    // =========================================================================
 
     private IQmdStore _store = null!;
     private QmdStore _coreStore = null!;
@@ -82,10 +79,6 @@ public class CliIntegrationTests : IAsyncLifetime
         await _store.DisposeAsync();
     }
 
-    // =========================================================================
-    // Helper: create a fresh store with custom config and seed
-    // =========================================================================
-
     private static (IQmdStore Store, QmdStore CoreStore) CreateFreshStore(CollectionConfig? config = null)
     {
         config ??= new CollectionConfig();
@@ -103,10 +96,6 @@ public class CliIntegrationTests : IAsyncLifetime
         DocumentOperations.InsertDocument(
             coreStore.Db, collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
-
-    // =========================================================================
-    // Search behavior (8 tests) — ported from "CLI Search Command"
-    // =========================================================================
 
     [Fact]
     public async Task Search_BM25_FindsMeetingDocument()
@@ -202,10 +191,6 @@ public class CliIntegrationTests : IAsyncLifetime
         csv.Trim().Should().Be("docid,score,file,title,context,line,snippet");
     }
 
-    // =========================================================================
-    // Get behavior
-    // =========================================================================
-
     [Fact]
     public async Task Get_RetrievesDocumentByPath()
     {
@@ -253,10 +238,6 @@ public class CliIntegrationTests : IAsyncLifetime
         // Should start from line 3, not line 1 — so should NOT contain the title "# Test Document 1"
         body.Should().NotContain("# Test Document 1");
     }
-
-    // =========================================================================
-    // Collection management
-    // =========================================================================
 
     [Fact]
     public async Task Collection_ListsCollections()
@@ -361,10 +342,6 @@ public class CliIntegrationTests : IAsyncLifetime
         collections.Select(c => c.Name).Should().Contain("docs");
         collections.Select(c => c.Name).Should().Contain("notes");
     }
-
-    // =========================================================================
-    // Context management
-    // =========================================================================
 
     [Fact]
     public async Task Context_AddGlobalWithSlash()
@@ -481,10 +458,6 @@ public class CliIntegrationTests : IAsyncLifetime
         removed.Should().BeFalse();
     }
 
-    // =========================================================================
-    // Update behavior
-    // =========================================================================
-
     [Fact]
     public async Task Update_ReturnsStats()
     {
@@ -552,10 +525,6 @@ public class CliIntegrationTests : IAsyncLifetime
         }
     }
 
-    // =========================================================================
-    // ls behavior
-    // =========================================================================
-
     [Fact]
     public async Task Ls_ListsAllCollections()
     {
@@ -583,10 +552,6 @@ public class CliIntegrationTests : IAsyncLifetime
         docs.Should().BeEmpty();
         errors.Should().NotBeEmpty();
     }
-
-    // =========================================================================
-    // Output formatting (3 tests) — ported from "CLI Output Formats"
-    // =========================================================================
 
     [Theory]
     [InlineData(OutputFormat.Json)]
@@ -637,10 +602,6 @@ public class CliIntegrationTests : IAsyncLifetime
         // This is the correct behavior for the .NET port.
     }
 
-    // =========================================================================
-    // Cleanup
-    // =========================================================================
-
     [Fact]
     public void Cleanup_OrphanedEntries()
     {
@@ -680,10 +641,6 @@ public class CliIntegrationTests : IAsyncLifetime
         Convert.ToInt32(after!["c"]).Should().Be(0);
     }
 
-    // =========================================================================
-    // ls with ListFilesAsync
-    // =========================================================================
-
     [Fact]
     public async Task Ls_ListsFilesViaListFilesAsync()
     {
@@ -715,10 +672,6 @@ public class CliIntegrationTests : IAsyncLifetime
         var files = await _store.ListFilesAsync("fixtures", "nonexistent/");
         files.Should().BeEmpty();
     }
-
-    // =========================================================================
-    // Search output format details — ported from "search output formats"
-    // =========================================================================
 
     [Fact]
     public async Task SearchOutput_Json_IncludesDocidAndQmdPath()
@@ -784,10 +737,6 @@ public class CliIntegrationTests : IAsyncLifetime
         files.Should().MatchRegex(@"#[a-f0-9]{6},[\d.]+,");
     }
 
-    // =========================================================================
-    // Status behavior
-    // =========================================================================
-
     [Fact]
     public async Task Status_ShowsIndexInfo()
     {
@@ -798,10 +747,6 @@ public class CliIntegrationTests : IAsyncLifetime
         status.Collections.Should().NotBeEmpty();
         status.Collections.Should().Contain(c => c.Name == "fixtures");
     }
-
-    // =========================================================================
-    // Get with various path formats
-    // =========================================================================
 
     [Fact]
     public async Task Get_WithCollectionSlashPathFormat()
@@ -820,10 +765,6 @@ public class CliIntegrationTests : IAsyncLifetime
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
     }
-
-    // =========================================================================
-    // Ignore patterns
-    // =========================================================================
 
     [Fact]
     public async Task IgnorePatterns_ExcludeMatchingFilesFromIndexing()
@@ -953,10 +894,6 @@ public class CliIntegrationTests : IAsyncLifetime
         }
     }
 
-    // =========================================================================
-    // Deactivate stale docs
-    // =========================================================================
-
     [Fact]
     public async Task Update_DeactivatesStaleDocsWhenCollectionHasZeroMatchingFiles()
     {
@@ -1008,10 +945,6 @@ public class CliIntegrationTests : IAsyncLifetime
         }
     }
 
-    // =========================================================================
-    // Search options
-    // =========================================================================
-
     [Fact]
     public async Task Search_WithAllOption_ReturnsAllResults()
     {
@@ -1051,10 +984,6 @@ public class CliIntegrationTests : IAsyncLifetime
         xml.Should().BeEmpty();
     }
 
-    // =========================================================================
-    // Multi-get CLI
-    // =========================================================================
-
     [Fact]
     public async Task MultiGet_ByGlobPattern_ReturnsResults()
     {
@@ -1073,10 +1002,6 @@ public class CliIntegrationTests : IAsyncLifetime
         docs1.Count.Should().BeGreaterThanOrEqualTo(1);
         docs2.Count.Should().BeGreaterThanOrEqualTo(1);
     }
-
-    // =========================================================================
-    // Ignore patterns — additional tests
-    // =========================================================================
 
     [Fact]
     public async Task IgnorePatterns_NonIgnoredFilesStillSearchable()
@@ -1114,10 +1039,6 @@ public class CliIntegrationTests : IAsyncLifetime
         finally { Directory.Delete(tempDir, true); }
     }
 
-    // =========================================================================
-    // MakeTerminalLink (ported from TS editor URI tests)
-    // =========================================================================
-
     [Fact]
     public void MakeTerminalLink_ReturnsPlainText_WhenNoEditorUri()
     {
@@ -1142,10 +1063,6 @@ public class CliIntegrationTests : IAsyncLifetime
         // Just verify the method handles the input without throwing.
         plain.Should().NotBeNullOrEmpty();
     }
-
-    // =========================================================================
-    // Embed validation
-    // =========================================================================
 
     [Fact]
     public async Task Embed_InvalidMaxDocsPerBatch_Fails()

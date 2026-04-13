@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -69,10 +69,6 @@ public class FuzzyMatcherTests : IDisposable
         similar.Should().HaveCountLessThanOrEqualTo(2);
     }
 
-    // =========================================================================
-    // Fuzzy matching — respects maxDistance
-    // =========================================================================
-
     [Fact]
     public void FindSimilarFiles_RespectsMaxDistance()
     {
@@ -95,10 +91,6 @@ public class FuzzyMatcherTests : IDisposable
         similar.Should().Contain("abc.md");
         similar.Should().NotContain("xyz.md");
     }
-
-    // =========================================================================
-    // Glob matching — matchFilesByGlob
-    // =========================================================================
 
     [Fact]
     public void MatchFilesByGlob_MatchesPatterns()

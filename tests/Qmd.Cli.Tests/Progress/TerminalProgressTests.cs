@@ -1,13 +1,10 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Cli.Progress;
 
 namespace Qmd.Cli.Tests.Progress;
 
 public class TerminalProgressTests
 {
-    // =========================================================================
-    // FormatEta
-    // =========================================================================
 
     [Theory]
     [InlineData(30, "30s")]
@@ -35,10 +32,6 @@ public class TerminalProgressTests
     {
         ProgressFormatting.FormatEta(input).Should().Be(expected);
     }
-
-    // =========================================================================
-    // RenderProgressBar
-    // =========================================================================
 
     [Fact]
     public void RenderProgressBar_ZeroPercent_AllEmpty()
@@ -85,10 +78,6 @@ public class TerminalProgressTests
         bar.Should().Be(new string('\u2591', 10));
     }
 
-    // =========================================================================
-    // FormatBytes
-    // =========================================================================
-
     [Theory]
     [InlineData(0, "0 B")]
     [InlineData(500, "500 B")]
@@ -120,10 +109,6 @@ public class TerminalProgressTests
     {
         ProgressFormatting.FormatBytes(1_073_741_824).Should().Be("1.0 GB");
     }
-
-    // =========================================================================
-    // OSC escape sequences
-    // =========================================================================
 
     [Fact]
     public void OscProgress_Set_ProducesCorrectEscapeSequence()

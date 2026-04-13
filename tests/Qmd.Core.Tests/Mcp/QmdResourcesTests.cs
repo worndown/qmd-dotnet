@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using ModelContextProtocol.Protocol;
 using Qmd.Core.Mcp;
 
@@ -24,10 +24,6 @@ public class QmdResourcesTests : IAsyncLifetime
         await _seededStore.DisposeAsync();
     }
 
-    // =========================================================================
-    // "reads document by display_path" — resource lookup by path returns content
-    // =========================================================================
-
     [Fact]
     public async Task ReadDocument_ByDisplayPath_ReturnsContent()
     {
@@ -36,10 +32,6 @@ public class QmdResourcesTests : IAsyncLifetime
         var text = GetText(result);
         text.Should().Contain("Project README");
     }
-
-    // =========================================================================
-    // "reads document by suffix match" — partial path resolves to full doc
-    // =========================================================================
 
     [Fact]
     public async Task ReadDocument_BySuffixMatch_ResolvesPartialPath()
@@ -50,10 +42,6 @@ public class QmdResourcesTests : IAsyncLifetime
         text.Should().Contain("January Meeting Notes");
     }
 
-    // =========================================================================
-    // "returns not found for missing" — missing path returns error message
-    // =========================================================================
-
     [Fact]
     public async Task ReadDocument_Missing_ReturnsNotFound()
     {
@@ -62,10 +50,6 @@ public class QmdResourcesTests : IAsyncLifetime
         var text = GetText(result);
         text.Should().Contain("Document not found");
     }
-
-    // =========================================================================
-    // "includes context in document body" — context prepended as HTML comment
-    // =========================================================================
 
     [Fact]
     public async Task ReadDocument_IncludesContextAsHtmlComment()
@@ -76,10 +60,6 @@ public class QmdResourcesTests : IAsyncLifetime
         text.Should().Contain("<!-- Context: Meeting notes and transcripts -->");
     }
 
-    // =========================================================================
-    // "reads document by URL-encoded path" — URL-encoded path is decoded
-    // =========================================================================
-
     [Fact]
     public async Task ReadDocument_UrlEncodedPath_DecodesCorrectly()
     {
@@ -89,10 +69,6 @@ public class QmdResourcesTests : IAsyncLifetime
         text.Should().Contain("January Meeting Notes");
     }
 
-    // =========================================================================
-    // "handles URL-encoded special characters" — various URL encodings decode correctly
-    // =========================================================================
-
     [Fact]
     public void UrlDecoding_VariousEncodings_DecodeCorrectly()
     {
@@ -101,10 +77,6 @@ public class QmdResourcesTests : IAsyncLifetime
         Uri.UnescapeDataString("meetings%2Fmeeting-2024-01.md").Should().Be("meetings/meeting-2024-01.md");
         Uri.UnescapeDataString("api.md%3A10").Should().Be("api.md:10");
     }
-
-    // =========================================================================
-    // "lists all documents" — use MultiGetAsync via the store to list all docs
-    // =========================================================================
 
     [Fact]
     public async Task ListResources_ReturnsAllDocuments()
@@ -125,10 +97,6 @@ public class QmdResourcesTests : IAsyncLifetime
         paths.Should().Contain(p => p.Contains("large-file.md"));
     }
 
-    // =========================================================================
-    // "handles double-encoded URLs" — double URL encoding decoded correctly
-    // =========================================================================
-
     [Fact]
     public async Task ReadDocument_DoubleEncodedUrl_DecodesCorrectly()
     {
@@ -141,10 +109,6 @@ public class QmdResourcesTests : IAsyncLifetime
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
     }
-
-    // =========================================================================
-    // "handles URL-encoded paths with spaces" — spaces via %20
-    // =========================================================================
 
     [Fact]
     public async Task ReadDocument_UrlEncodedSpaces_DecodesCorrectly()

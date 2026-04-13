@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using ModelContextProtocol.Protocol;
 using Qmd.Core.Mcp;
 using Qmd.Core.Snippets;
@@ -41,10 +41,6 @@ public class QmdToolsTests : IAsyncLifetime
         return "";
     }
 
-    // =========================================================================
-    // InstructionsBuilder
-    // =========================================================================
-
     [Fact]
     public async Task Instructions_EmptyStore_ShowsZeroDocuments()
     {
@@ -78,10 +74,6 @@ public class QmdToolsTests : IAsyncLifetime
         }
     }
 
-    // =========================================================================
-    // Status Tool
-    // =========================================================================
-
     [Fact]
     public async Task Status_EmptyStore_ShowsZeroDocuments()
     {
@@ -100,10 +92,6 @@ public class QmdToolsTests : IAsyncLifetime
         text.Should().Contain("code:");
         result.StructuredContent.Should().NotBeNull();
     }
-
-    // =========================================================================
-    // Get Tool
-    // =========================================================================
 
     [Fact]
     public async Task Get_ValidPath_ReturnsDocumentContent()
@@ -148,10 +136,6 @@ public class QmdToolsTests : IAsyncLifetime
         lines.Length.Should().BeLessThan(15);
     }
 
-    // =========================================================================
-    // Query Tool (BM25 — no LLM needed)
-    // =========================================================================
-
     [Fact]
     public async Task Query_MatchingTerm_ReturnsResults()
     {
@@ -177,10 +161,6 @@ public class QmdToolsTests : IAsyncLifetime
         // readme.md is in "docs", not "code"
         text.Should().NotContain("readme.md");
     }
-
-    // =========================================================================
-    // MultiGet Tool
-    // =========================================================================
 
     [Fact]
     public async Task MultiGet_GlobPattern_ReturnsMatchingDocs()
@@ -215,10 +195,6 @@ public class QmdToolsTests : IAsyncLifetime
         var text = GetAllText(result);
         text.Should().Contain("No files matched pattern");
     }
-
-    // =========================================================================
-    // Get Tool — additional tests
-    // =========================================================================
 
     [Fact]
     public async Task Get_ByDisplayPath_ReturnsDocument()
@@ -263,10 +239,6 @@ public class QmdToolsTests : IAsyncLifetime
         text.Should().Contain("Meeting notes and transcripts");
     }
 
-    // =========================================================================
-    // MultiGet Tool — additional tests
-    // =========================================================================
-
     [Fact]
     public async Task MultiGet_CommaSeparatedList_RetrievesDocuments()
     {
@@ -308,10 +280,6 @@ public class QmdToolsTests : IAsyncLifetime
         var text = GetAllText(result);
         text.Should().Contain("No files matched pattern");
     }
-
-    // =========================================================================
-    // Edge Cases
-    // =========================================================================
 
     [Fact]
     public async Task Query_EmptyQuery_HandlesGracefully()
@@ -364,10 +332,6 @@ public class QmdToolsTests : IAsyncLifetime
         await Task.CompletedTask; // keep async signature consistent
     }
 
-    // =========================================================================
-    // MCP Spec Compliance
-    // =========================================================================
-
     [Fact]
     public void EncodeQmdPath_PreservesSlashes_EncodesSpecialChars()
     {
@@ -414,10 +378,6 @@ public class QmdToolsTests : IAsyncLifetime
         text.Should().Contain("Document not found");
     }
 
-    // =========================================================================
-    // MultiGet — context inclusion
-    // =========================================================================
-
     [Fact]
     public async Task MultiGet_IncludesContextInResults()
     {
@@ -427,10 +387,6 @@ public class QmdToolsTests : IAsyncLifetime
         var text = GetAllText(result);
         text.Should().Contain("Meeting notes and transcripts");
     }
-
-    // =========================================================================
-    // Status — embedding count
-    // =========================================================================
 
     [Fact]
     public async Task Status_ShowsDocsNeedingEmbedding()
@@ -446,10 +402,6 @@ public class QmdToolsTests : IAsyncLifetime
         needsEmbedding.Should().BeGreaterThan(0);
     }
 
-    // =========================================================================
-    // Query — very long query
-    // =========================================================================
-
     [Fact]
     public async Task Query_VeryLongQuery_HandlesGracefully()
     {
@@ -458,10 +410,6 @@ public class QmdToolsTests : IAsyncLifetime
         var act = () => _seededTools.Query(longQuery);
         await act.Should().NotThrowAsync();
     }
-
-    // =========================================================================
-    // Query — only stopwords
-    // =========================================================================
 
     [Fact]
     public async Task Query_OnlyStopwords_HandlesGracefully()

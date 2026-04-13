@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Paths;
 
 namespace Qmd.Core.Tests.Paths;
@@ -38,10 +38,6 @@ public class DocidUtilsTests
         DocidUtils.IsDocid(input).Should().Be(expected);
     }
 
-    // =========================================================================
-    // normalizeDocid edge cases
-    // =========================================================================
-
     [Fact]
     public void Normalize_UppercaseHexPreserved()
     {
@@ -56,10 +52,6 @@ public class DocidUtilsTests
         DocidUtils.Normalize("\"abc123'").Should().Be("\"abc123'");
         DocidUtils.Normalize("'abc123\"").Should().Be("'abc123\"");
     }
-
-    // =========================================================================
-    // isDocid edge cases
-    // =========================================================================
 
     [Fact]
     public void IsDocid_RejectsFilePaths()

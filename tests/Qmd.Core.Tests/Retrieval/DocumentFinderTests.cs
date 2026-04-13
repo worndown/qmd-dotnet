@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -125,10 +125,6 @@ public class DocumentFinderTests : IDisposable
         body.Should().BeNull();
     }
 
-    // =========================================================================
-    // findDocument by display_path
-    // =========================================================================
-
     [Fact]
     public void FindDocument_ByDisplayPath_WithoutQmdPrefix()
     {
@@ -136,10 +132,6 @@ public class DocumentFinderTests : IDisposable
         var result = DocumentFinder.FindDocument(_db, "docs/api.md");
         result.IsFound.Should().BeTrue();
     }
-
-    // =========================================================================
-    // findDocument includes context from path_contexts
-    // =========================================================================
 
     [Fact]
     public void FindDocument_IncludesContextFromPathContexts()
@@ -170,10 +162,6 @@ public class DocumentFinderTests : IDisposable
         result.IsFound.Should().BeTrue();
         result.Document!.Context.Should().Be("Documentation");
     }
-
-    // =========================================================================
-    // findDocument includes hierarchical contexts
-    // =========================================================================
 
     [Fact]
     public void FindDocument_IncludesHierarchicalContexts()
@@ -215,10 +203,6 @@ public class DocumentFinderTests : IDisposable
             "Podcast episodes\n\n" +
             "External podcast interviews");
     }
-
-    // =========================================================================
-    // findDocument expands ~ to home directory
-    // =========================================================================
 
     [Fact]
     public void FindDocument_ExpandsTildeToHomeDirectory()

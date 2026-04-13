@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using FluentAssertions;
 using Qmd.Cli.Formatting;
 using Qmd.Core.Models;
@@ -57,10 +57,6 @@ public class FormatterTests
         };
     }
 
-    // =========================================================================
-    // Search results with context
-    // =========================================================================
-
     [Fact]
     public void SearchResults_Json_IncludesContext()
     {
@@ -98,10 +94,6 @@ public class FormatterTests
         output.Should().Contain(TestContext);
     }
 
-    // =========================================================================
-    // Search results without context
-    // =========================================================================
-
     [Fact]
     public void SearchResults_Json_OmitsNullContext()
     {
@@ -116,10 +108,6 @@ public class FormatterTests
         output.TrimEnd().Should().NotEndWith(",");
     }
 
-    // =========================================================================
-    // Format dispatcher
-    // =========================================================================
-
     [Theory]
     [InlineData(OutputFormat.Json)]
     [InlineData(OutputFormat.Csv)]
@@ -133,10 +121,6 @@ public class FormatterTests
         // All formats include either the display path or docid
         output.Should().Contain("abc123");
     }
-
-    // =========================================================================
-    // Multi-get documents with context
-    // =========================================================================
 
     [Fact]
     public void Documents_Json_IncludesContext()
@@ -166,10 +150,6 @@ public class FormatterTests
         output.Should().Contain(TestContext);
     }
 
-    // =========================================================================
-    // Single document with context
-    // =========================================================================
-
     [Fact]
     public void SingleDoc_Json_IncludesContext()
     {
@@ -191,10 +171,6 @@ public class FormatterTests
         output.Should().Contain(TestContext);
     }
 
-    // =========================================================================
-    // Single document without context
-    // =========================================================================
-
     [Fact]
     public void SingleDoc_Json_OmitsNullContext()
     {
@@ -215,10 +191,6 @@ public class FormatterTests
         var output = SingleDocumentFormatter.ToXml(MakeDocumentResult(null));
         output.Should().NotContain("context=");
     }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
 
     [Fact]
     public void EscapeCsv_WrapsFieldsWithCommas()
@@ -251,10 +223,6 @@ public class FormatterTests
         var result = FormatHelpers.AddLineNumbers("a\nb", 10);
         result.Should().Be("10: a\n11: b");
     }
-
-    // =========================================================================
-    // Snippet extraction in CLI output
-    // =========================================================================
 
     [Fact]
     public void Markdown_ShowsSnippet_WhenQueryProvided()
@@ -355,10 +323,6 @@ public class FormatterTests
         output.Should().Contain("2: line two");
     }
 
-    // =========================================================================
-    // Term highlighting
-    // =========================================================================
-
     [Fact]
     public void HighlightTerms_HighlightsMatchingTerms()
     {
@@ -386,10 +350,6 @@ public class FormatterTests
         result.Should().Contain("\x1b[1;33mAPI\x1b[0m");
     }
 
-    // =========================================================================
-    // Terminal links
-    // =========================================================================
-
     [Fact]
     public void MakeTerminalLink_CreatesOsc8Link()
     {
@@ -406,10 +366,6 @@ public class FormatterTests
         FormatHelpers.MakeTerminalLink("api.md", null, "/path").Should().Be("api.md");
         FormatHelpers.MakeTerminalLink("api.md", "", "/path").Should().Be("api.md");
     }
-
-    // =========================================================================
-    // Markdown shows content even with empty query
-    // =========================================================================
 
     [Fact]
     public void Markdown_ShowsContent_WhenQueryIsEmpty()
@@ -431,10 +387,6 @@ public class FormatterTests
 
         output.Should().Contain("API documentation content");
     }
-
-    // =========================================================================
-    // Multi-get format dispatcher (all formats produce output)
-    // =========================================================================
 
     [Theory]
     [InlineData(OutputFormat.Json)]
@@ -465,10 +417,6 @@ public class FormatterTests
         output.Should().NotContain("\"body\"");
     }
 
-    // =========================================================================
-    // JSON includes line number
-    // =========================================================================
-
     [Fact]
     public void SearchResults_Json_IncludesLineNumber()
     {
@@ -492,10 +440,6 @@ public class FormatterTests
         arr[0].TryGetProperty("body", out var body).Should().BeTrue();
         body.GetString().Should().Contain("api documentation");
     }
-
-    // =========================================================================
-    // Explain output
-    // =========================================================================
 
     private static SearchResult MakeSearchResultWithExplain()
     {

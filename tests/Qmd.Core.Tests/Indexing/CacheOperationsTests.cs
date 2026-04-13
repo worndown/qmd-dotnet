@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Indexing;
 
@@ -38,10 +38,6 @@ public class CacheOperationsTests : IDisposable
         CacheOperations.ClearCache(_db);
         CacheOperations.GetCachedResult(_db, key).Should().BeNull();
     }
-
-    // =========================================================================
-    // Cache Key Tests
-    // =========================================================================
 
     [Fact]
     public void GetCacheKey_GeneratesConsistentKeys()

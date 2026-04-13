@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Paths;
 
 namespace Qmd.Core.Tests.Paths;
@@ -24,10 +24,6 @@ public class QmdPathsTests : IDisposable
     {
         Environment.SetEnvironmentVariable("PWD", path);
     }
-
-    // =========================================================================
-    // IsAbsolutePath
-    // =========================================================================
 
     [Theory]
     [InlineData("/path/to/file", true)]
@@ -105,10 +101,6 @@ public class QmdPathsTests : IDisposable
         QmdPaths.IsAbsolutePath(path).Should().Be(expected);
     }
 
-    // =========================================================================
-    // NormalizePathSeparators
-    // =========================================================================
-
     [Theory]
     [InlineData("C:\\Users\\name\\file.txt", "C:/Users/name/file.txt")]
     [InlineData("D:\\Projects\\qmd\\src", "D:/Projects/qmd/src")]
@@ -152,10 +144,6 @@ public class QmdPathsTests : IDisposable
     {
         QmdPaths.NormalizePathSeparators(input).Should().Be(expected);
     }
-
-    // =========================================================================
-    // GetRelativePathFromPrefix
-    // =========================================================================
 
     [Theory]
     [InlineData("/home/user", "/home/user", "")]
@@ -208,10 +196,6 @@ public class QmdPathsTests : IDisposable
         QmdPaths.GetRelativePathFromPrefix("/home/username", "/home/user").Should().BeNull();
         QmdPaths.GetRelativePathFromPrefix("/home/user", "/").Should().Be("home/user");
     }
-
-    // =========================================================================
-    // Resolve - Unix environment
-    // =========================================================================
 
     [Fact]
     public void Resolve_UnixRelativePaths()
@@ -266,10 +250,6 @@ public class QmdPathsTests : IDisposable
         QmdPaths.Resolve("/absolute/path").Should().Be("/absolute/path");
         QmdPaths.Resolve("/").Should().Be("/");
     }
-
-    // =========================================================================
-    // Resolve - Windows environment
-    // =========================================================================
 
     [Fact]
     public void Resolve_WindowsRelativePaths()
@@ -334,10 +314,6 @@ public class QmdPathsTests : IDisposable
         QmdPaths.Resolve("D:").Should().Be("D:/");
     }
 
-    // =========================================================================
-    // Resolve - Git Bash style paths
-    // =========================================================================
-
     [Fact]
     public void Resolve_GitBashToWindowsConversion()
     {
@@ -368,10 +344,6 @@ public class QmdPathsTests : IDisposable
         QmdPaths.Resolve("/c/a", "b", "c").Should().Be("C:/a/b/c");
         QmdPaths.Resolve("/c/a", "b", "/d/c").Should().Be("D:/c");
     }
-
-    // =========================================================================
-    // Resolve - Edge cases
-    // =========================================================================
 
     [Fact]
     public void Resolve_EmptySegmentsFiltered()
@@ -428,10 +400,6 @@ public class QmdPathsTests : IDisposable
         act.Should().Throw<ArgumentException>()
             .WithMessage("*at least one path segment*");
     }
-
-    // =========================================================================
-    // GetDefaultDbPath
-    // =========================================================================
 
     [Fact]
     public void GetDefaultDbPath_RespectsIndexPathEnv()

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Content;
 
 namespace Qmd.Core.Tests.Content;
@@ -54,10 +54,6 @@ public class TitleExtractorTests
         TitleExtractor.ExtractTitle("No headings", "docs/api/reference.txt")
             .Should().Be("reference");
     }
-
-    // =========================================================================
-    // extractTitle handles emoji heading
-    // =========================================================================
 
     [Fact]
     public void ExtractTitle_HandlesEmojiHeading()

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Configuration;
 using Qmd.Core.Database;
@@ -69,10 +69,6 @@ public class StatusOperationsTests : IDisposable
         health.TotalDocs.Should().Be(1);
         health.NeedsEmbedding.Should().Be(1);
     }
-
-    // =========================================================================
-    // getStatus reports collection info
-    // =========================================================================
 
     [Fact]
     public void GetStatus_ReportsCollectionInfo()

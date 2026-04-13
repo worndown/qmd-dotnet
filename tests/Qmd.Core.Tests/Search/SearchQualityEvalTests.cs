@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using FluentAssertions;
 using Qmd.Core.Content;
@@ -57,10 +57,6 @@ public class SearchQualityEvalTests : IDisposable
             "Multi-factor authentication (MFA) implementation.");
     }
 
-    // =========================================================================
-    // Easy queries (exact keyword match)
-    // =========================================================================
-
     [Fact]
     public void BM25_ExactKeyword_ApiDesign()
     {
@@ -85,10 +81,6 @@ public class SearchQualityEvalTests : IDisposable
         results[0].DisplayPath.Should().Contain("fundraising");
     }
 
-    // =========================================================================
-    // Medium queries (semantic but keyword-matchable)
-    // =========================================================================
-
     [Fact]
     public void BM25_Medium_ConsensusAlgorithms()
     {
@@ -104,10 +96,6 @@ public class SearchQualityEvalTests : IDisposable
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("ml-deployment");
     }
-
-    // =========================================================================
-    // Score quality checks
-    // =========================================================================
 
     [Fact]
     public void BM25_Scores_Normalized_0_to_1()
@@ -141,10 +129,6 @@ public class SearchQualityEvalTests : IDisposable
 public class Bm25HitRateEvalTests : IDisposable
 {
     private readonly QmdStore _store;
-
-    // =========================================================================
-    // Eval query fixtures
-    // =========================================================================
 
     private record EvalQuery(string Query, string ExpectedDoc, string Difficulty);
 
@@ -183,10 +167,6 @@ public class Bm25HitRateEvalTests : IDisposable
         new("CI/CD pipeline testing coverage", "product-launch", "fusion"),
     ];
 
-    // =========================================================================
-    // Setup — load and index eval documents (mirrors TS beforeAll)
-    // =========================================================================
-
     public Bm25HitRateEvalTests()
     {
         _store = new QmdStore(new SqliteDatabase(":memory:"));
@@ -215,10 +195,6 @@ public class Bm25HitRateEvalTests : IDisposable
 
     public void Dispose() => _store.Dispose();
 
-    // =========================================================================
-    // Helpers — match TS matchesExpected and calcHitRate
-    // =========================================================================
-
     private static bool MatchesExpected(string filepath, string expectedDoc)
         => filepath.ToLowerInvariant().Contains(expectedDoc);
 
@@ -234,10 +210,6 @@ public class Bm25HitRateEvalTests : IDisposable
         }
         return (double)hits / queryList.Count;
     }
-
-    // =========================================================================
-    // Hit-rate tests — thresholds match eval-bm25.
-    // =========================================================================
 
     [Fact]
     public void EasyQueries_HitRate_AtLeast80Percent_At3()

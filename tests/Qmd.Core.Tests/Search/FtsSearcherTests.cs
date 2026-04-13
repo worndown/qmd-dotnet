@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
@@ -116,10 +116,6 @@ public class FtsSearcherTests : IDisposable
         results.Should().NotContain(r => r.DisplayPath == "docs/api.md");
     }
 
-    // =========================================================================
-    // Additional FTS tests
-    // =========================================================================
-
     [Fact]
     public void SearchFTS_RanksTitleMatchesHigher()
     {
@@ -200,10 +196,6 @@ public class FtsSearcherTests : IDisposable
         filtered[0].DisplayPath.Should().Contain("strong");
     }
 
-    // =========================================================================
-    // FTS title boost outweighs higher body frequency
-    // =========================================================================
-
     [Fact]
     public void SearchFTS_TitleBoostOutweighsHigherBodyFrequency()
     {
@@ -229,10 +221,6 @@ public class FtsSearcherTests : IDisposable
         results[0].DisplayPath.Should().Be($"{collectionName}/test/title-match.md");
     }
 
-    // =========================================================================
-    // Helpers for additional FTS tests
-    // =========================================================================
-
     private static void SeedCollectionInDb(SqliteDatabase db, string name, string path)
     {
         var config = new Qmd.Core.Configuration.CollectionConfig
@@ -242,10 +230,6 @@ public class FtsSearcherTests : IDisposable
         db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
         Qmd.Core.Configuration.ConfigSync.SyncToDb(db, config);
     }
-
-    // =========================================================================
-    // FTS strong signal detection
-    // =========================================================================
 
     [Fact]
     public void SearchFTS_StrongSignalDetection_ScoreNormalizationCorrect()

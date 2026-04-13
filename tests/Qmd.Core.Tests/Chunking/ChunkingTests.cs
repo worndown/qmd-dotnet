@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Chunking;
 using Qmd.Core.Models;
 
@@ -6,9 +6,6 @@ namespace Qmd.Core.Tests.Chunking;
 
 public class ChunkingTests
 {
-    // =========================================================================
-    // chunkDocument
-    // =========================================================================
 
     [Fact]
     public void ChunkDocument_SingleChunkForSmallDocs()
@@ -72,10 +69,6 @@ public class ChunkingTests
         chunks[0].Text.Length.Should().BeGreaterThan(2800);
         chunks[0].Text.Length.Should().BeLessThanOrEqualTo(3600);
     }
-
-    // =========================================================================
-    // scanBreakPoints
-    // =========================================================================
 
     [Fact]
     public void ScanBreakPoints_DetectsH1()
@@ -158,10 +151,6 @@ public class ChunkingTests
         atPos4[0].Score.Should().Be(100);
     }
 
-    // =========================================================================
-    // findCodeFences
-    // =========================================================================
-
     [Fact]
     public void FindCodeFences_SingleFence()
     {
@@ -192,10 +181,6 @@ public class ChunkingTests
     {
         BreakPointScanner.FindCodeFences("No code fences here").Should().BeEmpty();
     }
-
-    // =========================================================================
-    // isInsideCodeFence
-    // =========================================================================
 
     [Fact]
     public void IsInsideCodeFence_Inside()
@@ -229,10 +214,6 @@ public class ChunkingTests
         BreakPointScanner.IsInsideCodeFence(60, fences).Should().BeTrue();
         BreakPointScanner.IsInsideCodeFence(40, fences).Should().BeFalse();
     }
-
-    // =========================================================================
-    // findBestCutoff
-    // =========================================================================
 
     [Fact]
     public void FindBestCutoff_PrefersHigherScore()
@@ -293,10 +274,6 @@ public class ChunkingTests
         BreakPointScanner.FindBestCutoff([], 200, 100, 0.7).Should().Be(200);
     }
 
-    // =========================================================================
-    // mergeBreakPoints
-    // =========================================================================
-
     [Fact]
     public void MergeBreakPoints_MergesAndKeepsHighestScore()
     {
@@ -319,10 +296,6 @@ public class ChunkingTests
         merged[1].Pos.Should().Be(30);
     }
 
-    // =========================================================================
-    // ITokenizer
-    // =========================================================================
-
     [Fact]
     public void CharBasedTokenizer_ApproximatesCorrectly()
     {
@@ -331,10 +304,6 @@ public class ChunkingTests
         tokenizer.CountTokens("").Should().Be(0);
         tokenizer.CountTokens("A").Should().Be(1);
     }
-
-    // =========================================================================
-    // Smart Chunking Integration
-    // =========================================================================
 
     [Fact]
     public void ChunkDocument_PrefersHeadingsOverArbitraryBreaks()
