@@ -89,38 +89,9 @@ QMD applies several layers of filtering to mitigate false positives, particularl
 
 ---
 
-## Calibrating Thresholds with `profile-embeddings`
+## Calibrating Thresholds
 
-The default thresholds are conservative starting points. For optimal results, profile your actual corpus:
-
-```
-qmd profile-embeddings [--sample-size N] [--collection C]
-```
-
-This command randomly samples chunks from your indexed documents, re-embeds each one as a query, searches for its nearest neighbors, and computes the distribution of inter-document cosine similarities. A typical output looks like:
-
-```
-Model: embeddinggemma (768 dimensions)
-Corpus: 1200 chunks, sampled 100 (990 score pairs)
-
-Cosine similarity distribution (inter-document):
-  Min:    0.214
-  P5:     0.298    P25:    0.365
-  Median: 0.412    Mean:   0.415
-  P75:    0.462    P95:    0.541
-  Max:    0.687
-
-Suggested --min-score for vsearch: 0.46 (P75)
-```
-
-### How to read this
-
-- **Min / Max**: The full range of observed similarities between random documents.
-- **Median / Mean**: The center of the noise distribution — most unrelated document pairs score around here.
-- **P75**: 75% of random inter-document similarities fall below this value. Scores above P75 are more likely to be genuine matches than noise. This is the suggested `--min-score` for `vsearch`.
-- **P95**: Only 5% of random pairs exceed this — a very aggressive threshold that may filter some legitimate results.
-
-The `--sample-size` flag controls how many chunks are sampled (default: 100). Larger samples give more stable statistics but take longer to compute since each sample requires an embedding operation.
+The default thresholds are conservative starting points. For optimal results, profile your actual corpus using `qmd profile-embeddings`. See [Calibrating Search Thresholds](profile-embeddings.md) for a full guide.
 
 ---
 
