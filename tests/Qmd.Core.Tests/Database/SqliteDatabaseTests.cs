@@ -3,6 +3,7 @@ using Qmd.Core.Database;
 
 namespace Qmd.Core.Tests.Database;
 
+[Trait("Category", "Database")]
 public class SqliteDatabaseTests : IDisposable
 {
     private readonly SqliteDatabase _db;

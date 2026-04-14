@@ -7,6 +7,7 @@ namespace Qmd.Core.Tests.Mcp;
 /// <summary>
 /// Tests QmdResources.ReadDocument which wraps IQmdStore.GetAsync.
 /// </summary>
+[Trait("Category", "Integration")]
 public class QmdResourcesTests : IAsyncLifetime
 {
     private IQmdStore _seededStore = null!;

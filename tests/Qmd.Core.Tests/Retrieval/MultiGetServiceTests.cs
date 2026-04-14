@@ -4,19 +4,20 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Retrieval;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Retrieval;
 
+[Trait("Category", "Database")]
 public class MultiGetServiceTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
     private const string CollectionName = "testcol";
     private const string CollectionPath = "/path";
 
     public MultiGetServiceTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedCollection();
     }
 

@@ -3,6 +3,7 @@ using Qmd.Core.Configuration;
 
 namespace Qmd.Core.Tests.Configuration;
 
+[Trait("Category", "Unit")]
 public class ConfigManagerTests
 {
     private ConfigManager CreateInlineManager(CollectionConfig? config = null)

@@ -4,17 +4,18 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Retrieval;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Retrieval;
 
+[Trait("Category", "Database")]
 public class FuzzyMatcherTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public FuzzyMatcherTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedDocs();
     }
 
@@ -75,8 +76,7 @@ public class FuzzyMatcherTests : IDisposable
         // Set maxDistance=1, verify tight filtering
         // "abc.md" vs "abc.md" = 0, "abc.md" vs "xyz.md" = 3
         // With maxDistance=1, only "abc.md" should appear (distance 0 to itself)
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         void Seed(string path)
         {
@@ -96,8 +96,7 @@ public class FuzzyMatcherTests : IDisposable
     public void MatchFilesByGlob_MatchesPatterns()
     {
         // Verify *.md matches markdown files
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         void Seed(string collection, string path, string content)
         {

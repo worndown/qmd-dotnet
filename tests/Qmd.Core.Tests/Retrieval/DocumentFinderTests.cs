@@ -4,17 +4,18 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Retrieval;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Retrieval;
 
+[Trait("Category", "Database")]
 public class DocumentFinderTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public DocumentFinderTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedData();
     }
 
@@ -137,8 +138,7 @@ public class DocumentFinderTests : IDisposable
     public void FindDocument_IncludesContextFromPathContexts()
     {
         // FindDocument includes context from path_contexts
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         // Seed collection with context on "docs" path
         var config = new CollectionConfig
@@ -167,8 +167,7 @@ public class DocumentFinderTests : IDisposable
     public void FindDocument_IncludesHierarchicalContexts()
     {
         // FindDocument includes hierarchical contexts (global + collection + path)
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var config = new CollectionConfig
         {
@@ -208,8 +207,7 @@ public class DocumentFinderTests : IDisposable
     public void FindDocument_ExpandsTildeToHomeDirectory()
     {
         // FindDocument expands ~ to home directory
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var home = Qmd.Core.Paths.QmdPaths.HomeDir();
         var config = new CollectionConfig

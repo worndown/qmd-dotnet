@@ -4,6 +4,7 @@ using Qmd.Core.Search;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Unit")]
 public class RrfFusionTests
 {
     private static RankedResult R(string file, double score = 0) =>

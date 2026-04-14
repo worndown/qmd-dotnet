@@ -3,6 +3,7 @@ using Qmd.Cli.Skills;
 
 namespace Qmd.Cli.Tests.Skills;
 
+[Trait("Category", "Integration")]
 public class SkillInstallerTests : IDisposable
 {
     private readonly string _tempDir;

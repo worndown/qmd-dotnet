@@ -6,6 +6,7 @@ namespace Qmd.Core.Tests.Llm;
 /// <summary>
 /// Tests for HuggingFace URI parsing (no network needed).
 /// </summary>
+[Trait("Category", "Unit")]
 public class ModelResolverTests
 {
     [Fact]

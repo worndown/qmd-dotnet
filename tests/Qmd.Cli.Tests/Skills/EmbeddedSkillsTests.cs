@@ -3,6 +3,7 @@ using Qmd.Cli.Skills;
 
 namespace Qmd.Cli.Tests.Skills;
 
+[Trait("Category", "Unit")]
 public class EmbeddedSkillsTests
 {
     [Fact]

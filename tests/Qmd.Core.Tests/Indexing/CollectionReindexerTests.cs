@@ -6,6 +6,7 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Tests.Indexing;
 
+[Trait("Category", "Integration")]
 public class CollectionReindexerTests : IDisposable
 {
     private readonly QmdStore _store;

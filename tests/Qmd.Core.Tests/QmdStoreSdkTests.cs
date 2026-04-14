@@ -7,6 +7,7 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Tests;
 
+[Trait("Category", "Integration")]
 public class QmdStoreSdkTests
 {
     #region Helpers

@@ -3,6 +3,7 @@ using Qmd.Core.Llm;
 
 namespace Qmd.Core.Tests.Llm;
 
+[Trait("Category", "Unit")]
 public class EmbeddingFormatterTests : IDisposable
 {
     private readonly string? _originalEnv;

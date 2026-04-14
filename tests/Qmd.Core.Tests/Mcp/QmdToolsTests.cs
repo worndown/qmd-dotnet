@@ -5,6 +5,7 @@ using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Tests.Mcp;
 
+[Trait("Category", "Integration")]
 public class QmdToolsTests : IAsyncLifetime
 {
     private IQmdStore _seededStore = null!;

@@ -4,6 +4,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Tests.Chunking;
 
+[Trait("Category", "Unit")]
 public class ChunkingTests
 {
 

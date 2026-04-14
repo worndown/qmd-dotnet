@@ -3,6 +3,7 @@ using Qmd.Core.Paths;
 
 namespace Qmd.Core.Tests.Paths;
 
+[Trait("Category", "Unit")]
 public class FtsUtilsTests
 {
     [Theory]

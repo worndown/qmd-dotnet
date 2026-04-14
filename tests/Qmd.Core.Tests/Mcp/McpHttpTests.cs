@@ -16,6 +16,7 @@ namespace Qmd.Core.Tests.Mcp;
 /// Integration tests for the MCP HTTP transport.
 /// Starts a real HTTP server on an ephemeral port and sends requests.
 /// </summary>
+[Trait("Category", "Integration")]
 public class McpHttpTests : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOpts = new()

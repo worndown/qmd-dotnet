@@ -3,6 +3,7 @@ using Qmd.Core.Content;
 
 namespace Qmd.Core.Tests.Content;
 
+[Trait("Category", "Unit")]
 public class TitleExtractorTests
 {
     [Fact]

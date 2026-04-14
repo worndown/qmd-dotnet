@@ -3,6 +3,7 @@ using Qmd.Cli.Progress;
 
 namespace Qmd.Cli.Tests.Progress;
 
+[Trait("Category", "Unit")]
 public class TerminalProgressTests
 {
 

@@ -3,17 +3,18 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Embedding;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Embedding;
 
+[Trait("Category", "Database")]
 public class EmbeddingOperationsTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public EmbeddingOperationsTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedDocs();
     }
 

@@ -6,6 +6,7 @@ namespace Qmd.Core.Tests.Bench;
 /// <summary>
 /// Tests for the benchmark scoring functions.
 /// </summary>
+[Trait("Category", "Unit")]
 public class BenchmarkScorerTests
 {
 

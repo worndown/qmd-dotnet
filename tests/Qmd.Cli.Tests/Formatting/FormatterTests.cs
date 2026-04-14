@@ -5,6 +5,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Cli.Tests.Formatting;
 
+[Trait("Category", "Unit")]
 public class FormatterTests
 {
     private const string TestContext = "Internal engineering keynotes";

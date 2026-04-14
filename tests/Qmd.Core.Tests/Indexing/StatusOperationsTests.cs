@@ -4,17 +4,18 @@ using Qmd.Core.Configuration;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Indexing;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Indexing;
 
+[Trait("Category", "Database")]
 public class StatusOperationsTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public StatusOperationsTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
     }
 
     public void Dispose() => _db.Dispose();

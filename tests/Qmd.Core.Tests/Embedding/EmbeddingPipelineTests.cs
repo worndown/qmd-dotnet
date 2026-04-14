@@ -5,18 +5,19 @@ using Qmd.Core.Documents;
 using Qmd.Core.Embedding;
 using Qmd.Core.Models;
 using Qmd.Core.Tests.Llm;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Embedding;
 
+[Trait("Category", "Database")]
 public class EmbeddingPipelineTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
     private readonly MockLlmService _llm;
 
     public EmbeddingPipelineTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         _llm = new MockLlmService();
     }
 
