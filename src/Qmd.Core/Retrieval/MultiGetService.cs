@@ -7,7 +7,7 @@ namespace Qmd.Core.Retrieval;
 /// Multi-get pipeline: retrieve multiple documents by glob pattern or comma-separated list
 /// (instance version with constructor injection).
 /// </summary>
-internal class MultiGetServiceImpl : IMultiGetService
+internal class MultiGetService : IMultiGetService
 {
     private const int DefaultMaxBytes = 10 * 1024; // 10KB
 
@@ -15,7 +15,7 @@ internal class MultiGetServiceImpl : IMultiGetService
     private readonly IDocumentFinderService _documentFinder;
     private readonly IContextResolverService _contextResolver;
 
-    public MultiGetServiceImpl(IQmdDatabase db, IDocumentFinderService documentFinder, IContextResolverService contextResolver)
+    public MultiGetService(IQmdDatabase db, IDocumentFinderService documentFinder, IContextResolverService contextResolver)
     {
         _db = db;
         _documentFinder = documentFinder;

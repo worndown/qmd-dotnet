@@ -44,12 +44,12 @@ public class MultiGetServiceTests : IDisposable
         _docRepo.InsertDocument(CollectionName, displayPath, title, hash, "2025-01-01", "2025-01-01");
     }
 
-    private MultiGetServiceImpl CreateService()
+    private MultiGetService CreateService()
     {
         var contextResolver = new ContextResolverService(_db);
         var fuzzyMatcher = new FuzzyMatcherService(_db);
         var docFinder = new DocumentFinderService(_db, fuzzyMatcher, contextResolver);
-        return new MultiGetServiceImpl(_db, docFinder, contextResolver);
+        return new MultiGetService(_db, docFinder, contextResolver);
     }
 
     [Fact]

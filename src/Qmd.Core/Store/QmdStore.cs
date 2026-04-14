@@ -304,7 +304,7 @@ internal class QmdStore : IQmdStore, IDisposable
         var contextResolver = new ContextResolverService(Db);
         var fuzzyMatcher = new FuzzyMatcherService(Db);
         var docFinder = new DocumentFinderService(Db, fuzzyMatcher, contextResolver);
-        var multiGet = new MultiGetServiceImpl(Db, docFinder, contextResolver);
+        var multiGet = new MultiGetService(Db, docFinder, contextResolver);
         var (docs, errors) = multiGet.FindDocuments(pattern, options.IncludeBody, options.MaxBytes);
         return Task.FromResult((docs, errors));
     }
