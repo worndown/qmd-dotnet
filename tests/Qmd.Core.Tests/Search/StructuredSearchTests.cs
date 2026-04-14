@@ -1,11 +1,10 @@
 ﻿using FluentAssertions;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
 using Qmd.Core.Store;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Search;
 
@@ -19,25 +18,15 @@ public class StructuredSearchTests : IDisposable
     {
         _store = new QmdStore(new SqliteDatabase(":memory:"));
         _store.LlmService = _llm;
-        SeedDocuments();
+        TestDbHelper.SeedDocuments(_store.Db,
+            ("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication."),
+            ("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Install and configure the system."),
+            ("code", "auth.ts", "Auth Module", "OAuth2 authentication flow for users and service accounts."),
+            ("code", "server.ts", "Server Setup", "Express server with middleware for logging and error handling.")
+        );
     }
 
     public void Dispose() => _store.Dispose();
-
-    private void SeedDocuments()
-    {
-        void Seed(string collection, string path, string title, string content)
-        {
-            var hash = ContentHasher.HashContent(content);
-            ContentHasher.InsertContent(_store.Db, hash, content, "2025-01-01");
-            DocumentOperations.InsertDocument(_store.Db, collection, path, title, hash, "2025-01-01", "2025-01-01");
-        }
-
-        Seed("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication.");
-        Seed("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Install and configure the system.");
-        Seed("code", "auth.ts", "Auth Module", "OAuth2 authentication flow for users and service accounts.");
-        Seed("code", "server.ts", "Server Setup", "Express server with middleware for logging and error handling.");
-    }
 
     [Fact]
     public async Task StructuredSearch_WithLexQueries_ReturnsResults()

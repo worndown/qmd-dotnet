@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Models;
@@ -16,25 +15,15 @@ public class FtsSearcherTests : IDisposable
     public FtsSearcherTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
-        SeedDocuments();
+        TestDbHelper.SeedDocuments(_db,
+            ("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication and authorization."),
+            ("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Learn how to install and configure the system."),
+            ("docs", "faq.md", "FAQ", "Frequently asked questions about performance, scaling, and deployment."),
+            ("notes", "meeting.md", "Meeting Notes", "Discussion about multi-agent systems and their applications in distributed computing.")
+        );
     }
 
     public void Dispose() => _db.Dispose();
-
-    private void SeedDocuments()
-    {
-        void Seed(string collection, string path, string title, string content)
-        {
-            var hash = ContentHasher.HashContent(content);
-            ContentHasher.InsertContent(_db, hash, content, "2025-01-01");
-            DocumentOperations.InsertDocument(_db, collection, path, title, hash, "2025-01-01", "2025-01-01");
-        }
-
-        Seed("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication and authorization.");
-        Seed("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Learn how to install and configure the system.");
-        Seed("docs", "faq.md", "FAQ", "Frequently asked questions about performance, scaling, and deployment.");
-        Seed("notes", "meeting.md", "Meeting Notes", "Discussion about multi-agent systems and their applications in distributed computing.");
-    }
 
     [Fact]
     public void SearchFTS_ReturnsResults()
@@ -127,12 +116,12 @@ public class FtsSearcherTests : IDisposable
         SeedCollectionInDb(db, collectionName, "/test");
 
         // Document with "fox" in body only
-        InsertDoc(db, collectionName, "test/body.md", "Some Other Title",
-            "The fox is here in the body");
+        TestDbHelper.SeedDocument(db, collectionName, "test/body.md",
+            "The fox is here in the body", "Some Other Title");
 
         // Document with "fox" in title — title column has 4x BM25 weight
-        InsertDoc(db, collectionName, "test/title.md", "Fox Title",
-            "Different content without the animal fox");
+        TestDbHelper.SeedDocument(db, collectionName, "test/title.md",
+            "Different content without the animal fox", "Fox Title");
 
         var results = FtsSearcher.SearchFTS(db, "fox");
         results.Should().HaveCount(2);
@@ -148,8 +137,8 @@ public class FtsSearcherTests : IDisposable
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
 
-        InsertDoc(db, collectionName, "test/doc1.md", "Functions",
-            "Function with params: foo(bar, baz)");
+        TestDbHelper.SeedDocument(db, collectionName, "test/doc1.md",
+            "Function with params: foo(bar, baz)", "Functions");
 
         // Should not throw on special characters
         var results = FtsSearcher.SearchFTS(db, "foo(bar)");
@@ -167,17 +156,17 @@ public class FtsSearcherTests : IDisposable
         // Add noise documents for meaningful IDF
         for (int i = 0; i < 8; i++)
         {
-            InsertDoc(db, collectionName, $"test/noise{i}.md", $"Unrelated Topic {i}",
-                $"This document discusses completely different subjects like gardening and cooking {i}");
+            TestDbHelper.SeedDocument(db, collectionName, $"test/noise{i}.md",
+                $"This document discusses completely different subjects like gardening and cooking {i}", $"Unrelated Topic {i}");
         }
 
         // Strong match: keyword in title (4x weight) + repeated in body
-        InsertDoc(db, collectionName, "test/strong.md", "Kubernetes Deployment",
-            "Kubernetes deployment strategies for kubernetes clusters using kubernetes operators");
+        TestDbHelper.SeedDocument(db, collectionName, "test/strong.md",
+            "Kubernetes deployment strategies for kubernetes clusters using kubernetes operators", "Kubernetes Deployment");
 
         // Weak match: keyword appears once in body only
-        InsertDoc(db, collectionName, "test/weak.md", "Random Notes",
-            "Various topics including a brief kubernetes mention among many other unrelated things");
+        TestDbHelper.SeedDocument(db, collectionName, "test/weak.md",
+            "Various topics including a brief kubernetes mention among many other unrelated things", "Random Notes");
 
         var allResults = FtsSearcher.SearchFTS(db, "kubernetes");
         allResults.Should().HaveCount(2);
@@ -205,12 +194,12 @@ public class FtsSearcherTests : IDisposable
         SeedCollectionInDb(db, collectionName, "/test");
 
         // Document with "quantum" mentioned in a longer body but NOT in the title
-        InsertDoc(db, collectionName, "test/body-only.md", "General Science Notes",
-            "This research paper discusses quantum mechanics and the quantum model of computation. The quantum approach offers improvements over classical methods.");
+        TestDbHelper.SeedDocument(db, collectionName, "test/body-only.md",
+            "This research paper discusses quantum mechanics and the quantum model of computation. The quantum approach offers improvements over classical methods.", "General Science Notes");
 
         // Document with "quantum" in the title but a shorter body mention
-        InsertDoc(db, collectionName, "test/title-match.md", "Quantum Computing Overview",
-            "An introduction to the fundamentals of this emerging computing paradigm.");
+        TestDbHelper.SeedDocument(db, collectionName, "test/title-match.md",
+            "An introduction to the fundamentals of this emerging computing paradigm.", "Quantum Computing Overview");
 
         var results = FtsSearcher.SearchFTS(db, "quantum");
         results.Should().HaveCount(2);
@@ -241,20 +230,20 @@ public class FtsSearcherTests : IDisposable
         // 50 noise docs give IDF enough for scores above 0.85
         for (int i = 0; i < 50; i++)
         {
-            InsertDoc(db, collectionName, $"test/noise{i}.md", $"Noise Topic {i}",
-                $"Unrelated content about gardening, cooking, travel, music, and photography part {i}.");
+            TestDbHelper.SeedDocument(db, collectionName, $"test/noise{i}.md",
+                $"Unrelated content about gardening, cooking, travel, music, and photography part {i}.", $"Noise Topic {i}");
         }
 
         // Dominant: keyword in title + body (multiple occurrences)
-        InsertDoc(db, collectionName, "test/dominant.md", "Zephyr Configuration Guide",
-            "Complete zephyr configuration guide. Zephyr setup instructions for zephyr deployment.");
+        TestDbHelper.SeedDocument(db, collectionName, "test/dominant.md",
+            "Complete zephyr configuration guide. Zephyr setup instructions for zephyr deployment.", "Zephyr Configuration Guide");
 
         // Weak: keyword once in body only, longer doc dilutes TF
-        InsertDoc(db, collectionName, "test/weak.md", "General Notes",
+        TestDbHelper.SeedDocument(db, collectionName, "test/weak.md",
             "Various topics covering many areas of technology and design. " +
             "One of them might relate to zephyr but mostly about other things entirely. " +
             "Additional content about databases, networking, security, performance, " +
-            "monitoring, deployment, testing, and documentation practices.");
+            "monitoring, deployment, testing, and documentation practices.", "General Notes");
 
         var results = FtsSearcher.SearchFTS(db, "zephyr", limit: 10);
         results.Should().HaveCount(2);
@@ -273,12 +262,5 @@ public class FtsSearcherTests : IDisposable
         var hasStrongSignal = topScore >= SearchConstants.StrongSignalMinScore
                               && gap >= SearchConstants.StrongSignalMinGap;
         hasStrongSignal.Should().BeTrue();
-    }
-
-    private static void InsertDoc(IQmdDatabase db, string collection, string path, string title, string content)
-    {
-        var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(db, hash, content, "2025-01-01");
-        DocumentOperations.InsertDocument(db, collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 }
