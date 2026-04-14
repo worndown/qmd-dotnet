@@ -25,7 +25,7 @@ internal static class VectorSearcher
     {
         // Check if vectors_vec table exists
         var tableExists = db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'")
-            .GetDynamic();
+            .Get<SqliteMasterRow>();
         if (tableExists == null) return [];
 
         // Get embedding
@@ -41,7 +41,7 @@ internal static class VectorSearcher
         // STEP 1: Get vector matches from sqlite-vec (NO JOINs allowed!)
         var embeddingBytes = EmbeddingOperations.FloatArrayToBytes(embedding);
         var vecResults = db.Prepare("SELECT hash_seq, distance FROM vectors_vec WHERE embedding MATCH $1 AND k = $2")
-            .AllDynamic(embeddingBytes, (long)(limit * 3));
+            .All<VectorMatchRow>(embeddingBytes, (long)(limit * 3));
 
         if (vecResults.Count == 0) return [];
 
@@ -50,9 +50,8 @@ internal static class VectorSearcher
         var hashSeqs = new List<string>();
         foreach (var r in vecResults)
         {
-            var hs = r["hash_seq"]!.ToString()!;
-            hashSeqs.Add(hs);
-            distanceMap[hs] = Convert.ToDouble(r["distance"]);
+            hashSeqs.Add(r.HashSeq);
+            distanceMap[r.HashSeq] = r.Distance;
         }
 
         // STEP 2: Get document data (separate query — JOINs are safe here)
@@ -82,18 +81,16 @@ internal static class VectorSearcher
                 parameters.Add(c);
         }
 
-        var docRows = db.Prepare(docSql).AllDynamic(parameters.ToArray());
+        var docRows = db.Prepare(docSql).All<ContentVectorDocRow>(parameters.ToArray());
 
         // Combine with distances and dedup by filepath (keep best distance)
-        var seen = new Dictionary<string, (Dictionary<string, object?> Row, double BestDist)>();
+        var seen = new Dictionary<string, (ContentVectorDocRow Row, double BestDist)>();
         foreach (var row in docRows)
         {
-            var hashSeq = row["hash_seq"]!.ToString()!;
-            var filepath = row["filepath"]!.ToString()!;
-            var distance = distanceMap.GetValueOrDefault(hashSeq, 1.0);
+            var distance = distanceMap.GetValueOrDefault(row.HashSeq, 1.0);
 
-            if (!seen.TryGetValue(filepath, out var existing) || distance < existing.BestDist)
-                seen[filepath] = (row, distance);
+            if (!seen.TryGetValue(row.Filepath, out var existing) || distance < existing.BestDist)
+                seen[row.Filepath] = (row, distance);
         }
 
         return seen.Values
@@ -102,23 +99,22 @@ internal static class VectorSearcher
             .Select(x =>
             {
                 var row = x.Row;
-                var hash = row["hash"]!.ToString()!;
-                var body = row["body"]?.ToString() ?? "";
-                var virtualPath = row["filepath"]!.ToString()!;
+                var body = row.Body ?? "";
+                var virtualPath = row.Filepath;
                 return new SearchResult
                 {
                     Filepath = virtualPath,
-                    DisplayPath = row["display_path"]!.ToString()!,
-                    Title = row["title"]!.ToString()!,
-                    Hash = hash,
-                    DocId = DocidUtils.GetDocid(hash),
-                    CollectionName = row["collection"]!.ToString()!,
+                    DisplayPath = row.DisplayPath,
+                    Title = row.Title,
+                    Hash = row.Hash,
+                    DocId = DocidUtils.GetDocid(row.Hash),
+                    CollectionName = row.Collection,
                     ModifiedAt = "",
                     BodyLength = body.Length,
                     Body = body,
                     Score = 1 - x.BestDist,
                     Source = "vec",
-                    ChunkPos = Convert.ToInt32(row["pos"] ?? 0),
+                    ChunkPos = row.Pos,
                     Context = ContextResolver.GetContextForFile(db, virtualPath),
                 };
             })

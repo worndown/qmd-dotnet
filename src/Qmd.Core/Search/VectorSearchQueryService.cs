@@ -1,3 +1,4 @@
+using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Retrieval;
@@ -28,7 +29,7 @@ internal static class VectorSearchQueryService
 
         // Check if vectors_vec table exists
         var vecTableExists = store.Db.Prepare(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
         if (vecTableExists == null) return [];
 
         // Expand query — filter to vec/hyde only (lex queries target FTS, not vector)

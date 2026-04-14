@@ -32,15 +32,15 @@ internal static class ContextResolver
         else
         {
             // Filesystem path: find which collection owns this path
-            var collections = db.Prepare("SELECT name, path FROM store_collections").AllDynamic();
+            var collections = db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
             foreach (var coll in collections)
             {
-                var collPath = coll["path"]?.ToString();
+                var collPath = coll.Path;
                 if (string.IsNullOrEmpty(collPath)) continue;
 
                 if (filepath.StartsWith(collPath + "/") || filepath == collPath)
                 {
-                    collectionName = coll["name"]!.ToString();
+                    collectionName = coll.Name;
                     relativePath = filepath.StartsWith(collPath + "/")
                         ? filepath[(collPath.Length + 1)..]
                         : "";
@@ -53,13 +53,13 @@ internal static class ContextResolver
 
         // Get collection's context JSON from DB
         var collRow = db.Prepare("SELECT context FROM store_collections WHERE name = $1")
-            .GetDynamic(collectionName);
+            .Get<StoreCollectionRow>(collectionName);
         if (collRow == null) return null;
 
         // Verify document exists in DB
         var docCheck = db.Prepare(
-            "SELECT 1 FROM documents WHERE collection = $1 AND path = $2 AND active = 1 LIMIT 1")
-            .GetDynamic(collectionName, relativePath);
+            "SELECT 1 as cnt FROM documents WHERE collection = $1 AND path = $2 AND active = 1 LIMIT 1")
+            .Get<CountRow>(collectionName, relativePath);
         if (docCheck == null) return null;
 
         // Collect all matching contexts (global + path prefixes)
@@ -67,13 +67,13 @@ internal static class ContextResolver
 
         // Global context
         var globalRow = db.Prepare("SELECT value FROM store_config WHERE key = $1")
-            .GetDynamic("global_context");
-        var globalCtx = globalRow?["value"]?.ToString();
+            .Get<SingleValueRow>("global_context");
+        var globalCtx = globalRow?.Value;
         if (!string.IsNullOrEmpty(globalCtx))
             contexts.Add(globalCtx);
 
         // Path prefix contexts from collection
-        var contextJson = collRow["context"]?.ToString();
+        var contextJson = collRow.Context;
         if (!string.IsNullOrEmpty(contextJson))
         {
             var pathContexts = JsonSerializer.Deserialize<Dictionary<string, string>>(contextJson);

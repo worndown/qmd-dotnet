@@ -21,12 +21,12 @@ internal static class EmbeddingOperations
             WHERE d.active = 1 AND v.hash IS NULL
             GROUP BY d.hash
             ORDER BY MIN(d.path)
-        ").AllDynamic();
+        ").All<EmbeddingPendingRow>();
 
         return rows.Select(r => new PendingEmbeddingDoc(
-            r["hash"]!.ToString()!,
-            r["path"]!.ToString()!,
-            Convert.ToInt64(r["bytes"] ?? 0)
+            r.Hash,
+            r.Path,
+            r.Bytes
         )).ToList();
     }
 
@@ -39,11 +39,11 @@ internal static class EmbeddingOperations
 
         var placeholders = string.Join(",", batch.Select((_, i) => $"${i + 1}"));
         var rows = db.Prepare($"SELECT hash, doc as body FROM content WHERE hash IN ({placeholders})")
-            .AllDynamic(batch.Select(d => (object?)d.Hash).ToArray());
+            .All<HashBodyRow>(batch.Select(d => (object?)d.Hash).ToArray());
 
         var bodyByHash = new Dictionary<string, string>();
         foreach (var r in rows)
-            bodyByHash[r["hash"]!.ToString()!] = r["body"]?.ToString() ?? "";
+            bodyByHash[r.Hash] = r.Body ?? "";
 
         return batch.Select(d => new EmbeddingDoc(
             d.Hash, d.Path, d.Bytes,
@@ -67,7 +67,7 @@ internal static class EmbeddingOperations
             .Run(hash, (long)seq, (long)pos, model, embeddedAt);
 
         // 2. vec0 doesn't support OR REPLACE — use DELETE + INSERT
-        _vecTableExists ??= db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic() != null;
+        _vecTableExists ??= db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>() != null;
         if (_vecTableExists.Value)
         {
             db.Prepare("DELETE FROM vectors_vec WHERE hash_seq = $1").Run(hashSeq);
@@ -101,12 +101,12 @@ internal static class EmbeddingOperations
             LEFT JOIN content_vectors v ON d.hash = v.hash AND v.seq = 0
             WHERE d.active = 1 AND v.hash IS NULL
             GROUP BY d.hash
-        ").AllDynamic();
+        ").All<HashBodyPathRow>();
 
         return rows.Select(r => (
-            r["hash"]!.ToString()!,
-            r["body"]?.ToString() ?? "",
-            r["path"]!.ToString()!
+            r.Hash,
+            r.Body ?? "",
+            r.Path
         )).ToList();
     }
 

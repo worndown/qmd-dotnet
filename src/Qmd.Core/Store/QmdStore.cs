@@ -246,7 +246,7 @@ internal class QmdStore : IQmdStore, IDisposable
     public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null)
     {
         var results = new List<ListFileEntry>();
-        IEnumerable<dynamic> rows;
+        List<ListFileRow> rows;
         if (pathPrefix != null)
         {
             rows = Db.Prepare(@"
@@ -255,7 +255,7 @@ internal class QmdStore : IQmdStore, IDisposable
                 JOIN content c ON c.hash = d.hash
                 WHERE d.collection = $1 AND d.path LIKE $2 AND d.active = 1
                 ORDER BY d.path
-            ").AllDynamic(collection, pathPrefix + "%");
+            ").All<ListFileRow>(collection, pathPrefix + "%");
         }
         else
         {
@@ -265,16 +265,16 @@ internal class QmdStore : IQmdStore, IDisposable
                 JOIN content c ON c.hash = d.hash
                 WHERE d.collection = $1 AND d.active = 1
                 ORDER BY d.path
-            ").AllDynamic(collection);
+            ").All<ListFileRow>(collection);
         }
 
         foreach (var row in rows)
         {
             results.Add(new ListFileEntry
             {
-                Path = row["path"]!.ToString()!,
-                DisplayPath = row["path"]!.ToString()!,
-                BodyLength = Convert.ToInt32(row["size"]),
+                Path = row.Path,
+                DisplayPath = row.Path,
+                BodyLength = row.Size,
             });
         }
         return Task.FromResult(results);

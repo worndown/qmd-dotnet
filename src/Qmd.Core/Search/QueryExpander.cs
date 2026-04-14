@@ -25,8 +25,8 @@ internal static class QueryExpander
 
         // Check cache
         var cacheKey = ComputeCacheKey(query, model, intent);
-        var cached = db.Prepare("SELECT result FROM llm_cache WHERE hash = $1").GetDynamic(cacheKey);
-        if (cached?["result"] is string cachedJson)
+        var cached = db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+        if (cached?.Value is string cachedJson)
         {
             var parsed = ParseCachedResult(cachedJson, query);
             if (parsed != null) return parsed;

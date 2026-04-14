@@ -16,8 +16,8 @@ internal static class CacheOperations
 
     public static string? GetCachedResult(IQmdDatabase db, string cacheKey)
     {
-        var row = db.Prepare("SELECT result FROM llm_cache WHERE hash = $1").GetDynamic(cacheKey);
-        return row?["result"]?.ToString();
+        var row = db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+        return row?.Value;
     }
 
     public static void SetCachedResult(IQmdDatabase db, string cacheKey, string result)
