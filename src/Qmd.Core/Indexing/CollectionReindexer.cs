@@ -8,12 +8,6 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Indexing;
 
-internal class ReindexOptions
-{
-    public List<string>? IgnorePatterns { get; init; }
-    public Action<ReindexProgress>? OnProgress { get; init; }
-}
-
 /// <summary>
 /// Re-indexes a collection by scanning the filesystem and updating the database.
 /// </summary>

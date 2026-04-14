@@ -1,6 +1,5 @@
 using Qmd.Core.Configuration;
 using Qmd.Core.Models;
-using Qmd.Core.Search;
 
 namespace Qmd.Core;
 

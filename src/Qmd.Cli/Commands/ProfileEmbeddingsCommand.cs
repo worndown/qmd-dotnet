@@ -1,5 +1,5 @@
 using System.CommandLine;
-using Qmd.Core.Search;
+using Qmd.Core.Models;
 using Spectre.Console;
 
 namespace Qmd.Cli.Commands;
