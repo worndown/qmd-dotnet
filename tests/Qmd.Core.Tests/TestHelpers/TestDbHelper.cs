@@ -31,6 +31,16 @@ internal static class TestDbHelper
     }
 
     /// <summary>
+    /// Insert multiple documents with content into the database.
+    /// </summary>
+    public static void SeedDocuments(IQmdDatabase db,
+        params (string Collection, string Path, string Title, string Content)[] docs)
+    {
+        foreach (var (collection, path, title, content) in docs)
+            SeedDocument(db, collection, path, content, title);
+    }
+
+    /// <summary>
     /// Insert a collection into store_collections.
     /// </summary>
     public static void SeedCollection(IQmdDatabase db, string name, string path,

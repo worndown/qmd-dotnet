@@ -81,6 +81,6 @@ internal static class QueryExpander
             }
             return results.Count > 0 ? results : null;
         }
-        catch { return null; }
+        catch (JsonException) { return null; }
     }
 }

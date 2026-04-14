@@ -292,7 +292,7 @@ public class QmdStoreSdkTests
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(config);
 
         var act = async () => await store.RenameCollectionAsync("a", "b");
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*already exists*");
+        await act.Should().ThrowAsync<QmdException>().WithMessage("*already exists*");
     }
 
     [Fact]

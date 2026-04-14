@@ -64,7 +64,13 @@ internal static class CollectionReindexer
             {
                 content = await File.ReadAllTextAsync(filepath);
             }
-            catch
+            catch (IOException)
+            {
+                processed++;
+                options?.OnProgress?.Invoke(new ReindexProgress(relativeFile, processed, total));
+                continue;
+            }
+            catch (UnauthorizedAccessException)
             {
                 processed++;
                 options?.OnProgress?.Invoke(new ReindexProgress(relativeFile, processed, total));

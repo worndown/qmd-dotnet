@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Qmd.Core.Database;
 
 namespace Qmd.Core.Indexing;
@@ -38,7 +39,7 @@ internal static class MaintenanceOperations
         {
             db.Prepare("SELECT 1 FROM vectors_vec LIMIT 0").Get<SqliteMasterRow>();
         }
-        catch
+        catch (SqliteException)
         {
             return 0; // sqlite-vec not available
         }

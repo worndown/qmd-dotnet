@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Reflection;
 using LLama.Native;
 using Qmd.Cli.Commands;
+using Qmd.Core;
 
 // Version from assembly
 var version = Assembly.GetExecutingAssembly()
@@ -48,6 +49,11 @@ if (indexVal != null)
 try
 {
     return await parseResult.InvokeAsync();
+}
+catch (QmdException ex)
+{
+    Console.Error.WriteLine($"ERROR: {ex.Message}");
+    return 1;
 }
 catch (InvalidOperationException ex)
 {

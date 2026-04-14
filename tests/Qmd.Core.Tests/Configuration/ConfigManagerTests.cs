@@ -71,7 +71,7 @@ public class ConfigManagerTests
         mgr.AddCollection("a", "/path1");
         mgr.AddCollection("b", "/path2");
         var act = () => mgr.RenameCollection("a", "b");
-        act.Should().Throw<InvalidOperationException>().WithMessage("*already exists*");
+        act.Should().Throw<QmdException>().WithMessage("*already exists*");
     }
 
     [Fact]

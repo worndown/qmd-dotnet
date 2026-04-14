@@ -76,7 +76,8 @@ internal static class EmbeddingPipeline
                         embeddings = await llmService.EmbedBatchAsync(formattedTexts,
                             new EmbedOptions { Model = model }, options.CancellationToken);
                     }
-                    catch
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception)
                     {
                         // Batch failed — fallback to per-chunk embedding
                         embeddings = new List<EmbeddingResult?>(new EmbeddingResult?[formattedTexts.Count]);
@@ -87,7 +88,8 @@ internal static class EmbeddingPipeline
                                 embeddings[j] = await llmService.EmbedAsync(formattedTexts[j],
                                     new EmbedOptions { Model = model }, options.CancellationToken);
                             }
-                            catch { embeddings[j] = null; }
+                            catch (OperationCanceledException) { throw; }
+                            catch (Exception) { embeddings[j] = null; }
                         }
                     }
 
@@ -123,7 +125,8 @@ internal static class EmbeddingPipeline
                         totalBytes,
                         totalErrors));
                 }
-                catch
+                catch (OperationCanceledException) { throw; }
+                catch (Exception)
                 {
                     // Per-doc embedding failure — count it and continue with remaining docs
                     totalErrors++;

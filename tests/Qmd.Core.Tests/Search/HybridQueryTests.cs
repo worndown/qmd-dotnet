@@ -1,11 +1,10 @@
 using FluentAssertions;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
 using Qmd.Core.Store;
 using Qmd.Core.Tests.Llm;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Search;
 
@@ -20,25 +19,15 @@ public class HybridQueryTests : IDisposable
         _store = new QmdStore(new SqliteDatabase(":memory:"));
         _llm = new MockLlmService();
         _store.LlmService = _llm;
-        SeedDocuments();
+        TestDbHelper.SeedDocuments(_store.Db,
+            ("docs", "api.md", "api.md", "This document describes the REST API endpoints for user authentication and authorization. OAuth2 flows are covered in detail."),
+            ("docs", "guide.md", "guide.md", "Welcome to the getting started guide. Learn how to install and configure the system step by step."),
+            ("docs", "deploy.md", "deploy.md", "Deployment guide covering Docker containers, Kubernetes orchestration, and CI/CD pipeline configuration."),
+            ("notes", "meeting.md", "meeting.md", "Meeting notes about distributed systems architecture and multi-agent coordination patterns.")
+        );
     }
 
     public void Dispose() => _store.Dispose();
-
-    private void SeedDocuments()
-    {
-        void Seed(string collection, string path, string content)
-        {
-            var hash = ContentHasher.HashContent(content);
-            ContentHasher.InsertContent(_store.Db, hash, content, "2025-01-01");
-            DocumentOperations.InsertDocument(_store.Db, collection, path, path, hash, "2025-01-01", "2025-01-01");
-        }
-
-        Seed("docs", "api.md", "This document describes the REST API endpoints for user authentication and authorization. OAuth2 flows are covered in detail.");
-        Seed("docs", "guide.md", "Welcome to the getting started guide. Learn how to install and configure the system step by step.");
-        Seed("docs", "deploy.md", "Deployment guide covering Docker containers, Kubernetes orchestration, and CI/CD pipeline configuration.");
-        Seed("notes", "meeting.md", "Meeting notes about distributed systems architecture and multi-agent coordination patterns.");
-    }
 
     [Fact]
     public async Task HybridQuery_ReturnsResults()

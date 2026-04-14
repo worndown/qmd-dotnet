@@ -1,7 +1,5 @@
 using FluentAssertions;
-using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Search;
 using Qmd.Core.Tests.TestHelpers;
 
@@ -15,25 +13,15 @@ public class MultiCollectionFilterTests : IDisposable
     public MultiCollectionFilterTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
-        SeedDocuments();
+        TestDbHelper.SeedDocuments(_db,
+            ("docs", "api.md", "API Reference", "REST API endpoints for authentication."),
+            ("docs", "guide.md", "Getting Started", "How to install and configure the system."),
+            ("code", "auth.ts", "Auth Module", "OAuth2 authentication flow implementation."),
+            ("notes", "meeting.md", "Meeting Notes", "Discussion about API design patterns.")
+        );
     }
 
     public void Dispose() => _db.Dispose();
-
-    private void SeedDocuments()
-    {
-        void Seed(string collection, string path, string title, string content)
-        {
-            var hash = ContentHasher.HashContent(content);
-            ContentHasher.InsertContent(_db, hash, content, "2025-01-01");
-            DocumentOperations.InsertDocument(_db, collection, path, title, hash, "2025-01-01", "2025-01-01");
-        }
-
-        Seed("docs", "api.md", "API Reference", "REST API endpoints for authentication.");
-        Seed("docs", "guide.md", "Getting Started", "How to install and configure the system.");
-        Seed("code", "auth.ts", "Auth Module", "OAuth2 authentication flow implementation.");
-        Seed("notes", "meeting.md", "Meeting Notes", "Discussion about API design patterns.");
-    }
 
     [Fact]
     public void SearchFTS_NoCollectionFilter_ReturnsAll()
