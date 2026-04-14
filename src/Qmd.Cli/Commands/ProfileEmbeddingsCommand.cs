@@ -43,17 +43,17 @@ public static class ProfileEmbeddingsCommand
                     }, token);
                 });
 
-            Console.WriteLine($"Model: {profile.Model} ({profile.Dimensions} dimensions)");
-            Console.WriteLine($"Corpus: {profile.TotalChunks} chunks, sampled {profile.SampleSize} ({profile.ScoreCount} score pairs)");
-            Console.WriteLine();
-            Console.WriteLine("Cosine similarity distribution (inter-document):");
-            Console.WriteLine($"  Min:    {profile.Min:F3}");
-            Console.WriteLine($"  P5:     {profile.P5:F3}    P25:    {profile.P25:F3}");
-            Console.WriteLine($"  Median: {profile.Median:F3}    Mean:   {profile.Mean:F3}");
-            Console.WriteLine($"  P75:    {profile.P75:F3}    P95:    {profile.P95:F3}");
-            Console.WriteLine($"  Max:    {profile.Max:F3}");
-            Console.WriteLine();
-            Console.WriteLine($"Suggested --min-score for vsearch: {profile.SuggestedVsearchMinScore:F2} (P75)");
+            CliContext.Console.WriteLine($"Model: {profile.Model} ({profile.Dimensions} dimensions)");
+            CliContext.Console.WriteLine($"Corpus: {profile.TotalChunks} chunks, sampled {profile.SampleSize} ({profile.ScoreCount} score pairs)");
+            CliContext.Console.WriteLine();
+            CliContext.Console.WriteLine("Cosine similarity distribution (inter-document):");
+            CliContext.Console.WriteLine($"  Min:    {profile.Min:F3}");
+            CliContext.Console.WriteLine($"  P5:     {profile.P5:F3}    P25:    {profile.P25:F3}");
+            CliContext.Console.WriteLine($"  Median: {profile.Median:F3}    Mean:   {profile.Mean:F3}");
+            CliContext.Console.WriteLine($"  P75:    {profile.P75:F3}    P95:    {profile.P95:F3}");
+            CliContext.Console.WriteLine($"  Max:    {profile.Max:F3}");
+            CliContext.Console.WriteLine();
+            CliContext.Console.WriteLine($"Suggested --min-score for vsearch: {profile.SuggestedVsearchMinScore:F2} (P75)");
         });
 
         return cmd;

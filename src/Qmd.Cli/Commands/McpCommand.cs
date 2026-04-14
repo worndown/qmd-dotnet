@@ -22,7 +22,7 @@ public static class McpCommand
             var pidPath = QmdPaths.GetMcpPidPath();
             if (!File.Exists(pidPath))
             {
-                Console.WriteLine("Not running (no PID file).");
+                CliContext.Console.WriteLine("Not running (no PID file).");
                 return;
             }
 
@@ -36,13 +36,13 @@ public static class McpCommand
                     proc.WaitForExit(5000);
                 }
                 File.Delete(pidPath);
-                Console.WriteLine($"Stopped QMD MCP server (PID {pid}).");
+                CliContext.Console.WriteLine($"Stopped QMD MCP server (PID {pid}).");
             }
             catch (ArgumentException)
             {
                 // Process not found — stale PID file
                 File.Delete(pidPath);
-                Console.WriteLine("Cleaned up stale PID file (server was not running).");
+                CliContext.Console.WriteLine("Cleaned up stale PID file (server was not running).");
             }
         });
         cmd.Subcommands.Add(stopCmd);
@@ -63,7 +63,7 @@ public static class McpCommand
 
             if (daemon && !http)
             {
-                Console.Error.WriteLine("--daemon requires --http");
+                CliContext.Console.WriteErrorLine("--daemon requires --http");
                 Environment.Exit(1);
             }
 
@@ -82,7 +82,7 @@ public static class McpCommand
                         var existing = Process.GetProcessById(existingPid);
                         if (!existing.HasExited)
                         {
-                            Console.Error.WriteLine($"Already running (PID {existingPid}). Run 'qmd mcp stop' first.");
+                            CliContext.Console.WriteErrorLine($"Already running (PID {existingPid}). Run 'qmd mcp stop' first.");
                             Environment.Exit(1);
                         }
                     }
@@ -95,7 +95,7 @@ public static class McpCommand
                 var exePath = Environment.ProcessPath;
                 if (string.IsNullOrEmpty(exePath))
                 {
-                    Console.Error.WriteLine("Cannot determine executable path for daemon spawn.");
+                    CliContext.Console.WriteErrorLine("Cannot determine executable path for daemon spawn.");
                     Environment.Exit(1);
                 }
 
@@ -111,13 +111,13 @@ public static class McpCommand
                 var child = Process.Start(startInfo);
                 if (child == null)
                 {
-                    Console.Error.WriteLine("Failed to start daemon process.");
+                    CliContext.Console.WriteErrorLine("Failed to start daemon process.");
                     Environment.Exit(1);
                 }
 
                 File.WriteAllText(pidPath, child.Id.ToString());
-                Console.WriteLine($"Started on http://localhost:{port}/mcp (PID {child.Id})");
-                Console.WriteLine($"Logs: {logPath}");
+                CliContext.Console.WriteLine($"Started on http://localhost:{port}/mcp (PID {child.Id})");
+                CliContext.Console.WriteLine($"Logs: {logPath}");
                 Environment.Exit(0);
             }
             else

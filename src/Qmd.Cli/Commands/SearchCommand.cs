@@ -49,29 +49,36 @@ public static class SearchCommand
             if (all) limit = 100000;
 
             await using var store = await CliHelper.CreateStoreAsync();
-            var collList = await CliHelper.ResolveCollectionsAsync(store, collections);
-            var results = await store.SearchLexAsync(query, new LexSearchOptions
-            {
-                Limit = limit,
-                Collections = collList,
-            });
-
-            if (minScore > 0)
-                results = results.Where(r => r.Score >= minScore).ToList();
-
-            if (results.Count == 0)
-            {
-                CliHelper.PrintEmptySearchResults(outputFormat, minScore > 0
-                    ? $"No results above --min-score {minScore}."
-                    : null);
-                return;
-            }
-
-            var output = SearchResultFormatter.Format(results, outputFormat,
-                new FormatOptions { Full = full, Query = query, LineNumbers = lineNumbers });
-            Console.Write(output);
+            await HandleSearchAsync(store, query, collections, limit, minScore, outputFormat, full, lineNumbers);
         });
 
         return cmd;
+    }
+
+    internal static async Task HandleSearchAsync(
+        IQmdStore store, string query, string[] collections, int limit,
+        double minScore, OutputFormat outputFormat, bool full, bool lineNumbers)
+    {
+        var collList = await CliHelper.ResolveCollectionsAsync(store, collections);
+        var results = await store.SearchLexAsync(query, new LexSearchOptions
+        {
+            Limit = limit,
+            Collections = collList,
+        });
+
+        if (minScore > 0)
+            results = results.Where(r => r.Score >= minScore).ToList();
+
+        if (results.Count == 0)
+        {
+            CliHelper.PrintEmptySearchResults(outputFormat, minScore > 0
+                ? $"No results above --min-score {minScore}."
+                : null);
+            return;
+        }
+
+        var output = SearchResultFormatter.Format(results, outputFormat,
+            new FormatOptions { Full = full, Query = query, LineNumbers = lineNumbers });
+        CliContext.Console.Write(output);
     }
 }

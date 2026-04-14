@@ -45,11 +45,11 @@ public static class MultiGetCommand
             });
 
             foreach (var error in errors)
-                Console.Error.WriteLine(error);
+                CliContext.Console.WriteErrorLine(error);
 
             if (docs.Count == 0 && errors.Count == 0)
             {
-                Console.Error.WriteLine($"No files matched: {pattern}");
+                CliContext.Console.WriteErrorLine($"No files matched: {pattern}");
                 return;
             }
 
@@ -81,7 +81,7 @@ public static class MultiGetCommand
                 };
             }).ToList();
 
-            Console.Write(DocumentFormatter.Format(files, outputFormat));
+            CliContext.Console.Write(DocumentFormatter.Format(files, outputFormat));
         });
 
         return cmd;

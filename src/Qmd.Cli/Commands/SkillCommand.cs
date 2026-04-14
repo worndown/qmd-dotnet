@@ -13,10 +13,10 @@ public static class SkillCommand
         var showCmd = new Command("show", "Print the embedded SKILL.md to stdout");
         showCmd.SetAction(parseResult =>
         {
-            Console.WriteLine("QMD Skill (embedded)");
-            Console.WriteLine();
+            CliContext.Console.WriteLine("QMD Skill (embedded)");
+            CliContext.Console.WriteLine();
             var content = EmbeddedSkills.GetEmbeddedQmdSkillContent();
-            Console.Write(content.EndsWith('\n') ? content : content + "\n");
+            CliContext.Console.Write(content.EndsWith('\n') ? content : content + "\n");
         });
 
         // skill install
@@ -36,18 +36,18 @@ public static class SkillCommand
 
             var installDir = SkillInstaller.GetSkillInstallDir(global);
             SkillInstaller.WriteEmbeddedSkill(installDir, force);
-            Console.WriteLine($"Installed QMD skill to {installDir}");
+            CliContext.Console.WriteLine($"Installed QMD skill to {installDir}");
 
             var claudeLinkPath = SkillInstaller.GetClaudeSkillLinkPath(global);
             if (!SkillInstaller.ShouldCreateClaudeSymlink(yes, _ =>
             {
-                if (Console.IsInputRedirected)
+                if (CliContext.Console.IsInputRedirected)
                 {
-                    Console.WriteLine($"Tip: create a Claude symlink manually at {claudeLinkPath}");
+                    CliContext.Console.WriteLine($"Tip: create a Claude symlink manually at {claudeLinkPath}");
                     return false;
                 }
-                Console.Write($"Create a symlink in {claudeLinkPath}? [y/N] ");
-                var answer = Console.ReadLine()?.Trim().ToLowerInvariant();
+                CliContext.Console.Write($"Create a symlink in {claudeLinkPath}? [y/N] ");
+                var answer = CliContext.Console.ReadLine()?.Trim().ToLowerInvariant();
                 return answer is "y" or "yes";
             }))
                 return;
@@ -56,13 +56,13 @@ public static class SkillCommand
             {
                 var linked = SkillInstaller.EnsureClaudeSymlink(claudeLinkPath, installDir, force);
                 if (linked)
-                    Console.WriteLine($"Linked Claude skill at {claudeLinkPath}");
+                    CliContext.Console.WriteLine($"Linked Claude skill at {claudeLinkPath}");
                 else
-                    Console.WriteLine($"Claude already sees the skill via {Path.GetDirectoryName(claudeLinkPath)}");
+                    CliContext.Console.WriteLine($"Claude already sees the skill via {Path.GetDirectoryName(claudeLinkPath)}");
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                CliContext.Console.WriteErrorLine(ex.Message);
             }
         });
 

@@ -1,4 +1,5 @@
 using System.CommandLine;
+using Qmd.Core;
 using Qmd.Core.Paths;
 using Spectre.Console;
 
@@ -34,51 +35,7 @@ public static class ContextCommand
             var path = parseResult.GetValue(addPath) ?? ".";
             var text = parseResult.GetValue(addText) ?? throw new InvalidOperationException("Required argument 'text' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            var collections = await store.ListCollectionsAsync();
-            if (collections.Count == 0) { Console.Error.WriteLine("No collections found."); return; }
-
-            string collectionName;
-            string pathPrefix;
-
-            if (VirtualPaths.IsVirtualPath(path))
-            {
-                // Parse virtual path: qmd://collection/path
-                var parsed = VirtualPaths.Parse(path)!;
-                collectionName = parsed.CollectionName;
-                pathPrefix = parsed.Path ?? "/";
-            }
-            else if (path == "/")
-            {
-                // Global context — applies to all collections
-                await store.SetGlobalContextAsync(text);
-                Console.WriteLine($"Global context set: {text}");
-                return;
-            }
-            else
-            {
-                // Auto-detect collection from filesystem path
-                var absPath = Path.GetFullPath(path);
-                var matched = collections.FirstOrDefault(c =>
-                    absPath.StartsWith(c.Path, StringComparison.OrdinalIgnoreCase));
-                if (matched != null)
-                {
-                    collectionName = matched.Name;
-                    pathPrefix = absPath.Length > matched.Path.Length
-                        ? absPath[matched.Path.Length..].Replace('\\', '/')
-                        : "/";
-                }
-                else
-                {
-                    // Fallback: use first collection, treat path as prefix
-                    collectionName = collections[0].Name;
-                    pathPrefix = path;
-                }
-            }
-
-            var result = await store.AddContextAsync(collectionName, pathPrefix, text);
-            Console.WriteLine(result
-                ? $"Context added to {collectionName}:{pathPrefix}"
-                : "Failed to add context.");
+            await HandleAddAsync(store, path, text);
         });
 
         // context rm <path>
@@ -89,47 +46,7 @@ public static class ContextCommand
         {
             var path = parseResult.GetValue(rmPath) ?? throw new InvalidOperationException("Required argument 'path' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            var collections = await store.ListCollectionsAsync();
-            if (collections.Count == 0) { Console.Error.WriteLine("No collections found."); return; }
-
-            string collectionName;
-            string pathPrefix;
-
-            if (VirtualPaths.IsVirtualPath(path))
-            {
-                var parsed = VirtualPaths.Parse(path)!;
-                collectionName = parsed.CollectionName;
-                pathPrefix = parsed.Path ?? "/";
-            }
-            else if (path == "/")
-            {
-                // Remove global context
-                await store.SetGlobalContextAsync(null);
-                Console.WriteLine("Global context removed.");
-                return;
-            }
-            else
-            {
-                // Auto-detect collection from filesystem path
-                var absPath = Path.GetFullPath(path);
-                var matched = collections.FirstOrDefault(c =>
-                    absPath.StartsWith(c.Path, StringComparison.OrdinalIgnoreCase));
-                if (matched != null)
-                {
-                    collectionName = matched.Name;
-                    pathPrefix = absPath.Length > matched.Path.Length
-                        ? absPath[matched.Path.Length..].Replace('\\', '/')
-                        : "/";
-                }
-                else
-                {
-                    collectionName = collections[0].Name;
-                    pathPrefix = path;
-                }
-            }
-
-            var result = await store.RemoveContextAsync(collectionName, pathPrefix);
-            Console.WriteLine(result ? "Context removed." : "Context not found.");
+            await HandleRemoveAsync(store, path);
         });
 
         // context check
@@ -161,5 +78,93 @@ public static class ContextCommand
         cmd.Subcommands.Add(rmCmd);
         cmd.Subcommands.Add(checkCmd);
         return cmd;
+    }
+
+    internal static async Task HandleAddAsync(IQmdStore store, string path, string text)
+    {
+        var collections = await store.ListCollectionsAsync();
+        if (collections.Count == 0) { CliContext.Console.WriteErrorLine("No collections found."); return; }
+
+        string collectionName;
+        string pathPrefix;
+
+        if (VirtualPaths.IsVirtualPath(path))
+        {
+            var parsed = VirtualPaths.Parse(path)!;
+            collectionName = parsed.CollectionName;
+            pathPrefix = parsed.Path ?? "/";
+        }
+        else if (path == "/")
+        {
+            await store.SetGlobalContextAsync(text);
+            CliContext.Console.WriteLine($"Global context set: {text}");
+            return;
+        }
+        else
+        {
+            var absPath = Path.GetFullPath(path);
+            var matched = collections.FirstOrDefault(c =>
+                absPath.StartsWith(c.Path, StringComparison.OrdinalIgnoreCase));
+            if (matched != null)
+            {
+                collectionName = matched.Name;
+                pathPrefix = absPath.Length > matched.Path.Length
+                    ? absPath[matched.Path.Length..].Replace('\\', '/')
+                    : "/";
+            }
+            else
+            {
+                collectionName = collections[0].Name;
+                pathPrefix = path;
+            }
+        }
+
+        var result = await store.AddContextAsync(collectionName, pathPrefix, text);
+        CliContext.Console.WriteLine(result
+            ? $"Context added to {collectionName}:{pathPrefix}"
+            : "Failed to add context.");
+    }
+
+    internal static async Task HandleRemoveAsync(IQmdStore store, string path)
+    {
+        var collections = await store.ListCollectionsAsync();
+        if (collections.Count == 0) { CliContext.Console.WriteErrorLine("No collections found."); return; }
+
+        string collectionName;
+        string pathPrefix;
+
+        if (VirtualPaths.IsVirtualPath(path))
+        {
+            var parsed = VirtualPaths.Parse(path)!;
+            collectionName = parsed.CollectionName;
+            pathPrefix = parsed.Path ?? "/";
+        }
+        else if (path == "/")
+        {
+            await store.SetGlobalContextAsync(null);
+            CliContext.Console.WriteLine("Global context removed.");
+            return;
+        }
+        else
+        {
+            var absPath = Path.GetFullPath(path);
+            var matched = collections.FirstOrDefault(c =>
+                absPath.StartsWith(c.Path, StringComparison.OrdinalIgnoreCase));
+            if (matched != null)
+            {
+                collectionName = matched.Name;
+                pathPrefix = absPath.Length > matched.Path.Length
+                    ? absPath[matched.Path.Length..].Replace('\\', '/')
+                    : "/";
+            }
+            else
+            {
+                collectionName = collections[0].Name;
+                pathPrefix = path;
+            }
+        }
+
+        var result = await store.RemoveContextAsync(collectionName, pathPrefix);
+        CliContext.Console.WriteLine(result ? "Context removed." : "Context not found.");
     }
 }

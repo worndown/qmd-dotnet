@@ -112,7 +112,7 @@ public static class QueryCommand
                 });
 
             if (diagnostics is { HasFtsResults: false } && results.Count > 0)
-                Console.Error.WriteLine("Note: no keyword matches found -- results are based on semantic similarity only and may be less precise.");
+                CliContext.Console.WriteErrorLine("Note: no keyword matches found -- results are based on semantic similarity only and may be less precise.");
 
             if (minScore > 0)
                 results = results.Where(r => r.Score >= minScore).ToList();
@@ -142,7 +142,7 @@ public static class QueryCommand
 
             var output = SearchResultFormatter.Format(searchResults, outputFormat,
                 new FormatOptions { Full = full, Query = query, LineNumbers = lineNumbers, Intent = intent, Explain = explain });
-            Console.Write(output);
+            CliContext.Console.Write(output);
         });
 
         return cmd;

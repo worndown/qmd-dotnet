@@ -38,44 +38,49 @@ public static class GetCommand
             }
 
             await using var store = await CliHelper.CreateStoreAsync();
-            var result = await store.GetAsync(file, new GetOptions { IncludeBody = true });
-            if (result.IsFound)
-            {
-                var doc = result.Document!;
-                Console.WriteLine($"# {doc.DisplayPath}");
-                if (doc.Context != null) Console.WriteLine($"Context: {doc.Context}");
-                if (doc.Body != null)
-                {
-                    var body = doc.Body;
-
-                    // Apply line slicing
-                    if (fromLine.HasValue || maxLines.HasValue)
-                    {
-                        var lines = body.Split('\n');
-                        var start = (fromLine ?? 1) - 1;
-                        var count = maxLines ?? lines.Length - start;
-                        body = string.Join('\n', lines.Skip(start).Take(count));
-                    }
-
-                    if (lineNumbers)
-                        Console.WriteLine(FormatHelpers.AddLineNumbers(body, fromLine ?? 1));
-                    else
-                        Console.WriteLine(body);
-                }
-            }
-            else
-            {
-                Console.Error.WriteLine($"Not found: {file}");
-                if (result.NotFound!.SimilarFiles.Count > 0)
-                {
-                    Console.Error.WriteLine("Similar files:");
-                    foreach (var f in result.NotFound.SimilarFiles)
-                        Console.Error.WriteLine($"  {f}");
-                }
-                Environment.ExitCode = 1;
-            }
+            await HandleGetAsync(store, file, fromLine, maxLines, lineNumbers);
         });
 
         return cmd;
+    }
+
+    internal static async Task HandleGetAsync(IQmdStore store, string file, int? fromLine, int? maxLines, bool lineNumbers)
+    {
+        var result = await store.GetAsync(file, new GetOptions { IncludeBody = true });
+        if (result.IsFound)
+        {
+            var doc = result.Document!;
+            CliContext.Console.WriteLine($"# {doc.DisplayPath}");
+            if (doc.Context != null) CliContext.Console.WriteLine($"Context: {doc.Context}");
+            if (doc.Body != null)
+            {
+                var body = doc.Body;
+
+                // Apply line slicing
+                if (fromLine.HasValue || maxLines.HasValue)
+                {
+                    var lines = body.Split('\n');
+                    var start = (fromLine ?? 1) - 1;
+                    var count = maxLines ?? lines.Length - start;
+                    body = string.Join('\n', lines.Skip(start).Take(count));
+                }
+
+                if (lineNumbers)
+                    CliContext.Console.WriteLine(FormatHelpers.AddLineNumbers(body, fromLine ?? 1));
+                else
+                    CliContext.Console.WriteLine(body);
+            }
+        }
+        else
+        {
+            CliContext.Console.WriteErrorLine($"Not found: {file}");
+            if (result.NotFound!.SimilarFiles.Count > 0)
+            {
+                CliContext.Console.WriteErrorLine("Similar files:");
+                foreach (var f in result.NotFound.SimilarFiles)
+                    CliContext.Console.WriteErrorLine($"  {f}");
+            }
+            Environment.ExitCode = 1;
+        }
     }
 }
