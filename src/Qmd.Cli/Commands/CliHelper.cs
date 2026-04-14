@@ -189,5 +189,3 @@ internal static class CliHelper
         return queries.Count > 0 ? new ParsedStructuredQuery(queries, intent) : null;
     }
 }
-
-internal record ParsedStructuredQuery(List<ExpandedQuery> Queries, string? Intent);
