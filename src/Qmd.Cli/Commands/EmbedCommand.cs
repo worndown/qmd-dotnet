@@ -42,7 +42,7 @@ public static class EmbedCommand
                 ChunkStrategy = strategy,
                 MaxDocsPerBatch = maxDocs ?? 64,
                 MaxBatchBytes = (maxMb ?? 64) * 1024 * 1024,
-                OnProgress = info =>
+                Progress = new Progress<EmbedProgress>(info =>
                 {
                     if (info.TotalBytes == 0) return;
 
@@ -64,7 +64,7 @@ public static class EmbedCommand
 
                         Console.Error.Write($"\r{bar} {percentStr}% {info.ChunksEmbedded}/{info.TotalChunks}{errStr} {throughput} ETA {eta}   ");
                     }
-                },
+                }),
             });
 
             OscProgress.Clear();

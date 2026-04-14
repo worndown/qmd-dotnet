@@ -500,7 +500,7 @@ internal class QmdStore : IQmdStore, IDisposable
                 new ReindexOptions
                 {
                     IgnorePatterns = coll.Ignore,
-                    OnProgress = options?.OnProgress,
+                    Progress = options?.Progress,
                 });
             totalIndexed += result.Indexed;
             totalUpdated += result.Updated;

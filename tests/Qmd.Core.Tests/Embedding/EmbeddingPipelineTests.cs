@@ -112,7 +112,7 @@ public class EmbeddingPipelineTests : IDisposable
         var progressReports = new List<EmbedProgress>();
 
         await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
-            new EmbedPipelineOptions { OnProgress = p => progressReports.Add(p) },
+            new EmbedPipelineOptions { Progress = new TestHelpers.SyncProgress<EmbedProgress>(p => progressReports.Add(p)) },
             ensureVecTable: _ => { });
 
         progressReports.Should().NotBeEmpty();

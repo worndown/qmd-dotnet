@@ -69,13 +69,13 @@ internal class CollectionReindexerService : ICollectionReindexerService
             catch (IOException)
             {
                 processed++;
-                options?.OnProgress?.Invoke(new ReindexProgress(relativeFile, processed, total));
+                options?.Progress?.Report(new ReindexProgress(relativeFile, processed, total));
                 continue;
             }
             catch (UnauthorizedAccessException)
             {
                 processed++;
-                options?.OnProgress?.Invoke(new ReindexProgress(relativeFile, processed, total));
+                options?.Progress?.Report(new ReindexProgress(relativeFile, processed, total));
                 continue;
             }
 
@@ -122,7 +122,7 @@ internal class CollectionReindexerService : ICollectionReindexerService
             }
 
             processed++;
-            options?.OnProgress?.Invoke(new ReindexProgress(relativeFile, processed, total));
+            options?.Progress?.Report(new ReindexProgress(relativeFile, processed, total));
         }
 
         // Deactivate documents no longer on disk

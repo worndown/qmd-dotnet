@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using Qmd.Cli.Progress;
 using Qmd.Core;
+using Qmd.Core.Models;
 using Spectre.Console;
 
 namespace Qmd.Cli.Commands;
@@ -67,7 +68,7 @@ public static class UpdateCommand
 
             var result = await store.UpdateAsync(new UpdateOptions
             {
-                OnProgress = info =>
+                Progress = new Progress<ReindexProgress>(info =>
                 {
                     var percent = (int)(info.Current / (double)info.Total * 100);
                     OscProgress.Set(percent);
@@ -80,7 +81,7 @@ public static class UpdateCommand
                         var eta = info.Current > 2 ? $" ETA: {ProgressFormatting.FormatEta(remaining)}" : "";
                         Console.Error.Write($"\rIndexing: {info.Current}/{info.Total}{eta}        ");
                     }
-                },
+                }),
             });
 
             OscProgress.Clear();
