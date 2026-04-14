@@ -26,10 +26,10 @@ jobs:
         shell: bash
 
       - name: Publish CLI
-        run: dotnet publish src/Qmd.Cli/Qmd.Cli.csproj --configuration Release --runtime win-x64 --self-contained --output ./publish /p:Version=${{ steps.version.outputs.VERSION }}
+        run: dotnet publish src/Qmd.Cli/Qmd.Cli.csproj --configuration Release --runtime win-x64 --self-contained --output ./publish /p:Version=${{ steps.version.outputs.VERSION }} /p:ContinuousIntegrationBuild=true
 
       - name: Pack NuGet
-        run: dotnet pack src/Qmd.Core/Qmd.Core.csproj --configuration Release --output ./nupkg /p:Version=${{ steps.version.outputs.VERSION }}
+        run: dotnet pack src/Qmd.Core/Qmd.Core.csproj --configuration Release --output ./nupkg /p:Version=${{ steps.version.outputs.VERSION }} /p:ContinuousIntegrationBuild=true
 
       - name: Remove non-Windows runtimes
         run: |
