@@ -9,10 +9,12 @@ namespace Qmd.Core.Tests.Configuration;
 public class ConfigSyncTests : IDisposable
 {
     private readonly IQmdDatabase _db;
+    private readonly ConfigSyncService _configSync;
 
     public ConfigSyncTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
+        _configSync = new ConfigSyncService(_db);
     }
 
     public void Dispose() => _db.Dispose();
@@ -29,7 +31,7 @@ public class ConfigSyncTests : IDisposable
             }
         };
 
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
 
         var rows = _db.Prepare("SELECT name, path FROM store_collections ORDER BY name").AllDynamic();
         rows.Should().HaveCount(2);
@@ -49,7 +51,7 @@ public class ConfigSyncTests : IDisposable
                 ["b"] = new Collection { Path = "/b" },
             }
         };
-        ConfigSync.SyncToDb(_db, config1);
+        _configSync.SyncToDb(config1);
 
         var config2 = new CollectionConfig
         {
@@ -58,7 +60,7 @@ public class ConfigSyncTests : IDisposable
                 ["a"] = new Collection { Path = "/a" },
             }
         };
-        ConfigSync.SyncToDb(_db, config2);
+        _configSync.SyncToDb(config2);
 
         var rows = _db.Prepare("SELECT name FROM store_collections").AllDynamic();
         rows.Should().HaveCount(1);
@@ -69,7 +71,7 @@ public class ConfigSyncTests : IDisposable
     public void SyncToDb_SyncsGlobalContext()
     {
         var config = new CollectionConfig { GlobalContext = "test context" };
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
 
         var row = _db.Prepare("SELECT value FROM store_config WHERE key = $1")
             .GetDynamic("global_context");
@@ -85,10 +87,10 @@ public class ConfigSyncTests : IDisposable
             Collections = new() { ["a"] = new Collection { Path = "/a" } }
         };
 
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
 
         // Second sync should be a no-op (same hash)
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
 
         var rows = _db.Prepare("SELECT name FROM store_collections").AllDynamic();
         rows.Should().HaveCount(1);
@@ -101,13 +103,13 @@ public class ConfigSyncTests : IDisposable
         {
             Collections = new() { ["a"] = new Collection { Path = "/old" } }
         };
-        ConfigSync.SyncToDb(_db, config1);
+        _configSync.SyncToDb(config1);
 
         var config2 = new CollectionConfig
         {
             Collections = new() { ["a"] = new Collection { Path = "/new" } }
         };
-        ConfigSync.SyncToDb(_db, config2);
+        _configSync.SyncToDb(config2);
 
         var row = _db.Prepare("SELECT path FROM store_collections WHERE name = $1")
             .GetDynamic("a");

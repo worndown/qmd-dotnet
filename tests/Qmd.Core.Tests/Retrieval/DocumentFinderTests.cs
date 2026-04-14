@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -28,13 +28,14 @@ public class DocumentFinderTests : IDisposable
         {
             Collections = new() { ["docs"] = new Collection { Path = "/home/docs" } }
         };
-        ConfigSync.SyncToDb(_db, config);
+        new ConfigSyncService(_db).SyncToDb(config);
 
         // Seed documents
-        ContentHasher.InsertContent(_db, "aabbcc112233", "# API Reference\nREST API docs.", "2025-01-01");
-        ContentHasher.InsertContent(_db, "ddeeff445566", "# Guide\nGetting started.", "2025-01-01");
-        DocumentOperations.InsertDocument(_db, "docs", "api.md", "API Reference", "aabbcc112233", "2025-01-01", "2025-01-01");
-        DocumentOperations.InsertDocument(_db, "docs", "guide.md", "Guide", "ddeeff445566", "2025-01-01", "2025-01-01");
+        var docRepo = new DocumentRepository(_db);
+        docRepo.InsertContent("aabbcc112233", "# API Reference\nREST API docs.", "2025-01-01");
+        docRepo.InsertContent("ddeeff445566", "# Guide\nGetting started.", "2025-01-01");
+        docRepo.InsertDocument("docs", "api.md", "API Reference", "aabbcc112233", "2025-01-01", "2025-01-01");
+        docRepo.InsertDocument("docs", "guide.md", "Guide", "ddeeff445566", "2025-01-01", "2025-01-01");
     }
 
     [Fact]
@@ -152,11 +153,12 @@ public class DocumentFinderTests : IDisposable
                 }
             }
         };
-        ConfigSync.SyncToDb(db, config);
+        new ConfigSyncService(db).SyncToDb(config);
 
         // Insert document under docs/
-        ContentHasher.InsertContent(db, "ctx112233", "# My Doc\nContent", "2025-01-01");
-        DocumentOperations.InsertDocument(db, "mycol", "docs/mydoc.md", "My Doc", "ctx112233", "2025-01-01", "2025-01-01");
+        var docRepo = new DocumentRepository(db);
+        docRepo.InsertContent("ctx112233", "# My Doc\nContent", "2025-01-01");
+        docRepo.InsertDocument("mycol", "docs/mydoc.md", "My Doc", "ctx112233", "2025-01-01", "2025-01-01");
 
         var result = DocumentFinder.FindDocument(db, "/path/docs/mydoc.md");
         result.IsFound.Should().BeTrue();
@@ -186,11 +188,12 @@ public class DocumentFinderTests : IDisposable
                 }
             }
         };
-        ConfigSync.SyncToDb(db, config);
+        new ConfigSyncService(db).SyncToDb(config);
 
         // Insert document in nested path
-        ContentHasher.InsertContent(db, "hier112233", "# Interview\nContent of interview", "2025-01-01");
-        DocumentOperations.InsertDocument(db, "archive", "podcasts/external/2024-jan-interview.md",
+        var docRepo = new DocumentRepository(db);
+        docRepo.InsertContent("hier112233", "# Interview\nContent of interview", "2025-01-01");
+        docRepo.InsertDocument("archive", "podcasts/external/2024-jan-interview.md",
             "Interview", "hier112233", "2025-01-01", "2025-01-01");
 
         var result = DocumentFinder.FindDocument(db, "/archive/podcasts/external/2024-jan-interview.md");
@@ -214,10 +217,11 @@ public class DocumentFinderTests : IDisposable
         {
             Collections = new() { ["home"] = new Collection { Path = home } }
         };
-        ConfigSync.SyncToDb(db, config);
+        new ConfigSyncService(db).SyncToDb(config);
 
-        ContentHasher.InsertContent(db, "tilde112233", "# My Doc\nTilde test content", "2025-01-01");
-        DocumentOperations.InsertDocument(db, "home", "docs/mydoc.md", "My Doc", "tilde112233", "2025-01-01", "2025-01-01");
+        var docRepo = new DocumentRepository(db);
+        docRepo.InsertContent("tilde112233", "# My Doc\nTilde test content", "2025-01-01");
+        docRepo.InsertDocument("home", "docs/mydoc.md", "My Doc", "tilde112233", "2025-01-01", "2025-01-01");
 
         // Query using ~/path — should expand tilde and find the document
         var result = DocumentFinder.FindDocument(db, "~/docs/mydoc.md");

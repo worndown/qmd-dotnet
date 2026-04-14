@@ -12,12 +12,14 @@ namespace Qmd.Core.Tests.Retrieval;
 public class MultiGetServiceTests : IDisposable
 {
     private readonly IQmdDatabase _db;
+    private readonly DocumentRepository _docRepo;
     private const string CollectionName = "testcol";
     private const string CollectionPath = "/path";
 
     public MultiGetServiceTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
+        _docRepo = new DocumentRepository(_db);
         SeedCollection();
     }
 
@@ -32,14 +34,14 @@ public class MultiGetServiceTests : IDisposable
                 [CollectionName] = new Collection { Path = CollectionPath }
             }
         };
-        ConfigSync.SyncToDb(_db, config);
+        new ConfigSyncService(_db).SyncToDb(config);
     }
 
     private void InsertDoc(string displayPath, string body = "# Test\n\nDefault content.", string title = "Test")
     {
         var hash = ContentHasher.HashContent(body);
-        ContentHasher.InsertContent(_db, hash, body, "2025-01-01");
-        DocumentOperations.InsertDocument(_db, CollectionName, displayPath, title, hash, "2025-01-01", "2025-01-01");
+        _docRepo.InsertContent(hash, body, "2025-01-01");
+        _docRepo.InsertDocument(CollectionName, displayPath, title, hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]

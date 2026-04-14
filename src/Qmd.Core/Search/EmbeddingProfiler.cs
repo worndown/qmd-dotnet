@@ -73,7 +73,7 @@ internal static class EmbeddingProfiler
             if (embedResult?.Embedding == null) continue;
 
             // Search the vector index — get top-k neighbors
-            var embeddingBytes = EmbeddingOperations.FloatArrayToBytes(embedResult.Embedding);
+            var embeddingBytes = EmbeddingRepository.FloatArrayToBytes(embedResult.Embedding);
             var vecResults = db.Prepare(
                 "SELECT hash_seq, distance FROM vectors_vec WHERE embedding MATCH $1 AND k = $2")
                 .All<VectorMatchRow>(embeddingBytes, 11L); // top 11 so we can skip self-match

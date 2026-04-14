@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
@@ -28,6 +28,14 @@ public class StructuredSearchTests : IDisposable
 
     public void Dispose() => _store.Dispose();
 
+    private StructuredSearchService CreateService()
+    {
+        return new StructuredSearchService(
+            _store.FtsSearch, _store.VectorSearch,
+            new RerankerService(_store.Db, _llm),
+            _store.Db, _llm);
+    }
+
     [Fact]
     public async Task StructuredSearch_WithLexQueries_ReturnsResults()
     {
@@ -36,7 +44,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "API endpoints"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
 
         results.Should().NotBeEmpty();
@@ -52,11 +60,10 @@ public class StructuredSearchTests : IDisposable
             new("lex", "authentication OAuth"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
 
         results.Should().NotBeEmpty();
-        // Should find both API and auth docs via RRF fusion
         results.Should().HaveCountGreaterThanOrEqualTo(2);
     }
 
@@ -68,7 +75,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "the"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { Limit = 2, SkipRerank = true });
 
         results.Should().HaveCountLessThanOrEqualTo(2);
@@ -82,7 +89,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "query\nwith\nnewlines"),
         };
 
-        var act = () => StructuredSearchService.SearchAsync(_store, _llm, searches);
+        var act = () => CreateService().SearchAsync(searches);
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*single-line*");
     }
@@ -95,7 +102,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "xyznonexistent12345"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
 
         results.Should().BeEmpty();
@@ -109,7 +116,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "authentication"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { Collections = ["docs"], SkipRerank = true });
 
         results.Should().NotBeEmpty();
@@ -124,7 +131,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "API endpoints"),
         };
 
-        var results = await StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var results = await CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
 
         results.Should().NotBeEmpty();
@@ -134,14 +141,12 @@ public class StructuredSearchTests : IDisposable
     [Fact]
     public async Task StructuredSearch_InternalWhitespacePreserved()
     {
-        // Internal whitespace is preserved in query
         var searches = new List<ExpandedQuery>
         {
             new("lex", "multiple   spaces   between"),
         };
 
-        // Should not throw — whitespace is preserved in query
-        var act = () => StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var act = () => CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
         await act.Should().NotThrowAsync();
     }
@@ -149,13 +154,12 @@ public class StructuredSearchTests : IDisposable
     [Fact]
     public async Task StructuredSearch_ThrowsOnUnmatchedQuote()
     {
-        // Throws when lex query has unmatched quote
         var searches = new List<ExpandedQuery>
         {
             new("lex", "unmatched \"quote here"),
         };
 
-        var act = () => StructuredSearchService.SearchAsync(_store, _llm, searches,
+        var act = () => CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*unmatched*quote*");

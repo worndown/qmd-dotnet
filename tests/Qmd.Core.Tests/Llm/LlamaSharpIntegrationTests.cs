@@ -122,7 +122,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
-        var results = await QueryExpander.ExpandQueryAsync(db, llm, "machine learning algorithms");
+        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync("machine learning algorithms");
 
         results.Should().NotBeEmpty();
         // Should have different query types
@@ -137,7 +137,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         SchemaInitializer.Initialize(db);
 
         var query = "how to deploy to production";
-        var results = await QueryExpander.ExpandQueryAsync(db, llm, query);
+        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync(query);
 
         // At least one expansion should differ from the original
         results.Should().NotBeEmpty();
@@ -157,7 +157,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
             new("irrelevant.md", "The recipe for chocolate cake requires flour, sugar, eggs, and cocoa powder."),
         };
 
-        var results = await Reranker.RerankAsync(db, llm, "What is machine learning?", documents);
+        var results = await new RerankerService(db, llm).RerankAsync("What is machine learning?", documents);
 
         results.Should().HaveCount(2);
         var relevantScore = results.First(r => r.File == "relevant.md").Score;

@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Qmd.Core.Configuration;
+using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
@@ -23,11 +22,12 @@ public class FuzzyMatcherTests : IDisposable
 
     private void SeedDocs()
     {
+        var repo = new DocumentRepository(_db);
         void Seed(string path)
         {
             var hash = ContentHasher.HashContent(path);
-            ContentHasher.InsertContent(_db, hash, $"Content of {path}", "2025-01-01");
-            DocumentOperations.InsertDocument(_db, "docs", path, path, hash, "2025-01-01", "2025-01-01");
+            repo.InsertContent(hash, $"Content of {path}", "2025-01-01");
+            repo.InsertDocument("docs", path, path, hash, "2025-01-01", "2025-01-01");
         }
         Seed("readme.md");
         Seed("readme.txt");
@@ -74,15 +74,14 @@ public class FuzzyMatcherTests : IDisposable
     public void FindSimilarFiles_RespectsMaxDistance()
     {
         // Set maxDistance=1, verify tight filtering
-        // "abc.md" vs "abc.md" = 0, "abc.md" vs "xyz.md" = 3
-        // With maxDistance=1, only "abc.md" should appear (distance 0 to itself)
         using var db = TestDbHelper.CreateInMemoryDb();
 
+        var repo = new DocumentRepository(db);
         void Seed(string path)
         {
             var hash = ContentHasher.HashContent(path);
-            ContentHasher.InsertContent(db, hash, $"Content of {path}", "2025-01-01");
-            DocumentOperations.InsertDocument(db, "docs", path, path, hash, "2025-01-01", "2025-01-01");
+            repo.InsertContent(hash, $"Content of {path}", "2025-01-01");
+            repo.InsertDocument("docs", path, path, hash, "2025-01-01", "2025-01-01");
         }
         Seed("abc.md");
         Seed("xyz.md");
@@ -98,11 +97,12 @@ public class FuzzyMatcherTests : IDisposable
         // Verify *.md matches markdown files
         using var db = TestDbHelper.CreateInMemoryDb();
 
+        var repo = new DocumentRepository(db);
         void Seed(string collection, string path, string content)
         {
             var hash = ContentHasher.HashContent(content);
-            ContentHasher.InsertContent(db, hash, content, "2025-01-01");
-            DocumentOperations.InsertDocument(db, collection, path, "Title", hash, "2025-01-01", "2025-01-01");
+            repo.InsertContent(hash, content, "2025-01-01");
+            repo.InsertDocument(collection, path, "Title", hash, "2025-01-01", "2025-01-01");
         }
 
         Seed("docs", "journals/2024-01.md", "January journal");
