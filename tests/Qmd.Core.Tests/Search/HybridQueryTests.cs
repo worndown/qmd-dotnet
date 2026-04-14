@@ -9,6 +9,7 @@ using Qmd.Core.Tests.Llm;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Database")]
 public class HybridQueryTests : IDisposable
 {
     private readonly QmdStore _store;

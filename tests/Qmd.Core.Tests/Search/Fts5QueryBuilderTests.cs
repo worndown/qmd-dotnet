@@ -3,6 +3,7 @@ using Qmd.Core.Search;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Unit")]
 public class Fts5QueryBuilderTests
 {
 

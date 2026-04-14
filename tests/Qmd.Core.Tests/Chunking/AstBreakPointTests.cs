@@ -5,6 +5,7 @@ using static Qmd.Core.Chunking.AstBreakPointScanner;
 
 namespace Qmd.Core.Tests.Chunking;
 
+[Trait("Category", "Unit")]
 public class AstBreakPointTests
 {
 

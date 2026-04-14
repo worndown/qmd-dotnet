@@ -4,6 +4,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Tests.Chunking;
 
+[Trait("Category", "Unit")]
 public class TokenChunkingTests
 {
     private readonly ITokenizer _charTokenizer = new CharBasedTokenizer();

@@ -3,17 +3,18 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Search;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Database")]
 public class MultiCollectionFilterTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public MultiCollectionFilterTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedDocuments();
     }
 

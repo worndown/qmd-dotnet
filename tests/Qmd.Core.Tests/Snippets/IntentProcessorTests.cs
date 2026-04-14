@@ -4,6 +4,7 @@ using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Tests.Snippets;
 
+[Trait("Category", "Unit")]
 public class IntentProcessorTests
 {
     [Fact]

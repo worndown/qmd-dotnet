@@ -2,18 +2,19 @@ using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Search;
 using Qmd.Core.Tests.Llm;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Database")]
 public class QueryExpanderTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
     private readonly MockLlmService _llm;
 
     public QueryExpanderTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         _llm = new MockLlmService();
     }
 

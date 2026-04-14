@@ -4,17 +4,18 @@ using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Retrieval;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Retrieval;
 
+[Trait("Category", "Database")]
 public class ContextResolverTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public ContextResolverTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
     }
 
     public void Dispose() => _db.Dispose();

@@ -3,6 +3,7 @@ using Qmd.Core.Snippets;
 
 namespace Qmd.Core.Tests.Snippets;
 
+[Trait("Category", "Unit")]
 public class SnippetExtractorTests
 {
     private const string TestBody = @"Line one about introduction.

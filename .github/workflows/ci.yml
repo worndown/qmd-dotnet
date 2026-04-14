@@ -25,4 +25,6 @@ jobs:
         run: dotnet build Qmd.slnx --configuration Release --no-restore
 
       - name: Test
+        # Available test categories: Unit, Database, Integration, LLM
+        # Run specific category: dotnet test --filter "Category=Unit"
         run: dotnet test Qmd.slnx --configuration Release --no-build --filter "Category!=LLM"

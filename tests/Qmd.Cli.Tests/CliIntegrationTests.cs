@@ -16,6 +16,7 @@ namespace Qmd.Cli.Tests;
 /// Instead of spawning processes, we invoke SDK methods directly
 /// against an in-memory store with seeded data.
 /// </summary>
+[Trait("Category", "Integration")]
 public class CliIntegrationTests : IAsyncLifetime
 {
 

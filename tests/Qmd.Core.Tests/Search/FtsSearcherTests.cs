@@ -4,17 +4,18 @@ using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Models;
 using Qmd.Core.Search;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Database")]
 public class FtsSearcherTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public FtsSearcherTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         SeedDocuments();
     }
 
@@ -120,8 +121,7 @@ public class FtsSearcherTests : IDisposable
     public void SearchFTS_RanksTitleMatchesHigher()
     {
         // Create a fresh DB so seeded docs don't interfere
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
@@ -143,8 +143,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_HandlesSpecialCharactersInQuery()
     {
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
@@ -160,8 +159,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_MinScoreFilter_KeepsStrongDropsWeak()
     {
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
@@ -201,8 +199,7 @@ public class FtsSearcherTests : IDisposable
     {
         // Title boost outweighs higher body frequency
         // Document with term in title but not body ranks higher than one with term in body 5x
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
@@ -221,7 +218,7 @@ public class FtsSearcherTests : IDisposable
         results[0].DisplayPath.Should().Be($"{collectionName}/test/title-match.md");
     }
 
-    private static void SeedCollectionInDb(SqliteDatabase db, string name, string path)
+    private static void SeedCollectionInDb(IQmdDatabase db, string name, string path)
     {
         var config = new Qmd.Core.Configuration.CollectionConfig
         {
@@ -236,8 +233,7 @@ public class FtsSearcherTests : IDisposable
     {
         // BM25 strong signal detection works with correct score normalization
         // BM25 IDF needs meaningful corpus depth for strong signal to fire.
-        using var db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(db);
+        using var db = TestDbHelper.CreateInMemoryDb();
 
         var collectionName = "testcol";
         SeedCollectionInDb(db, collectionName, "/test");
@@ -279,7 +275,7 @@ public class FtsSearcherTests : IDisposable
         hasStrongSignal.Should().BeTrue();
     }
 
-    private static void InsertDoc(SqliteDatabase db, string collection, string path, string title, string content)
+    private static void InsertDoc(IQmdDatabase db, string collection, string path, string title, string content)
     {
         var hash = ContentHasher.HashContent(content);
         ContentHasher.InsertContent(db, hash, content, "2025-01-01");

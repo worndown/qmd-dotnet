@@ -7,6 +7,7 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Tests.Store;
 
+[Trait("Category", "Database")]
 public class QmdStoreTests : IDisposable
 {
     private readonly QmdStore _store;

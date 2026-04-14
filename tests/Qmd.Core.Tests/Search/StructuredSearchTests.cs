@@ -9,6 +9,7 @@ using Qmd.Core.Store;
 
 namespace Qmd.Core.Tests.Search;
 
+[Trait("Category", "Database")]
 public class StructuredSearchTests : IDisposable
 {
     private readonly QmdStore _store;

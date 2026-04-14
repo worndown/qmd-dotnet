@@ -6,6 +6,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Cli.Tests;
 
+[Trait("Category", "Database")]
 public class CliHelperTests
 {
     [Theory]

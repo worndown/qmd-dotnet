@@ -1,17 +1,18 @@
 using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Content;
 
+[Trait("Category", "Database")]
 public class ContentHasherTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public ContentHasherTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
     }
 
     public void Dispose() => _db.Dispose();

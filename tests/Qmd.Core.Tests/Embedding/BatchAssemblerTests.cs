@@ -4,6 +4,7 @@ using Qmd.Core.Models;
 
 namespace Qmd.Core.Tests.Embedding;
 
+[Trait("Category", "Unit")]
 public class BatchAssemblerTests
 {
     [Fact]

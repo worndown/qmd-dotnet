@@ -2,17 +2,18 @@ using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Documents;
 
+[Trait("Category", "Database")]
 public class DocumentOperationsTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public DocumentOperationsTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
         // Seed content for FK
         ContentHasher.InsertContent(_db, "hash1", "Content 1", "2025-01-01");
         ContentHasher.InsertContent(_db, "hash2", "Content 2", "2025-01-01");

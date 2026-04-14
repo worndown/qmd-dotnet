@@ -12,6 +12,7 @@ namespace Qmd.Core.Tests.Search;
 /// <summary>
 /// Search quality evaluation tests — verify BM25 ranking produces expected results.
 /// </summary>
+[Trait("Category", "Database")]
 public class SearchQualityEvalTests : IDisposable
 {
     private readonly QmdStore _store;
@@ -126,6 +127,7 @@ public class SearchQualityEvalTests : IDisposable
 /// Seeds the same 6 synthetic documents from eval-docs/ and runs queries
 /// at different difficulty levels, asserting the same hit-rate thresholds.
 /// </summary>
+[Trait("Category", "Database")]
 public class Bm25HitRateEvalTests : IDisposable
 {
     private readonly QmdStore _store;

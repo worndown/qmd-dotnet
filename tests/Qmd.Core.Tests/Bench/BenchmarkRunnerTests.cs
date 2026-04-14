@@ -9,6 +9,7 @@ namespace Qmd.Core.Tests.Bench;
 /// <summary>
 /// Tests for the benchmark runner with a mock IQmdStore.
 /// </summary>
+[Trait("Category", "Unit")]
 public class BenchmarkRunnerTests : IAsyncDisposable
 {
     private readonly IQmdStore _store;

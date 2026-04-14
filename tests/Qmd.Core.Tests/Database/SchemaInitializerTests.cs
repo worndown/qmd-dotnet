@@ -1,16 +1,17 @@
 using FluentAssertions;
 using Qmd.Core.Database;
+using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Database;
 
+[Trait("Category", "Database")]
 public class SchemaInitializerTests : IDisposable
 {
-    private readonly SqliteDatabase _db;
+    private readonly IQmdDatabase _db;
 
     public SchemaInitializerTests()
     {
-        _db = new SqliteDatabase(":memory:");
-        SchemaInitializer.Initialize(_db);
+        _db = TestDbHelper.CreateInMemoryDb();
     }
 
     public void Dispose() => _db.Dispose();

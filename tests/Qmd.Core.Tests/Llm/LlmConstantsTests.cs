@@ -6,6 +6,7 @@ namespace Qmd.Core.Tests.Llm;
 /// <summary>
 /// Verifies that LlmConstants defaults match the hardcoded values.
 /// </summary>
+[Trait("Category", "Unit")]
 public class LlmConstantsTests
 {
 
