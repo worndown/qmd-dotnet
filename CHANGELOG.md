@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [v1.2.0] - 2026-04-14
+
+### New features
+
+- Added support for C/C++ and C# languages for document indexing.
+
+### SDK / public API
+
+- Replace `Action<T>` progress callbacks with `IProgress<T>`, aligning the API with standard .NET conventions and enabling proper synchronization context handling (#22).
+- CLI console I/O abstraction: `Console.Write`/`Console.Error.WriteLine` abstracted behind `IConsoleOutput` interface for testable CLI output (#23).
+
+### Internal
+
+- Typed database row models: replaced dynamic `GetDynamic()`/`AllDynamic()` calls with strongly-typed `Get<T>()`/`All<T>()` using internal record/class types for every SQL query result shape, eliminating brittle dictionary access and most null-forgiving operator usage (#17).
+- Error handling: replaced silent `catch { }` blocks with typed exception handlers, introduced domain-specific exception types, and ensured `CancellationToken`/`OperationCanceledException` is never swallowed (#19).
+- Separate pure utility classes from stateful services that depend on database/I/O; extract inline record definitions to their own files (#20).
+- Convert stateful static services to instance classes with interfaces for proper dependency injection and testability (#21).
+- Pass `CancellationToken` through to all CLI commands.
+- Removed duplicate code and renamed classes for clarity.
+
+### Tests
+
+- Added `[Trait]` categorization to all test classes, extracted repeated setup into shared helpers, and established conventions for filtered test runs.
+
+### Build
+
+- Added missing NuGet package properties (#16).
+
 ## [1.1.0] - 2026-04-13
 
 ### Search
