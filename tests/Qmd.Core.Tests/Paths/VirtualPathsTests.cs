@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Paths;
 
 namespace Qmd.Core.Tests.Paths;
@@ -68,10 +68,6 @@ public class VirtualPathsTests
         VirtualPaths.Normalize(input).Should().Be(expected);
     }
 
-    // =========================================================================
-    // normalizeVirtualPath edge cases
-    // =========================================================================
-
     [Fact]
     public void Normalize_BareCollectionPathPreserved()
     {
@@ -100,10 +96,6 @@ public class VirtualPathsTests
         VirtualPaths.Normalize("#def456").Should().Be("#def456");
     }
 
-    // =========================================================================
-    // isVirtualPath edge cases
-    // =========================================================================
-
     [Fact]
     public void IsVirtualPath_RejectsBareCollectionPath()
     {
@@ -125,10 +117,6 @@ public class VirtualPathsTests
         VirtualPaths.IsVirtualPath("file.md").Should().BeFalse();
         VirtualPaths.IsVirtualPath("document").Should().BeFalse();
     }
-
-    // =========================================================================
-    // parseVirtualPath edge cases
-    // =========================================================================
 
     [Fact]
     public void Parse_NestedDirectories()

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
@@ -140,10 +140,6 @@ public class StructuredSearchTests : IDisposable
         results.Should().NotBeEmpty();
         results[0].BestChunk.Should().NotBeNullOrEmpty();
     }
-
-    // =========================================================================
-    // Edge cases
-    // =========================================================================
 
     [Fact]
     public async Task StructuredSearch_InternalWhitespacePreserved()

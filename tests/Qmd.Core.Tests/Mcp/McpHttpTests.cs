@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -126,10 +126,6 @@ public class McpHttpTests : IAsyncLifetime
         return JsonDocument.Parse(body).RootElement;
     }
 
-    // =========================================================================
-    // Health & routing
-    // =========================================================================
-
     [Fact]
     public async Task Health_Returns200WithStatus()
     {
@@ -147,10 +143,6 @@ public class McpHttpTests : IAsyncLifetime
         var response = await _client.GetAsync("/nonexistent");
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
-    // =========================================================================
-    // MCP protocol over HTTP
-    // =========================================================================
 
     [Fact]
     public async Task Initialize_ReturnsServerInfo()

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Llm;
 
 namespace Qmd.Core.Tests.Llm;
@@ -8,9 +8,6 @@ namespace Qmd.Core.Tests.Llm;
 /// </summary>
 public class LlmConstantsTests
 {
-    // =========================================================================
-    // Uses hardcoded default when no config or env is set — verify exact model URIs
-    // =========================================================================
 
     [Fact]
     public void DefaultEmbedModel_MatchesTypeScriptHardcoded()
@@ -33,10 +30,6 @@ public class LlmConstantsTests
             "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf");
     }
 
-    // =========================================================================
-    // Verify default embed context size
-    // =========================================================================
-
     [Fact]
     public void EmbedContextSize_DefaultIs2048()
     {
@@ -44,19 +37,11 @@ public class LlmConstantsTests
         LlmConstants.EmbedContextSize.Should().Be(2048);
     }
 
-    // =========================================================================
-    // Verify RerankContextSize matches reranker contextSize=4096
-    // =========================================================================
-
     [Fact]
     public void RerankContextSize_DefaultIs4096()
     {
         LlmConstants.RerankContextSize.Should().Be(4096);
     }
-
-    // =========================================================================
-    // Model resolution: env var overrides default
-    // =========================================================================
 
     [Fact]
     public void ModelResolution_EnvVarOverridesDefault()
@@ -109,14 +94,6 @@ public class LlmConstantsTests
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
         }
     }
-
-    // =========================================================================
-    // EmbeddingFormatter model resolution with env vars
-    // =========================================================================
-
-    // =========================================================================
-    // Expand context size resolution
-    // =========================================================================
 
     [Fact]
     public void ExpandContextSize_UsesDefault_WhenNoEnvOrConfig()

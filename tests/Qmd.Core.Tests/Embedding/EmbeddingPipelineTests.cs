@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
@@ -128,10 +128,6 @@ public class EmbeddingPipelineTests : IDisposable
 
         result.DocsProcessed.Should().Be(5);
     }
-
-    // =========================================================================
-    // Embedding Batching
-    // =========================================================================
 
     [Fact]
     public async Task GenerateEmbeddings_FlushesOnMaxBatchBytes()

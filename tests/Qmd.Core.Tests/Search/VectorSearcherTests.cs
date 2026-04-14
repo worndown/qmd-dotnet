@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -19,10 +19,6 @@ public class VectorSearcherTests : IDisposable
     }
 
     public void Dispose() => _db.Dispose();
-
-    // =========================================================================
-    // searchVec returns empty when no vector index
-    // =========================================================================
 
     [Fact]
     public async Task SearchVec_ReturnsEmpty_WhenNoVectorIndex()

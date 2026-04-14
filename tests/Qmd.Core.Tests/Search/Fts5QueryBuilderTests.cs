@@ -1,13 +1,10 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Search;
 
 namespace Qmd.Core.Tests.Search;
 
 public class Fts5QueryBuilderTests
 {
-    // =========================================================================
-    // Plain terms → prefix match
-    // =========================================================================
 
     [Fact]
     public void PlainTerm_PrefixMatch()
@@ -33,10 +30,6 @@ public class Fts5QueryBuilderTests
         Fts5QueryBuilder.BuildFTS5Query("hello! world@").Should().Be("\"hello\"* AND \"world\"*");
     }
 
-    // =========================================================================
-    // Quoted phrases → exact match
-    // =========================================================================
-
     [Fact]
     public void QuotedPhrase_ExactMatch()
     {
@@ -49,10 +42,6 @@ public class Fts5QueryBuilderTests
         Fts5QueryBuilder.BuildFTS5Query("\"machine learning\" algorithms").Should()
             .Be("\"machine learning\" AND \"algorithms\"*");
     }
-
-    // =========================================================================
-    // Negation
-    // =========================================================================
 
     [Fact]
     public void Negation_SingleTerm()
@@ -82,10 +71,6 @@ public class Fts5QueryBuilderTests
         Fts5QueryBuilder.BuildFTS5Query("-sports -games").Should().BeNull();
     }
 
-    // =========================================================================
-    // Hyphenated tokens → phrase match
-    // =========================================================================
-
     [Fact]
     public void Hyphenated_PhraseMatch()
     {
@@ -112,10 +97,6 @@ public class Fts5QueryBuilderTests
             .Be("\"search\"* NOT \"multi agent\"");
     }
 
-    // =========================================================================
-    // Edge cases
-    // =========================================================================
-
     [Fact]
     public void EmptyQuery_ReturnsNull()
     {
@@ -141,10 +122,6 @@ public class Fts5QueryBuilderTests
         Fts5QueryBuilder.BuildFTS5Query("don't").Should().Be("\"don't\"*");
     }
 
-    // =========================================================================
-    // IsHyphenatedToken
-    // =========================================================================
-
     [Theory]
     [InlineData("multi-agent", true)]
     [InlineData("DEC-0054", true)]
@@ -157,10 +134,6 @@ public class Fts5QueryBuilderTests
     {
         Fts5QueryBuilder.IsHyphenatedToken(token).Should().Be(expected);
     }
-
-    // =========================================================================
-    // QueryValidator
-    // =========================================================================
 
     [Fact]
     public void ValidateSemanticQuery_RejectsNegation()

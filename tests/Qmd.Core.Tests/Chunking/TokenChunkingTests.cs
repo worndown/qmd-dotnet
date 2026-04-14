@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Chunking;
 using Qmd.Core.Models;
 
@@ -7,10 +7,6 @@ namespace Qmd.Core.Tests.Chunking;
 public class TokenChunkingTests
 {
     private readonly ITokenizer _charTokenizer = new CharBasedTokenizer();
-
-    // =========================================================================
-    // Group A: CharBasedTokenizer tests
-    // =========================================================================
 
     [Fact]
     public void ChunkDocumentByTokens_SingleChunkForSmallDocs()
@@ -70,10 +66,6 @@ public class TokenChunkingTests
         chunks[0].Tokens.Should().BeGreaterThan(0);
         chunks[0].Tokens.Should().BeLessThan(content.Length); // Tokens < chars for English
     }
-
-    // =========================================================================
-    // Group B: Re-splitting path tests (OneCharPerTokenTokenizer)
-    // =========================================================================
 
     /// <summary>
     /// Tokenizer that reports 1 token per character, forcing re-splitting

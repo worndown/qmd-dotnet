@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Bench;
 
 namespace Qmd.Core.Tests.Bench;
@@ -8,9 +8,6 @@ namespace Qmd.Core.Tests.Bench;
 /// </summary>
 public class BenchmarkScorerTests
 {
-    // =========================================================================
-    // NormalizePath
-    // =========================================================================
 
     [Fact]
     public void NormalizePath_Lowercases()
@@ -39,10 +36,6 @@ public class BenchmarkScorerTests
         BenchmarkScorer.NormalizePath("readme.md")
             .Should().Be("readme.md");
     }
-
-    // =========================================================================
-    // PathsMatch
-    // =========================================================================
 
     [Fact]
     public void PathsMatch_ExactMatch()
@@ -85,10 +78,6 @@ public class BenchmarkScorerTests
         BenchmarkScorer.PathsMatch("docs/readme.md", "docs/other.md")
             .Should().BeFalse();
     }
-
-    // =========================================================================
-    // ScoreResults
-    // =========================================================================
 
     [Fact]
     public void ScoreResults_PerfectScore_AllExpectedInTopK()

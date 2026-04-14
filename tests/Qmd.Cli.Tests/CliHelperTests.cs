@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Cli.Commands;
 using Qmd.Cli.Formatting;
 using Qmd.Core;
@@ -76,20 +76,12 @@ public class CliHelperTests
         act.Should().Throw<ArgumentException>().WithMessage("*cannot appear alone*");
     }
 
-    // =========================================================================
-    // ParseStructuredQuery — plain queries
-    // =========================================================================
-
     [Fact]
     public void ParseStructuredQuery_ExplicitExpandLine_ReturnsNull()
     {
         // "explicit expand line returns null" — expand: some query → null
         CliHelper.ParseStructuredQuery("expand: error handling best practices").Should().BeNull();
     }
-
-    // =========================================================================
-    // ParseStructuredQuery — error cases
-    // =========================================================================
 
     [Fact]
     public void ParseStructuredQuery_PlainLineWithPrefixedLines_Throws()
@@ -122,10 +114,6 @@ public class CliHelperTests
         var act = () => CliHelper.ParseStructuredQuery("lex:   \nvec: real");
         act.Should().Throw<ArgumentException>().WithMessage("*must include text*");
     }
-
-    // =========================================================================
-    // ParseStructuredQuery — whitespace handling
-    // =========================================================================
 
     [Fact]
     public void ParseStructuredQuery_EmptyLinesIgnored()
@@ -170,10 +158,6 @@ public class CliHelperTests
         act.Should().Throw<ArgumentException>().WithMessage("*must include text*");
     }
 
-    // =========================================================================
-    // ParseStructuredQuery — edge cases
-    // =========================================================================
-
     [Fact]
     public void ParseStructuredQuery_ColonInQueryTextPreserved()
     {
@@ -193,14 +177,6 @@ public class CliHelperTests
         result!.Queries.Should().HaveCount(1);
         result.Queries[0].Query.Should().Be("the vec: protocol");
     }
-
-    // =========================================================================
-    // ResolveCollections
-    // =========================================================================
-
-    // =========================================================================
-    // ParseStructuredQuery — intent edge cases
-    // =========================================================================
 
     [Fact]
     public void ParseStructuredQuery_IntentWithMultipleTypedLines()
@@ -272,10 +248,6 @@ public class CliHelperTests
         result!.Intent.Should().Be("web performance: LCP, FID, CLS");
     }
 
-    // =========================================================================
-    // ResolveFormat
-    // =========================================================================
-
     [Theory]
     [InlineData(false, false, false, false, false, OutputFormat.Cli)]
     [InlineData(true, false, false, false, false, OutputFormat.Json)]
@@ -307,10 +279,6 @@ public class CliHelperTests
         CliHelper.ResolveFormat("csv", json: true, csv: false, md: false, xml: false, files: false)
             .Should().Be(OutputFormat.Json);
     }
-
-    // =========================================================================
-    // ResolveCollections
-    // =========================================================================
 
     [Fact]
     public async Task ResolveCollections_UsesProvidedCollections()

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Chunking;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
@@ -27,10 +27,6 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     {
         if (_llm != null) await _llm.DisposeAsync();
     }
-
-    // =========================================================================
-    // Embedding tests
-    // =========================================================================
 
     [Fact]
     public async Task Embed_GeneratesCorrectDimensions()
@@ -86,10 +82,6 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         }
     }
 
-    // =========================================================================
-    // Tokenization tests
-    // =========================================================================
-
     [Fact]
     public async Task LlamaSharpTokenizer_CountsTokensAccurately()
     {
@@ -123,10 +115,6 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         }
     }
 
-    // =========================================================================
-    // Query expansion tests
-    // =========================================================================
-
     [Fact]
     public async Task ExpandQuery_ReturnsVariants()
     {
@@ -155,10 +143,6 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         results.Should().NotBeEmpty();
         results.Should().Contain(r => r.Query != query);
     }
-
-    // =========================================================================
-    // Reranking tests
-    // =========================================================================
 
     [Fact]
     public async Task Rerank_ScoresRelevantHigher()

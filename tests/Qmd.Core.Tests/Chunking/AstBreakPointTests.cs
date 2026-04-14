@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Chunking;
 using Qmd.Core.Models;
 using static Qmd.Core.Chunking.AstBreakPointScanner;
@@ -7,9 +7,6 @@ namespace Qmd.Core.Tests.Chunking;
 
 public class AstBreakPointTests
 {
-    // =========================================================================
-    // Language Detection
-    // =========================================================================
 
     [Theory]
     [InlineData("foo.ts", SupportedLanguage.TypeScript)]
@@ -38,10 +35,6 @@ public class AstBreakPointTests
     {
         AstBreakPointScanner.DetectLanguage(filepath).Should().BeNull();
     }
-
-    // =========================================================================
-    // TypeScript Break Points
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_TypeScript_FindsFunctionsAndClasses()
@@ -75,10 +68,6 @@ const arrow = () => 42;
         funcBp.Score.Should().Be(90);
     }
 
-    // =========================================================================
-    // Python Break Points
-    // =========================================================================
-
     [Fact]
     public void GetASTBreakPoints_Python_FindsClassesAndFunctions()
     {
@@ -99,10 +88,6 @@ def standalone():
         breakPoints.Should().Contain(bp => bp.Type == "ast:class");
         breakPoints.Should().Contain(bp => bp.Type == "ast:func");
     }
-
-    // =========================================================================
-    // Go Break Points
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_Go_FindsFunctionsAndTypes()
@@ -130,10 +115,6 @@ func main() {
         breakPoints.Should().Contain(bp => bp.Type == "ast:type");
         breakPoints.Should().Contain(bp => bp.Type == "ast:func" || bp.Type == "ast:method");
     }
-
-    // =========================================================================
-    // Rust Break Points
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_Rust_FindsStructsAndFunctions()
@@ -164,20 +145,12 @@ fn main() {
         breakPoints.Should().Contain(bp => bp.Type == "ast:func");
     }
 
-    // =========================================================================
-    // Unsupported Languages
-    // =========================================================================
-
     [Fact]
     public void GetASTBreakPoints_MarkdownFile_ReturnsEmpty()
     {
         var content = "# Hello\n\nSome text.";
         AstBreakPointScanner.GetASTBreakPoints(content, "readme.md").Should().BeEmpty();
     }
-
-    // =========================================================================
-    // Graceful Degradation
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_MalformedContent_ReturnsEmptyNoThrow()
@@ -188,10 +161,6 @@ fn main() {
         // May return some partial results or empty — just should not throw
         result.Should().NotBeNull();
     }
-
-    // =========================================================================
-    // Position Ordering
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_ResultsSortedByPosition()
@@ -204,10 +173,6 @@ function third() {}
         var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.ts");
         breakPoints.Should().BeInAscendingOrder(bp => bp.Pos);
     }
-
-    // =========================================================================
-    // Merge Integration
-    // =========================================================================
 
     [Fact]
     public void MergeBreakPoints_AstAndRegex_HighestScoreWins()
@@ -231,10 +196,6 @@ function third() {}
         merged.First(bp => bp.Pos == 50).Score.Should().Be(1);   // regex only
     }
 
-    // =========================================================================
-    // End-to-End: Auto vs Regex
-    // =========================================================================
-
     [Fact]
     public void ChunkDocument_AutoStrategy_UsesAstBreakPoints()
     {
@@ -255,10 +216,6 @@ function third() {}
         // The key verification: chunks should start at function boundaries more often with Auto
         autoChunks.Should().NotBeEmpty("AST chunking should produce chunks for code files");
     }
-
-    // =========================================================================
-    // AST vs Regex Chunking Comparison
-    // =========================================================================
 
     /// <summary>
     /// Helper: generate a large TypeScript file with 30 functions.
@@ -385,10 +342,6 @@ export function handler{i}(req: Request, res: Response): void {{
         smallChunks.Should().HaveCount(1);
     }
 
-    // =========================================================================
-    // AST Break Point Score Verification
-    // =========================================================================
-
     [Fact]
     public void TypeScriptExportClass_Scores90()
     {
@@ -429,10 +382,6 @@ export function handler{i}(req: Request, res: Response): void {{
         enumPoint!.Score.Should().Be(80);
     }
 
-    // =========================================================================
-    // Case-insensitive extension detection
-    // =========================================================================
-
     [Theory]
     [InlineData("src/Auth.TS", SupportedLanguage.TypeScript)]
     [InlineData("src/script.PY", SupportedLanguage.Python)]
@@ -446,20 +395,12 @@ export function handler{i}(req: Request, res: Response): void {{
         AstBreakPointScanner.DetectLanguage(filepath).Should().Be(expected);
     }
 
-    // =========================================================================
-    // Virtual qmd:// path detection
-    // =========================================================================
-
     [Fact]
     public void DetectLanguage_WorksWithVirtualQmdPaths()
     {
         // Language detection works with virtual qmd:// paths
         AstBreakPointScanner.DetectLanguage("qmd://myproject/src/auth.ts").Should().Be(SupportedLanguage.TypeScript);
     }
-
-    // =========================================================================
-    // MergeBreakPoints result sorted by position
-    // =========================================================================
 
     [Fact]
     public void MergeBreakPoints_ResultSortedByPosition()
@@ -479,10 +420,6 @@ export function handler{i}(req: Request, res: Response): void {{
         merged.Should().BeInAscendingOrder(bp => bp.Pos);
     }
 
-    // =========================================================================
-    // chunkDocumentWithBreakPoints equivalence
-    // =========================================================================
-
     [Fact]
     public void ChunkDocumentWithBreakPoints_EquivalentToChunkDocument()
     {
@@ -499,10 +436,6 @@ export function handler{i}(req: Request, res: Response): void {{
             regularChunks[i].Pos.Should().Be(breakPointChunks[i].Pos);
         }
     }
-
-    // =========================================================================
-    // Gap closure: break point positions match actual content
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_TypeScript_PositionsMatchSourceText()
@@ -522,10 +455,6 @@ export function hashPassword() { return ''; }
         firstImport.Should().NotBeNull();
         content.Substring(firstImport!.Pos, 6).Should().Be("import");
     }
-
-    // =========================================================================
-    // Gap closure: Python captures method definitions inside classes
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_Python_CapturesMethodDefsInsideClass()
@@ -556,10 +485,6 @@ def hash_password(password):
         funcPoints.Count.Should().BeGreaterThanOrEqualTo(3);
     }
 
-    // =========================================================================
-    // Gap closure: Go function and method both score 90
-    // =========================================================================
-
     [Fact]
     public void GetASTBreakPoints_Go_FuncAndMethodBothScore90()
     {
@@ -589,10 +514,6 @@ func HashPassword(password string) string {
         funcPoint!.Score.Should().Be(90);
         methodPoint!.Score.Should().Be(90);
     }
-
-    // =========================================================================
-    // Gap closure: Rust struct, impl, and trait all score 100
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_Rust_StructImplTraitAllScore100()
@@ -636,20 +557,12 @@ fn hash_password(password: &str) -> String {
         traitPoint!.Score.Should().Be(100);
     }
 
-    // =========================================================================
-    // Gap closure: returns empty for unknown extensions
-    // =========================================================================
-
     [Fact]
     public void GetASTBreakPoints_UnknownExtension_ReturnsEmpty()
     {
         // Returns empty array for unknown extensions
         AstBreakPointScanner.GetASTBreakPoints("data,here", "file.csv").Should().BeEmpty();
     }
-
-    // =========================================================================
-    // Gap closure: handles empty content gracefully
-    // =========================================================================
 
     [Fact]
     public void GetASTBreakPoints_EmptyContent_ReturnsEmpty()

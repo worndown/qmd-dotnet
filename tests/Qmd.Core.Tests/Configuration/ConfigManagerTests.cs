@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Configuration;
 
 namespace Qmd.Core.Tests.Configuration;
@@ -10,10 +10,6 @@ public class ConfigManagerTests
         var source = new InlineConfigSource(config);
         return new ConfigManager(source);
     }
-
-    // =========================================================================
-    // Collection CRUD
-    // =========================================================================
 
     [Fact]
     public void AddCollection_CreatesNew()
@@ -102,10 +98,6 @@ public class ConfigManagerTests
         defaults.Should().Contain("a");
         defaults.Should().NotContain("b");
     }
-
-    // =========================================================================
-    // Context operations
-    // =========================================================================
 
     [Fact]
     public void GlobalContext_SetAndGet()
@@ -209,10 +201,6 @@ public class ConfigManagerTests
         mgr.FindContextForPath("docs", "/any/path").Should().Be("global fallback");
     }
 
-    // =========================================================================
-    // Validation
-    // =========================================================================
-
     [Theory]
     [InlineData("valid-name", true)]
     [InlineData("name_123", true)]
@@ -225,10 +213,6 @@ public class ConfigManagerTests
     {
         ConfigManager.IsValidCollectionName(name).Should().Be(expected);
     }
-
-    // =========================================================================
-    // YAML round-trip (file-based)
-    // =========================================================================
 
     [Fact]
     public void FileConfigSource_RoundTrip()

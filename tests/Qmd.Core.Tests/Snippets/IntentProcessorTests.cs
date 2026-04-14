@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Qmd.Core.Search;
 using Qmd.Core.Snippets;
 
@@ -141,10 +141,6 @@ public class IntentProcessorTests
         IntentProcessor.ExtractIntentTerms("  ").Should().BeEmpty();
     }
 
-    // =========================================================================
-    // Intent keyword extraction / chunk scoring logic (ported from TS)
-    // =========================================================================
-
     private static readonly string[] Chunks =
     [
         "Web performance: optimize page load times, reduce latency, improve rendering pipeline.",
@@ -216,10 +212,6 @@ public class IntentProcessorTests
         scores[1].Should().Be(SnippetExtractor.IntentWeightChunk);      // "performance" only
         scores[2].Should().Be(SnippetExtractor.IntentWeightChunk);      // "performance" only
     }
-
-    // =========================================================================
-    // Strong-signal bypass logic
-    // =========================================================================
 
     private static bool HasStrongSignal(double topScore, double secondScore, string? intent = null)
     {

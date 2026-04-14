@@ -87,14 +87,14 @@ public class QmdStoreTests : IDisposable
     }
 
     [Fact]
-    public void Store_Maintenance()
+    public async Task Store_Maintenance()
     {
         var hash = _store.HashContent("Content");
         _store.InsertContent(hash, "Content", "2025-01-01");
         _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
         _store.DeactivateDocument("docs", "a.md");
 
-        var result = _store.CleanupAsync().Result;
+        var result = await _store.CleanupAsync();
         result.OrphanedCollectionDocsDeleted.Should().Be(1);
     }
 
