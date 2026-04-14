@@ -63,7 +63,7 @@ public static class CollectionCommand
                 ignore.Length > 0 ? ignore.ToList() : null);
             // Auto-index the new collection
             CliContext.Console.WriteLine($"Indexing '{name}'...");
-            var result = await store.UpdateAsync(new UpdateOptions { Collections = [name] });
+            var result = await store.UpdateAsync(new UpdateOptions { Collections = [name] }, token);
             CliContext.Console.WriteLine($"Collection '{name}' added. Indexed {result.Indexed} files.");
         });
 

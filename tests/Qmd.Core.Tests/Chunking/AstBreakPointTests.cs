@@ -21,6 +21,15 @@ public class AstBreakPointTests
     [InlineData("foo.py", SupportedLanguage.Python)]
     [InlineData("foo.go", SupportedLanguage.Go)]
     [InlineData("foo.rs", SupportedLanguage.Rust)]
+    [InlineData("foo.cs", SupportedLanguage.CSharp)]
+    [InlineData("foo.c", SupportedLanguage.C)]
+    [InlineData("foo.h", SupportedLanguage.C)]
+    [InlineData("foo.cpp", SupportedLanguage.Cpp)]
+    [InlineData("foo.cxx", SupportedLanguage.Cpp)]
+    [InlineData("foo.cc", SupportedLanguage.Cpp)]
+    [InlineData("foo.hpp", SupportedLanguage.Cpp)]
+    [InlineData("foo.hxx", SupportedLanguage.Cpp)]
+    [InlineData("foo.hh", SupportedLanguage.Cpp)]
     public void DetectLanguage_SupportedExtensions(string filepath, SupportedLanguage expected)
     {
         AstBreakPointScanner.DetectLanguage(filepath).Should().Be(expected);
@@ -390,6 +399,10 @@ export function handler{i}(req: Request, res: Response): void {{
     [InlineData("src/lib.RS", SupportedLanguage.Rust)]
     [InlineData("src/App.JSX", SupportedLanguage.Tsx)]
     [InlineData("src/App.TSX", SupportedLanguage.Tsx)]
+    [InlineData("src/Program.CS", SupportedLanguage.CSharp)]
+    [InlineData("src/main.C", SupportedLanguage.C)]
+    [InlineData("src/main.CPP", SupportedLanguage.Cpp)]
+    [InlineData("src/main.HPP", SupportedLanguage.Cpp)]
     public void DetectLanguage_CaseInsensitive_ReturnsCorrectLanguage(string filepath, SupportedLanguage expected)
     {
         // Language detection is case-insensitive for extensions
@@ -570,5 +583,380 @@ fn hash_password(password: &str) -> String {
     {
         // Handles empty content gracefully
         AstBreakPointScanner.GetASTBreakPoints("", "empty.ts").Should().BeEmpty();
+    }
+
+    // =========================================================================
+    // C# Language Tests
+    // =========================================================================
+
+    [Fact]
+    public void GetASTBreakPoints_CSharp_FindsClassesMethodsAndInterfaces()
+    {
+        var content = @"using System;
+using System.Collections.Generic;
+
+namespace MyApp.Services
+{
+    public interface IAuthService
+    {
+        bool Authenticate(string user, string token);
+    }
+
+    public class AuthService : IAuthService
+    {
+        public string ConnectionString { get; set; }
+
+        public AuthService(string connStr)
+        {
+            ConnectionString = connStr;
+        }
+
+        public bool Authenticate(string user, string token)
+        {
+            return true;
+        }
+    }
+
+    public enum Role
+    {
+        Admin,
+        User
+    }
+
+    public struct Point
+    {
+        public double X;
+        public double Y;
+    }
+
+    public record UserRecord(string Name, int Age);
+}
+";
+        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "AuthService.cs");
+
+        breakPoints.Should().NotBeEmpty();
+        breakPoints.Should().Contain(bp => bp.Type == "ast:import");    // using directives
+        breakPoints.Should().Contain(bp => bp.Type == "ast:namespace"); // namespace
+        breakPoints.Should().Contain(bp => bp.Type == "ast:iface");     // interface
+        breakPoints.Should().Contain(bp => bp.Type == "ast:class");     // class + record
+        breakPoints.Should().Contain(bp => bp.Type == "ast:method");    // method + constructor
+        breakPoints.Should().Contain(bp => bp.Type == "ast:enum");      // enum
+        breakPoints.Should().Contain(bp => bp.Type == "ast:struct");    // struct
+        breakPoints.Should().Contain(bp => bp.Type == "ast:prop");      // property
+    }
+
+    [Fact]
+    public void CSharpClass_Scores100()
+    {
+        var code = @"namespace Foo {
+    class Bar {
+    }
+}";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var classPoint = points.FirstOrDefault(p => p.Type == "ast:class");
+        classPoint.Should().NotBeNull();
+        classPoint!.Score.Should().Be(100);
+    }
+
+    [Fact]
+    public void CSharpNamespace_Scores100()
+    {
+        var code = @"namespace Foo {
+    class Bar {}
+}";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var nsPoint = points.FirstOrDefault(p => p.Type == "ast:namespace");
+        nsPoint.Should().NotBeNull();
+        nsPoint!.Score.Should().Be(100);
+    }
+
+    [Fact]
+    public void CSharpMethod_Scores90()
+    {
+        var code = @"class Foo {
+    void Bar() {}
+}";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var methodPoint = points.FirstOrDefault(p => p.Type == "ast:method");
+        methodPoint.Should().NotBeNull();
+        methodPoint!.Score.Should().Be(90);
+    }
+
+    [Fact]
+    public void CSharpProperty_Scores70()
+    {
+        var code = @"class Foo {
+    public int Bar { get; set; }
+}";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var propPoint = points.FirstOrDefault(p => p.Type == "ast:prop");
+        propPoint.Should().NotBeNull();
+        propPoint!.Score.Should().Be(70);
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_CSharp_PositionsMatchSourceText()
+    {
+        var content = @"using System;
+
+namespace MyApp
+{
+    class Program
+    {
+        static void Main() {}
+    }
+}
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(content, "Program.cs");
+        var usingPoint = points.FirstOrDefault(p => p.Type == "ast:import");
+
+        usingPoint.Should().NotBeNull();
+        content.Substring(usingPoint!.Pos, 5).Should().Be("using");
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_CSharp_ResultsSortedByPosition()
+    {
+        var content = @"using System;
+class First {}
+class Second {}
+class Third {}
+";
+        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.cs");
+        breakPoints.Should().BeInAscendingOrder(bp => bp.Pos);
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_CSharp_CapturesMethodsInsideClass()
+    {
+        var content = @"using System;
+
+class AuthService
+{
+    public AuthService(string connStr) {}
+
+    public bool Authenticate(string user) { return true; }
+
+    public void Logout() {}
+}
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(content, "auth.cs");
+        var methodPoints = points.Where(p => p.Type == "ast:method").ToList();
+
+        // constructor + Authenticate + Logout
+        methodPoints.Count.Should().BeGreaterThanOrEqualTo(3);
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_CSharp_FileScopedNamespace()
+    {
+        // File-scoped namespace (C# 10+) should capture namespace and classes inside it
+        var content = @"namespace MyApp;
+
+class Program
+{
+    static void Main() {}
+}
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(content, "Program.cs");
+
+        points.Should().NotBeEmpty();
+        points.Should().Contain(bp => bp.Type == "ast:namespace"); // file-scoped namespace
+        points.Should().Contain(bp => bp.Type == "ast:class");
+        points.Should().Contain(bp => bp.Type == "ast:method");
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_MalformedCSharp_ReturnsEmptyNoThrow()
+    {
+        var content = "}{}{}{class @@@ {{{;;; namespace";
+        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.cs");
+        result.Should().NotBeNull();
+    }
+
+    // =========================================================================
+    // C Language Tests
+    // =========================================================================
+
+    [Fact]
+    public void GetASTBreakPoints_C_FindsFunctionsAndStructs()
+    {
+        var content = @"#include <stdio.h>
+#include <stdlib.h>
+
+typedef unsigned long size_t;
+
+struct Point {
+    double x;
+    double y;
+};
+
+enum Color {
+    RED,
+    GREEN,
+    BLUE
+};
+
+union Data {
+    int i;
+    float f;
+};
+
+void greet(const char* name) {
+    printf(""Hello, %s\n"", name);
+}
+
+int main() {
+    struct Point p = {1.0, 2.0};
+    greet(""world"");
+    return 0;
+}
+";
+        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.c");
+
+        breakPoints.Should().NotBeEmpty();
+        breakPoints.Should().Contain(bp => bp.Type == "ast:import");  // #include
+        breakPoints.Should().Contain(bp => bp.Type == "ast:type");    // typedef
+        breakPoints.Should().Contain(bp => bp.Type == "ast:struct");  // struct + union
+        breakPoints.Should().Contain(bp => bp.Type == "ast:enum");    // enum
+        breakPoints.Should().Contain(bp => bp.Type == "ast:func");    // functions
+    }
+
+    [Fact]
+    public void CFunc_Scores90()
+    {
+        var code = @"#include <stdio.h>
+
+void hello() {
+    printf(""hi\n"");
+}
+
+int main() {
+    return 0;
+}
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.c");
+        var funcPoint = points.FirstOrDefault(p => p.Type == "ast:func");
+        funcPoint.Should().NotBeNull();
+        funcPoint!.Score.Should().Be(90);
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_MalformedC_ReturnsEmptyNoThrow()
+    {
+        var content = "}{}{}{void @@@ (((;;; #include";
+        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.c");
+        result.Should().NotBeNull();
+    }
+
+    // =========================================================================
+    // C++ Language Tests
+    // =========================================================================
+
+    [Fact]
+    public void GetASTBreakPoints_Cpp_FindsClassesNamespacesAndFunctions()
+    {
+        var content = @"#include <iostream>
+#include <string>
+
+namespace MyApp {
+
+class Greeter {
+public:
+    Greeter(const std::string& name) : name_(name) {}
+
+    void greet() const {
+        std::cout << ""Hello, "" << name_ << std::endl;
+    }
+
+private:
+    std::string name_;
+};
+
+struct Point {
+    double x;
+    double y;
+};
+
+enum Color {
+    RED,
+    GREEN,
+    BLUE
+};
+
+template<typename T>
+T max_value(T a, T b) {
+    return (a > b) ? a : b;
+}
+
+}  // namespace MyApp
+
+int main() {
+    MyApp::Greeter g(""world"");
+    g.greet();
+    return 0;
+}
+";
+        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.cpp");
+
+        breakPoints.Should().NotBeEmpty();
+        breakPoints.Should().Contain(bp => bp.Type == "ast:import");    // #include
+        breakPoints.Should().Contain(bp => bp.Type == "ast:namespace"); // namespace
+        breakPoints.Should().Contain(bp => bp.Type == "ast:class");     // class
+        breakPoints.Should().Contain(bp => bp.Type == "ast:struct");    // struct
+        breakPoints.Should().Contain(bp => bp.Type == "ast:enum");      // enum
+        breakPoints.Should().Contain(bp => bp.Type == "ast:template");  // template
+        breakPoints.Should().Contain(bp => bp.Type == "ast:func");      // functions
+    }
+
+    [Fact]
+    public void CppClass_Scores100()
+    {
+        var code = @"class Foo {
+public:
+    void bar() {}
+};
+
+int main() { return 0; }
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var classPoint = points.FirstOrDefault(p => p.Type == "ast:class");
+        classPoint.Should().NotBeNull();
+        classPoint!.Score.Should().Be(100);
+    }
+
+    [Fact]
+    public void CppTemplate_Scores90()
+    {
+        var code = @"template<typename T>
+T identity(T val) { return val; }
+
+int main() { return 0; }
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var templatePoint = points.FirstOrDefault(p => p.Type == "ast:template");
+        templatePoint.Should().NotBeNull();
+        templatePoint!.Score.Should().Be(90);
+    }
+
+    [Fact]
+    public void CppNamespace_Scores100()
+    {
+        var code = @"namespace Foo {
+    void bar() {}
+}
+";
+        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var nsPoint = points.FirstOrDefault(p => p.Type == "ast:namespace");
+        nsPoint.Should().NotBeNull();
+        nsPoint!.Score.Should().Be(100);
+    }
+
+    [Fact]
+    public void GetASTBreakPoints_MalformedCpp_ReturnsEmptyNoThrow()
+    {
+        var content = "}{}{}{class @@@ {{{;;; template<<<";
+        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.cpp");
+        result.Should().NotBeNull();
     }
 }

@@ -57,7 +57,7 @@ public static class McpCommand
             {
                 // Stdio transport — default for Claude Desktop / agent integration
                 await using var store = await CliHelper.CreateStoreAsync();
-                await McpServerSetup.RunStdioAsync(store);
+                await McpServerSetup.RunStdioAsync(store, token);
                 return;
             }
 
@@ -76,7 +76,7 @@ public static class McpCommand
                 // Guard: check if already running
                 if (File.Exists(pidPath))
                 {
-                    var existingPid = int.Parse(File.ReadAllText(pidPath).Trim());
+                    var existingPid = int.Parse((await File.ReadAllTextAsync(pidPath, token)).Trim());
                     try
                     {
                         var existing = Process.GetProcessById(existingPid);
@@ -124,7 +124,7 @@ public static class McpCommand
             {
                 // Foreground HTTP mode
                 await using var store = await CliHelper.CreateStoreAsync();
-                await McpServerSetup.RunHttpAsync(store, port);
+                await McpServerSetup.RunHttpAsync(store, port, token);
             }
         });
 

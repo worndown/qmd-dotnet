@@ -44,6 +44,14 @@ public class MultiGetServiceTests : IDisposable
         _docRepo.InsertDocument(CollectionName, displayPath, title, hash, "2025-01-01", "2025-01-01");
     }
 
+    private MultiGetService CreateService()
+    {
+        var contextResolver = new ContextResolverService(_db);
+        var fuzzyMatcher = new FuzzyMatcherService(_db);
+        var docFinder = new DocumentFinderService(_db, fuzzyMatcher, contextResolver);
+        return new MultiGetService(_db, docFinder, contextResolver);
+    }
+
     [Fact]
     public void FindDocuments_FindsByGlobPattern()
     {
@@ -51,7 +59,7 @@ public class MultiGetServiceTests : IDisposable
         InsertDoc("journals/2024-02.md", "# Feb 2024", "Feb");
         InsertDoc("other/file.md", "# Other", "Other");
 
-        var (docs, errors) = MultiGetService.FindDocuments(_db, "journals/2024-*.md");
+        var (docs, errors) = CreateService().FindDocuments("journals/2024-*.md");
         errors.Should().BeEmpty();
         docs.Should().HaveCount(2);
     }
@@ -62,7 +70,7 @@ public class MultiGetServiceTests : IDisposable
         InsertDoc("doc1.md", "# Doc 1", "Doc1");
         InsertDoc("doc2.md", "# Doc 2", "Doc2");
 
-        var (docs, errors) = MultiGetService.FindDocuments(_db, "doc1.md, doc2.md");
+        var (docs, errors) = CreateService().FindDocuments("doc1.md, doc2.md");
         errors.Should().BeEmpty();
         docs.Should().HaveCount(2);
     }
@@ -72,7 +80,7 @@ public class MultiGetServiceTests : IDisposable
     {
         InsertDoc("doc1.md", "# Doc 1", "Doc1");
 
-        var (docs, errors) = MultiGetService.FindDocuments(_db, "doc1.md, nonexistent.md");
+        var (docs, errors) = CreateService().FindDocuments("doc1.md, nonexistent.md");
         docs.Should().HaveCount(1);
         errors.Should().HaveCount(1);
         errors[0].Should().Contain("not found", Exactly.Once());
@@ -84,7 +92,7 @@ public class MultiGetServiceTests : IDisposable
         var largeBody = new string('x', 20000); // 20KB
         InsertDoc("large.md", largeBody, "Large");
 
-        var (docs, errors) = MultiGetService.FindDocuments(_db, "large.md", maxBytes: 10000);
+        var (docs, errors) = CreateService().FindDocuments("large.md", maxBytes: 10000);
         docs.Should().HaveCount(1);
         docs[0].Skipped.Should().BeTrue();
         docs[0].SkipReason.Should().Contain("too large");
@@ -95,7 +103,7 @@ public class MultiGetServiceTests : IDisposable
     {
         InsertDoc("doc1.md", "The content", "Doc1");
 
-        var (docs, _) = MultiGetService.FindDocuments(_db, "doc1.md", includeBody: true);
+        var (docs, _) = CreateService().FindDocuments("doc1.md", includeBody: true);
         docs.Should().HaveCount(1);
         docs[0].Skipped.Should().BeFalse();
         docs[0].Doc.Body.Should().Be("The content");
@@ -109,7 +117,7 @@ public class MultiGetServiceTests : IDisposable
         InsertDoc("doc3.md", "# Doc 3", "Doc3");
 
         // Brace expansion: {doc1,doc2}.md — DotNet.Glob does not support this
-        var (docs, errors) = MultiGetService.FindDocuments(_db, "{doc1,doc2}.md");
+        var (docs, errors) = CreateService().FindDocuments("{doc1,doc2}.md");
         errors.Should().BeEmpty();
         docs.Should().HaveCount(2);
     }
@@ -128,7 +136,7 @@ public class MultiGetServiceTests : IDisposable
         var docid1 = $"#{hash1[..6]}";
         var docid2 = $"#{hash2[..6]}";
 
-        var (docs, errors) = MultiGetService.FindDocuments(_db, $"{docid1}, {docid2}");
+        var (docs, errors) = CreateService().FindDocuments($"{docid1}, {docid2}");
         errors.Should().BeEmpty();
         docs.Should().HaveCount(2);
     }

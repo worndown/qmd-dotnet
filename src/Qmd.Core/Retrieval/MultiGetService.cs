@@ -4,17 +4,29 @@ using Qmd.Core.Models;
 namespace Qmd.Core.Retrieval;
 
 /// <summary>
-/// Multi-get pipeline: retrieve multiple documents by glob pattern or comma-separated list.
+/// Multi-get pipeline: retrieve multiple documents by glob pattern or comma-separated list
+/// (instance version with constructor injection).
 /// </summary>
-internal static class MultiGetService
+internal class MultiGetService : IMultiGetService
 {
     private const int DefaultMaxBytes = 10 * 1024; // 10KB
+
+    private readonly IQmdDatabase _db;
+    private readonly IDocumentFinderService _documentFinder;
+    private readonly IContextResolverService _contextResolver;
+
+    public MultiGetService(IQmdDatabase db, IDocumentFinderService documentFinder, IContextResolverService contextResolver)
+    {
+        _db = db;
+        _documentFinder = documentFinder;
+        _contextResolver = contextResolver;
+    }
 
     /// <summary>
     /// Find documents matching a pattern (glob or comma-separated list of paths/docids).
     /// </summary>
-    public static (List<MultiGetResult> Docs, List<string> Errors) FindDocuments(
-        IQmdDatabase db, string pattern, bool includeBody = false, int maxBytes = DefaultMaxBytes)
+    public (List<MultiGetResult> Docs, List<string> Errors) FindDocuments(
+        string pattern, bool includeBody = false, int maxBytes = DefaultMaxBytes)
     {
         // Detect comma-separated list (has comma but no glob special chars)
         var isCommaSeparated = pattern.Contains(',')
@@ -34,7 +46,7 @@ internal static class MultiGetService
 
             foreach (var name in names)
             {
-                var findResult = DocumentFinder.FindDocument(db, name, includeBody, similarFilesLimit: 3);
+                var findResult = _documentFinder.FindDocument(name, includeBody, similarFilesLimit: 3);
                 if (findResult.IsFound)
                 {
                     var doc = findResult.Document!;
@@ -70,7 +82,7 @@ internal static class MultiGetService
         else
         {
             // Glob pattern match
-            var matched = GlobMatcher.MatchFilesByGlob(db, pattern);
+            var matched = GlobMatcher.MatchFilesByGlob(_db, pattern);
             if (matched.Count == 0)
             {
                 errors.Add($"No files matched pattern: {pattern}");
@@ -88,7 +100,7 @@ internal static class MultiGetService
                         {
                             Filepath = match.VirtualPath,
                             DisplayPath = match.DisplayPath,
-                            Context = ContextResolver.GetContextForFile(db, match.VirtualPath),
+                            Context = _contextResolver.GetContextForFile(match.VirtualPath),
                         },
                         Skipped = true,
                         SkipReason = $"File too large ({(int)Math.Round(match.BodyLength / 1024.0)}KB > {maxBytes / 1024}KB)",
@@ -96,7 +108,7 @@ internal static class MultiGetService
                     continue;
                 }
 
-                var findResult = DocumentFinder.FindDocument(db, match.VirtualPath, includeBody);
+                var findResult = _documentFinder.FindDocument(match.VirtualPath, includeBody);
                 if (findResult.IsFound)
                 {
                     results.Add(new MultiGetResult { Doc = findResult.Document!, Skipped = false });
