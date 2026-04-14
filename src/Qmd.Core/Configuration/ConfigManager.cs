@@ -135,7 +135,7 @@ public class ConfigManager
         var config = LoadConfig();
         if (!config.Collections.TryGetValue(oldName, out var coll)) return false;
         if (config.Collections.ContainsKey(newName))
-            throw new InvalidOperationException($"Collection '{newName}' already exists");
+            throw new QmdException($"Collection '{newName}' already exists");
 
         config.Collections[newName] = coll;
         config.Collections.Remove(oldName);

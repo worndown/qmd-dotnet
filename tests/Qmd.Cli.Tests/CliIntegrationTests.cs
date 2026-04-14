@@ -324,7 +324,7 @@ public class CliIntegrationTests : IAsyncLifetime
         await using var __ = store;
 
         var act = async () => await store.RenameCollectionAsync("fixtures", "second");
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<QmdException>()
             .WithMessage("*already exists*");
     }
 

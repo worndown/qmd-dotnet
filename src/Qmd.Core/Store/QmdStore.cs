@@ -75,7 +75,7 @@ internal class QmdStore : IQmdStore, IDisposable
     public ILlmService? LlmService { get; set; }
 
     private ILlmService GetLlmService() =>
-        LlmService ?? throw new InvalidOperationException("LLM service not configured. Call EmbedAsync or configure LlamaSharpService.");
+        LlmService ?? throw new QmdModelException("LLM service not configured. Call EmbedAsync or configure LlamaSharpService.");
 
     #region Content
 
