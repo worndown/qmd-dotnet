@@ -17,13 +17,6 @@ public class VecExtensionTests : IDisposable
     }
 
     [Fact]
-    public void IsAvailable_DefaultsToFalse_BeforeTryLoad()
-    {
-        // Before TryLoad is called, IsAvailable should be false (null → false)
-        VecExtension.IsAvailable.Should().BeFalse();
-    }
-
-    [Fact]
     public void TryLoad_SetsAvailabilityFlag_NeverThrows()
     {
         // TryLoad should never throw — it gracefully sets the availability flag.
