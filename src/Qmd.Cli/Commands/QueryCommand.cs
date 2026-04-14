@@ -92,7 +92,7 @@ public static class QueryCommand
                                 SkipRerank = noRerank,
                                 ChunkStrategy = strategy,
                                 Explain = explain,
-                            });
+                            }, token);
                     }
                     else
                     {
@@ -107,7 +107,7 @@ public static class QueryCommand
                             ChunkStrategy = strategy,
                             Explain = explain,
                             Diagnostics = diagnostics,
-                        });
+                        }, token);
                     }
                 });
 

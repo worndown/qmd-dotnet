@@ -69,7 +69,7 @@ public static class VsearchCommand
                         MinScore = minScore,
                         Collections = collList,
                         Intent = intent,
-                    });
+                    }, token);
                 });
 
             if (results.Count == 0)

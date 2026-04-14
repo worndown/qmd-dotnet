@@ -31,7 +31,7 @@ public static class BenchCommand
                 return 1;
             }
 
-            var raw = await File.ReadAllTextAsync(resolvedPath);
+            var raw = await File.ReadAllTextAsync(resolvedPath, token);
             var fixture = JsonSerializer.Deserialize<BenchmarkFixture>(raw);
             if (fixture?.Queries is not { Count: > 0 })
             {

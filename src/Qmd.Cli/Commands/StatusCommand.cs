@@ -33,7 +33,7 @@ public static class StatusCommand
             var pidPath = QmdPaths.GetMcpPidPath();
             if (File.Exists(pidPath))
             {
-                var pidText = File.ReadAllText(pidPath).Trim();
+                var pidText = (await File.ReadAllTextAsync(pidPath, token)).Trim();
                 if (int.TryParse(pidText, out var pid))
                 {
                     try

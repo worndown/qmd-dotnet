@@ -39,7 +39,7 @@ public static class UpdateCommand
                     };
                     using var proc = Process.Start(psi);
                     if (proc != null)
-                        await proc.WaitForExitAsync();
+                        await proc.WaitForExitAsync(token);
                 }
                 else if (pull)
                 {
@@ -55,7 +55,7 @@ public static class UpdateCommand
                     };
                     using var proc = Process.Start(psi);
                     if (proc != null)
-                        await proc.WaitForExitAsync();
+                        await proc.WaitForExitAsync(token);
                 }
             }
 
@@ -82,7 +82,7 @@ public static class UpdateCommand
                         CliContext.Console.WriteError($"\rIndexing: {info.Current}/{info.Total}{eta}        ");
                     }
                 }),
-            });
+            }, token);
 
             OscProgress.Clear();
             if (isTty)

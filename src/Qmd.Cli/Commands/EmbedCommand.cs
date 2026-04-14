@@ -65,7 +65,7 @@ public static class EmbedCommand
                         CliContext.Console.WriteError($"\r{bar} {percentStr}% {info.ChunksEmbedded}/{info.TotalChunks}{errStr} {throughput} ETA {eta}   ");
                     }
                 }),
-            });
+            }, token);
 
             OscProgress.Clear();
             CursorHelper.Show();
