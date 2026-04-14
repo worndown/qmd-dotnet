@@ -4,7 +4,7 @@ using TreeSitter;
 
 namespace Qmd.Core.Chunking;
 
-public enum SupportedLanguage { TypeScript, Tsx, JavaScript, Python, Go, Rust }
+public enum SupportedLanguage { TypeScript, Tsx, JavaScript, Python, Go, Rust, CSharp, C, Cpp }
 
 /// <summary>
 /// AST-aware break point extraction via tree-sitter.
@@ -29,6 +29,15 @@ internal static class AstBreakPointScanner
         [".py"] = SupportedLanguage.Python,
         [".go"] = SupportedLanguage.Go,
         [".rs"] = SupportedLanguage.Rust,
+        [".cs"] = SupportedLanguage.CSharp,
+        [".c"] = SupportedLanguage.C,
+        [".h"] = SupportedLanguage.C,
+        [".cpp"] = SupportedLanguage.Cpp,
+        [".cxx"] = SupportedLanguage.Cpp,
+        [".cc"] = SupportedLanguage.Cpp,
+        [".hpp"] = SupportedLanguage.Cpp,
+        [".hxx"] = SupportedLanguage.Cpp,
+        [".hh"] = SupportedLanguage.Cpp,
     };
 
     public static SupportedLanguage? DetectLanguage(string filepath)
@@ -50,6 +59,9 @@ internal static class AstBreakPointScanner
         [SupportedLanguage.Python] = "Python",
         [SupportedLanguage.Go] = "Go",
         [SupportedLanguage.Rust] = "Rust",
+        [SupportedLanguage.CSharp] = "C#",
+        [SupportedLanguage.C] = "C",
+        [SupportedLanguage.Cpp] = "C++",
     };
 
     // =========================================================================
@@ -114,6 +126,38 @@ internal static class AstBreakPointScanner
             (type_item) @type
             (mod_item) @mod
         ",
+        [SupportedLanguage.C] = @"
+            (function_definition) @func
+            (struct_specifier) @struct
+            (enum_specifier) @enum
+            (type_definition) @type
+            (union_specifier) @struct
+            (preproc_include) @import
+        ",
+        [SupportedLanguage.Cpp] = @"
+            (function_definition) @func
+            (class_specifier) @class
+            (struct_specifier) @struct
+            (namespace_definition) @namespace
+            (template_declaration) @template
+            (enum_specifier) @enum
+            (union_specifier) @struct
+            (preproc_include) @import
+        ",
+        [SupportedLanguage.CSharp] = @"
+            (class_declaration) @class
+            (method_declaration) @method
+            (constructor_declaration) @method
+            (interface_declaration) @iface
+            (namespace_declaration) @namespace
+            (file_scoped_namespace_declaration) @namespace
+            (enum_declaration) @enum
+            (struct_declaration) @struct
+            (record_declaration) @class
+            (using_directive) @import
+            (property_declaration) @prop
+            (delegate_declaration) @type
+        ",
     };
 
     // =========================================================================
@@ -134,6 +178,9 @@ internal static class AstBreakPointScanner
         ["decorated"] = 90,
         ["type"] = 80,
         ["enum"] = 80,
+        ["namespace"] = 100,
+        ["template"] = 90,
+        ["prop"] = 70,
         ["import"] = 60,
     };
 
