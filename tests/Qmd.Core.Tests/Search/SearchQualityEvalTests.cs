@@ -3,7 +3,6 @@ using System.Text;
 using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
 using Qmd.Core.Search;
 using Qmd.Core.Store;
 
@@ -28,8 +27,8 @@ public class SearchQualityEvalTests : IDisposable
     private void SeedDoc(string collection, string path, string title, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(_store.Db, hash, content, "2025-01-01");
-        DocumentOperations.InsertDocument(_store.Db, collection, path, title, hash, "2025-01-01", "2025-01-01");
+        _store.DocumentRepo.InsertContent(hash, content, "2025-01-01");
+        _store.DocumentRepo.InsertDocument(collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 
     private void SeedEvalDocuments()
@@ -61,7 +60,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_ApiDesign()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "REST API design");
+        var results = _store.FtsSearch.Search( "REST API design");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("api-design");
     }
@@ -69,7 +68,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_OAuth()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "OAuth2 JWT authentication");
+        var results = _store.FtsSearch.Search( "OAuth2 JWT authentication");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("security-auth");
     }
@@ -77,7 +76,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_Fundraising()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "Series A fundraising pitch deck");
+        var results = _store.FtsSearch.Search( "Series A fundraising pitch deck");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("fundraising");
     }
@@ -85,7 +84,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Medium_ConsensusAlgorithms()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "Raft Paxos consensus");
+        var results = _store.FtsSearch.Search( "Raft Paxos consensus");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("distributed");
     }
@@ -93,7 +92,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Medium_ModelDeployment()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "MLOps model deployment GPU");
+        var results = _store.FtsSearch.Search( "MLOps model deployment GPU");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("ml-deployment");
     }
@@ -101,7 +100,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Scores_Normalized_0_to_1()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "API");
+        var results = _store.FtsSearch.Search( "API");
         results.Should().NotBeEmpty();
         foreach (var r in results)
         {
@@ -113,7 +112,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Scores_OrderedDescending()
     {
-        var results = FtsSearcher.SearchFTS(_store.Db, "deployment");
+        var results = _store.FtsSearch.Search( "deployment");
         if (results.Count > 1)
         {
             for (int i = 1; i < results.Count; i++)
@@ -190,8 +189,8 @@ public class Bm25HitRateEvalTests : IDisposable
                 SHA256.HashData(Encoding.UTF8.GetBytes(content)))[..12].ToLowerInvariant();
             var now = DateTime.UtcNow.ToString("o");
 
-            ContentHasher.InsertContent(_store.Db, hash, content, now);
-            DocumentOperations.InsertDocument(_store.Db, "eval-docs", fileName, title, hash, now, now);
+            _store.DocumentRepo.InsertContent(hash, content, now);
+            _store.DocumentRepo.InsertDocument("eval-docs", fileName, title, hash, now, now);
         }
     }
 
@@ -206,7 +205,7 @@ public class Bm25HitRateEvalTests : IDisposable
         int hits = 0;
         foreach (var eq in queryList)
         {
-            var results = FtsSearcher.SearchFTS(_store.Db, eq.Query, 5);
+            var results = _store.FtsSearch.Search( eq.Query, 5);
             if (results.Take(topK).Any(r => MatchesExpected(r.Filepath, eq.ExpectedDoc)))
                 hits++;
         }

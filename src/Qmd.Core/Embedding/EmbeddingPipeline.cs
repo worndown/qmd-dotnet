@@ -15,6 +15,7 @@ internal static class EmbeddingPipeline
     public static async Task<EmbedResult> GenerateEmbeddingsAsync(
         IQmdDatabase db,
         ILlmService llmService,
+        IEmbeddingRepository embeddingRepo,
         EmbedPipelineOptions? options = null,
         Action<int>? ensureVecTable = null)
     {
@@ -29,9 +30,9 @@ internal static class EmbeddingPipeline
         var sw = Stopwatch.StartNew();
 
         if (options.Force)
-            EmbeddingOperations.ClearAllEmbeddings(db);
+            embeddingRepo.ClearAllEmbeddings();
 
-        var pending = EmbeddingOperations.GetPendingEmbeddingDocs(db);
+        var pending = embeddingRepo.GetPendingEmbeddingDocs();
         if (pending.Count == 0)
             return new EmbedResult(0, 0, 0, sw.ElapsedMilliseconds);
 
@@ -50,7 +51,7 @@ internal static class EmbeddingPipeline
         {
             options.CancellationToken.ThrowIfCancellationRequested();
 
-            var docs = EmbeddingOperations.GetEmbeddingDocsForBatch(db, batch);
+            var docs = embeddingRepo.GetEmbeddingDocsForBatch(batch);
 
             foreach (var doc in docs)
             {
@@ -101,9 +102,9 @@ internal static class EmbeddingPipeline
 
                             // Ensure vec table exists with correct dimensions
                             ensureVecTable?.Invoke(emb.Embedding.Length);
-                            EmbeddingOperations.ResetVecTableCache();
+                            embeddingRepo.ResetVecTableCache();
 
-                            EmbeddingOperations.InsertEmbedding(db,
+                            embeddingRepo.InsertEmbedding(
                                 doc.Hash, i, chunks[i].Pos,
                                 emb.Embedding, model,
                                 DateTime.UtcNow.ToString("o"));

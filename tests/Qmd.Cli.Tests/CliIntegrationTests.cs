@@ -4,8 +4,6 @@ using Qmd.Core;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
-using Qmd.Core.Indexing;
 using Qmd.Core.Models;
 using Qmd.Core.Store;
 
@@ -32,10 +30,10 @@ public class CliIntegrationTests : IAsyncLifetime
     private void Seed(string collection, string path, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(_coreStore.Db, hash, content, "2025-01-01");
+        _coreStore.DocumentRepo.InsertContent(hash, content, "2025-01-01");
         var title = _coreStore.ExtractTitle(content, path);
-        DocumentOperations.InsertDocument(
-            _coreStore.Db, collection, path, title, hash, "2025-01-01", "2025-01-01");
+        _coreStore.DocumentRepo.InsertDocument(
+            collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 
     public Task InitializeAsync()
@@ -92,10 +90,10 @@ public class CliIntegrationTests : IAsyncLifetime
     private static void SeedDoc(QmdStore coreStore, string collection, string path, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(coreStore.Db, hash, content, "2025-01-01");
+        coreStore.DocumentRepo.InsertContent(hash, content, "2025-01-01");
         var title = coreStore.ExtractTitle(content, path);
-        DocumentOperations.InsertDocument(
-            coreStore.Db, collection, path, title, hash, "2025-01-01", "2025-01-01");
+        coreStore.DocumentRepo.InsertDocument(
+            collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]
@@ -607,11 +605,11 @@ public class CliIntegrationTests : IAsyncLifetime
     public void Cleanup_OrphanedEntries()
     {
         // Deactivate a document, then clean up
-        DocumentOperations.DeactivateDocument(_coreStore.Db, "fixtures", "test2.md");
-        var deleted = MaintenanceOperations.DeleteInactiveDocuments(_coreStore.Db);
+        _coreStore.DocumentRepo.DeactivateDocument("fixtures", "test2.md");
+        var deleted = _coreStore.MaintenanceRepo.DeleteInactiveDocuments();
         deleted.Should().BeGreaterThanOrEqualTo(1);
 
-        var orphaned = MaintenanceOperations.CleanupOrphanedContent(_coreStore.Db);
+        var orphaned = _coreStore.MaintenanceRepo.CleanupOrphanedContent();
         orphaned.Should().BeGreaterThanOrEqualTo(0);
     }
 

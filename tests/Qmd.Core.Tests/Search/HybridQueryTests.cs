@@ -29,11 +29,20 @@ public class HybridQueryTests : IDisposable
 
     public void Dispose() => _store.Dispose();
 
+    private HybridQueryService CreateService()
+    {
+        return new HybridQueryService(
+            _store.FtsSearch, _store.VectorSearch,
+            new QueryExpanderService(_store.Db, _llm),
+            new RerankerService(_store.Db, _llm),
+            _store.Db, _llm);
+    }
+
     [Fact]
     public async Task HybridQuery_ReturnsResults()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "API authentication",
+        var results = await CreateService().HybridQueryAsync(
+            "API authentication",
             new HybridQueryOptions { SkipRerank = true });
         results.Should().NotBeEmpty();
     }
@@ -41,8 +50,8 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_RespectsLimit()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "guide",
+        var results = await CreateService().HybridQueryAsync(
+            "guide",
             new HybridQueryOptions { Limit = 2, SkipRerank = true });
         results.Should().HaveCountLessThanOrEqualTo(2);
     }
@@ -50,19 +59,17 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_StrongSignal_SkipsExpansion()
     {
-        // With a very specific query that should produce a strong signal
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "OAuth2",
+        var results = await CreateService().HybridQueryAsync(
+            "OAuth2",
             new HybridQueryOptions { SkipRerank = true });
-        // Should still return results (via direct FTS)
         results.Should().NotBeEmpty();
     }
 
     [Fact]
     public async Task HybridQuery_WithIntent_DisablesStrongSignal()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "API",
+        var results = await CreateService().HybridQueryAsync(
+            "API",
             new HybridQueryOptions { Intent = "security review", SkipRerank = true });
         results.Should().NotBeEmpty();
     }
@@ -70,19 +77,18 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_SkipRerank_UsesRrfScores()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "deployment Docker",
+        var results = await CreateService().HybridQueryAsync(
+            "deployment Docker",
             new HybridQueryOptions { SkipRerank = true });
         results.Should().NotBeEmpty();
-        // All scores should be > 0
         results.Should().AllSatisfy(r => r.Score.Should().BeGreaterThan(0));
     }
 
     [Fact]
     public async Task HybridQuery_WithExplain_IncludesTrace()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "API",
+        var results = await CreateService().HybridQueryAsync(
+            "API",
             new HybridQueryOptions { Explain = true, SkipRerank = true });
         results.Should().NotBeEmpty();
         results[0].Explain.Should().NotBeNull();
@@ -91,18 +97,17 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_MinScore_FiltersLowScores()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "API",
+        var results = await CreateService().HybridQueryAsync(
+            "API",
             new HybridQueryOptions { MinScore = 0.99, SkipRerank = true });
-        // Very high min score should filter most/all results
         results.Should().HaveCountLessThanOrEqualTo(1);
     }
 
     [Fact]
     public async Task HybridQuery_HasBestChunk()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "API",
+        var results = await CreateService().HybridQueryAsync(
+            "API",
             new HybridQueryOptions { SkipRerank = true });
         results.Should().NotBeEmpty();
         results[0].BestChunk.Should().NotBeNullOrEmpty();
@@ -111,8 +116,8 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_EmptyQuery_ReturnsEmpty()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "",
+        var results = await CreateService().HybridQueryAsync(
+            "",
             new HybridQueryOptions { SkipRerank = true });
         results.Should().BeEmpty();
     }
@@ -120,8 +125,8 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_FiltersByCollection()
     {
-        var results = await HybridQueryService.HybridQueryAsync(
-            _store, _llm, "systems",
+        var results = await CreateService().HybridQueryAsync(
+            "systems",
             new HybridQueryOptions { Collections = ["notes"], SkipRerank = true });
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.File.Should().Contain("notes"));

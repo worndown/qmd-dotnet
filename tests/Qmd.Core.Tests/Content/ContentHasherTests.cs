@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
+using Qmd.Core.Documents;
 using Qmd.Core.Tests.TestHelpers;
 
 namespace Qmd.Core.Tests.Content;
@@ -9,10 +10,12 @@ namespace Qmd.Core.Tests.Content;
 public class ContentHasherTests : IDisposable
 {
     private readonly IQmdDatabase _db;
+    private readonly DocumentRepository _docRepo;
 
     public ContentHasherTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
+        _docRepo = new DocumentRepository(_db);
     }
 
     public void Dispose() => _db.Dispose();
@@ -44,7 +47,7 @@ public class ContentHasherTests : IDisposable
     [Fact]
     public void InsertContent_InsertsRow()
     {
-        ContentHasher.InsertContent(_db, "abc123", "Hello", "2025-01-01");
+        _docRepo.InsertContent("abc123", "Hello", "2025-01-01");
         var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").GetDynamic("abc123");
         row.Should().NotBeNull();
         row!["doc"].Should().Be("Hello");
@@ -53,8 +56,8 @@ public class ContentHasherTests : IDisposable
     [Fact]
     public void InsertContent_IgnoresDuplicate()
     {
-        ContentHasher.InsertContent(_db, "abc123", "First", "2025-01-01");
-        ContentHasher.InsertContent(_db, "abc123", "Second", "2025-01-02");
+        _docRepo.InsertContent("abc123", "First", "2025-01-01");
+        _docRepo.InsertContent("abc123", "Second", "2025-01-02");
         var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").GetDynamic("abc123");
         row!["doc"].Should().Be("First"); // First insert wins
     }

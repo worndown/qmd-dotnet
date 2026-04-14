@@ -1,7 +1,6 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Qmd.Core.Content;
-using Qmd.Core.Documents;
 using Qmd.Core.Models;
 using Qmd.Core.Paths;
 using Qmd.Core.Store;
@@ -23,6 +22,8 @@ internal static class CollectionReindexer
         ReindexOptions? options = null)
     {
         var now = DateTime.UtcNow.ToString("o");
+        var documentRepo = store.DocumentRepo;
+        var maintenanceRepo = store.MaintenanceRepo;
 
         // Find files using FileSystemGlobbing
         var matcher = new Matcher();
@@ -79,7 +80,7 @@ internal static class CollectionReindexer
 
             var hash = ContentHasher.HashContent(content);
             var title = TitleExtractor.ExtractTitle(content, relativeFile);
-            var existing = DocumentOperations.FindActiveDocument(store.Db, collectionName, handelized);
+            var existing = documentRepo.FindActiveDocument(collectionName, handelized);
 
             if (existing != null)
             {
@@ -87,7 +88,7 @@ internal static class CollectionReindexer
                 {
                     if (existing.Title != title)
                     {
-                        DocumentOperations.UpdateDocumentTitle(store.Db, existing.Id, title, now);
+                        documentRepo.UpdateDocumentTitle(existing.Id, title, now);
                         updated++;
                     }
                     else
@@ -97,17 +98,17 @@ internal static class CollectionReindexer
                 }
                 else
                 {
-                    ContentHasher.InsertContent(store.Db, hash, content, now);
+                    documentRepo.InsertContent(hash, content, now);
                     var modTime = File.GetLastWriteTimeUtc(filepath).ToString("o");
-                    DocumentOperations.UpdateDocument(store.Db, existing.Id, title, hash, modTime);
+                    documentRepo.UpdateDocument(existing.Id, title, hash, modTime);
                     updated++;
                 }
             }
             else
             {
-                ContentHasher.InsertContent(store.Db, hash, content, now);
+                documentRepo.InsertContent(hash, content, now);
                 var fileInfo = new FileInfo(filepath);
-                DocumentOperations.InsertDocument(store.Db, collectionName, handelized, title, hash,
+                documentRepo.InsertDocument(collectionName, handelized, title, hash,
                     fileInfo.CreationTimeUtc.ToString("o"),
                     fileInfo.LastWriteTimeUtc.ToString("o"));
                 indexed++;
@@ -118,17 +119,17 @@ internal static class CollectionReindexer
         }
 
         // Deactivate documents no longer on disk
-        var allActive = DocumentOperations.GetActiveDocumentPaths(store.Db, collectionName);
+        var allActive = documentRepo.GetActiveDocumentPaths(collectionName);
         foreach (var path in allActive)
         {
             if (!seenPaths.Contains(path))
             {
-                DocumentOperations.DeactivateDocument(store.Db, collectionName, path);
+                documentRepo.DeactivateDocument(collectionName, path);
                 removed++;
             }
         }
 
-        var orphanedCleaned = MaintenanceOperations.CleanupOrphanedContent(store.Db);
+        var orphanedCleaned = maintenanceRepo.CleanupOrphanedContent();
 
         return new ReindexResult(indexed, updated, unchanged, removed, orphanedCleaned);
     }

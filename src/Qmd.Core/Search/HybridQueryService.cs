@@ -5,18 +5,38 @@ using Qmd.Core.Models;
 using Qmd.Core.Paths;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Snippets;
-using Qmd.Core.Store;
 
 namespace Qmd.Core.Search;
 
 /// <summary>
 /// 8-step hybrid query pipeline combining BM25, vector search, RRF fusion, and LLM reranking.
 /// </summary>
-internal static class HybridQueryService
+internal class HybridQueryService : IHybridQueryService
 {
-    public static async Task<List<HybridQueryResult>> HybridQueryAsync(
-        QmdStore store,
-        ILlmService llmService,
+    private readonly IFtsSearchService _ftsSearch;
+    private readonly IVectorSearchService _vectorSearch;
+    private readonly IQueryExpanderService _queryExpander;
+    private readonly IRerankerService _reranker;
+    private readonly IQmdDatabase _db;
+    private readonly ILlmService _llmService;
+
+    public HybridQueryService(
+        IFtsSearchService ftsSearch,
+        IVectorSearchService vectorSearch,
+        IQueryExpanderService queryExpander,
+        IRerankerService reranker,
+        IQmdDatabase db,
+        ILlmService llmService)
+    {
+        _ftsSearch = ftsSearch;
+        _vectorSearch = vectorSearch;
+        _queryExpander = queryExpander;
+        _reranker = reranker;
+        _db = db;
+        _llmService = llmService;
+    }
+
+    public async Task<List<HybridQueryResult>> HybridQueryAsync(
         string query,
         HybridQueryOptions? options = null,
         CancellationToken ct = default)
@@ -30,7 +50,7 @@ internal static class HybridQueryService
         // =====================================================================
         // Step 1: BM25 Probe — detect strong signal
         // =====================================================================
-        var initialFts = store.SearchFTS(query, 20, collections);
+        var initialFts = _ftsSearch.Search(query, 20, collections);
         var topScore = initialFts.Count > 0 ? initialFts[0].Score : 0.0;
         var secondScore = initialFts.Count > 1 ? initialFts[1].Score : 0.0;
         var strongSignal = intent == null
@@ -43,8 +63,7 @@ internal static class HybridQueryService
         var expandedQueries = new List<ExpandedQuery>();
         if (!strongSignal)
         {
-            expandedQueries = await QueryExpander.ExpandQueryAsync(
-                store.Db, llmService, query, null, intent, ct);
+            expandedQueries = await _queryExpander.ExpandQueryAsync(query, null, intent, ct);
         }
 
         // =====================================================================
@@ -64,7 +83,7 @@ internal static class HybridQueryService
         // 3b: Expanded lex queries
         foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
         {
-            var ftsResults = store.SearchFTS(eq.Query, 20, collections);
+            var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
             if (ftsResults.Count > 0)
             {
                 rankedLists.Add(ftsResults.Select(r => new RankedResult(
@@ -80,22 +99,22 @@ internal static class HybridQueryService
             .Select(q => (q.Query, q.Type)));
 
         // Check if vector table exists
-        var vecTableExists = store.Db.Prepare(
+        var vecTableExists = _db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
 
-        if (vecTableExists != null && store.LlmService != null)
+        if (vecTableExists != null && _llmService != null)
         {
             // Batch embed all vector queries
             var textsToEmbed = vecQueries
-                .Select(q => EmbeddingFormatter.FormatQueryForEmbedding(q.Text, llmService.EmbedModelName))
+                .Select(q => EmbeddingFormatter.FormatQueryForEmbedding(q.Text, _llmService.EmbedModelName))
                 .ToList();
-            var embeddings = await llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
+            var embeddings = await _llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
 
             for (int i = 0; i < vecQueries.Count; i++)
             {
                 if (embeddings[i] == null) continue;
-                var vecResults = await store.SearchVecAsync(
-                    vecQueries[i].Text, llmService.EmbedModelName,
+                var vecResults = await _vectorSearch.SearchAsync(
+                    vecQueries[i].Text, _llmService.EmbedModelName,
                     20, collections, embeddings[i]!.Embedding, ct);
                 if (vecResults.Count > 0)
                 {
@@ -179,8 +198,7 @@ internal static class HybridQueryService
             var chunksToRerank = candidatesWithChunks
                 .Select(c => new RerankDocument(c.Cand.File, c.BestChunk))
                 .ToList();
-            var reranked = await Reranker.RerankAsync(
-                store.Db, llmService, query, chunksToRerank, null, intent, ct);
+            var reranked = await _reranker.RerankAsync(query, chunksToRerank, null, intent, ct);
             rerankScores = reranked.ToDictionary(r => r.File, r => r.Score);
         }
 
@@ -235,7 +253,7 @@ internal static class HybridQueryService
                 BestChunk = bestChunk,
                 BestChunkPos = bestChunkPos,
                 Score = finalScore,
-                Context = ContextResolver.GetContextForFile(store.Db, cand.File),
+                Context = ContextResolver.GetContextForFile(_db, cand.File),
                 Docid = DocidUtils.GetDocid(cand.Hash),
                 Explain = options.Explain ? BuildExplain(cand.File, rrfTraces, rerankScore, finalScore) : null,
             });

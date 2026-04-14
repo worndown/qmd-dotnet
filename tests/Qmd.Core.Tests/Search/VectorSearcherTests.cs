@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Qmd.Core.Configuration;
 using Qmd.Core.Content;
 using Qmd.Core.Database;
@@ -24,20 +24,20 @@ public class VectorSearcherTests : IDisposable
     [Fact]
     public async Task SearchVec_ReturnsEmpty_WhenNoVectorIndex()
     {
-        // SearchVecAsync on DB without vectors_vec table returns empty
         var config = new CollectionConfig
         {
             Collections = new() { ["docs"] = new Collection { Path = "/docs" } }
         };
-        ConfigSync.SyncToDb(_db, config);
+        new ConfigSyncService(_db).SyncToDb(config);
 
+        var docRepo = new DocumentRepository(_db);
         var hash = ContentHasher.HashContent("Some content");
-        ContentHasher.InsertContent(_db, hash, "Some content", "2025-01-01");
-        DocumentOperations.InsertDocument(_db, "docs", "doc1.md", "Doc 1", hash, "2025-01-01", "2025-01-01");
+        docRepo.InsertContent(hash, "Some content", "2025-01-01");
+        docRepo.InsertDocument("docs", "doc1.md", "Doc 1", hash, "2025-01-01", "2025-01-01");
 
         var llm = new MockLlmService();
-        // No vectors_vec table exists, should return empty
-        var results = await VectorSearcher.SearchVecAsync(_db, "query", "embeddinggemma", llm, limit: 10);
+        var vecService = new VectorSearchService(_db, llm);
+        var results = await vecService.SearchAsync("query", "embeddinggemma", limit: 10);
         results.Should().BeEmpty();
     }
 }

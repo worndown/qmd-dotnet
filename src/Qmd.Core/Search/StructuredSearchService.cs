@@ -5,7 +5,6 @@ using Qmd.Core.Models;
 using Qmd.Core.Paths;
 using Qmd.Core.Retrieval;
 using Qmd.Core.Snippets;
-using Qmd.Core.Store;
 
 namespace Qmd.Core.Search;
 
@@ -14,11 +13,29 @@ namespace Qmd.Core.Search;
 /// through FTS + vector search, RRF fusion, chunk selection, and reranking.
 /// Unlike HybridQueryService, this skips query expansion — the caller provides expansions.
 /// </summary>
-internal static class StructuredSearchService
+internal class StructuredSearchService : IStructuredSearchService
 {
-    public static async Task<List<HybridQueryResult>> SearchAsync(
-        QmdStore store,
-        ILlmService llmService,
+    private readonly IFtsSearchService _ftsSearch;
+    private readonly IVectorSearchService _vectorSearch;
+    private readonly IRerankerService _reranker;
+    private readonly IQmdDatabase _db;
+    private readonly ILlmService _llmService;
+
+    public StructuredSearchService(
+        IFtsSearchService ftsSearch,
+        IVectorSearchService vectorSearch,
+        IRerankerService reranker,
+        IQmdDatabase db,
+        ILlmService llmService)
+    {
+        _ftsSearch = ftsSearch;
+        _vectorSearch = vectorSearch;
+        _reranker = reranker;
+        _db = db;
+        _llmService = llmService;
+    }
+
+    public async Task<List<HybridQueryResult>> SearchAsync(
         List<ExpandedQuery> searches,
         StructuredSearchOptions? options = null,
         CancellationToken ct = default)
@@ -65,7 +82,7 @@ internal static class StructuredSearchService
         {
             foreach (var coll in collectionList)
             {
-                var ftsResults = store.SearchFTS(search.Query, 20, coll);
+                var ftsResults = _ftsSearch.Search(search.Query, 20, coll);
                 if (ftsResults.Count > 0)
                 {
                     rankedLists.Add(ftsResults.Select(r => new RankedResult(
@@ -80,24 +97,24 @@ internal static class StructuredSearchService
         // =====================================================================
         var vecSearches = searches.Where(s => s.Type is "vec" or "hyde").ToList();
 
-        var vecTableExists = store.Db.Prepare(
+        var vecTableExists = _db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
 
-        if (vecTableExists != null && store.LlmService != null && vecSearches.Count > 0)
+        if (vecTableExists != null && _llmService != null && vecSearches.Count > 0)
         {
             // Batch embed all vec/hyde queries
             var textsToEmbed = vecSearches
-                .Select(s => EmbeddingFormatter.FormatQueryForEmbedding(s.Query, llmService.EmbedModelName))
+                .Select(s => EmbeddingFormatter.FormatQueryForEmbedding(s.Query, _llmService.EmbedModelName))
                 .ToList();
-            var embeddings = await llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
+            var embeddings = await _llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
 
             for (int i = 0; i < vecSearches.Count; i++)
             {
                 if (embeddings[i] == null) continue;
                 foreach (var coll in collectionList)
                 {
-                    var vecResults = await store.SearchVecAsync(
-                        vecSearches[i].Query, llmService.EmbedModelName,
+                    var vecResults = await _vectorSearch.SearchAsync(
+                        vecSearches[i].Query, _llmService.EmbedModelName,
                         20, coll, embeddings[i]!.Embedding, ct);
                     if (vecResults.Count > 0)
                     {
@@ -164,8 +181,7 @@ internal static class StructuredSearchService
             var chunksToRerank = candidatesWithChunks
                 .Select(c => new RerankDocument(c.Cand.File, c.BestChunk))
                 .ToList();
-            var reranked = await Reranker.RerankAsync(
-                store.Db, llmService, primaryQuery, chunksToRerank, null, intent, ct);
+            var reranked = await _reranker.RerankAsync(primaryQuery, chunksToRerank, null, intent, ct);
             rerankScores = reranked.ToDictionary(r => r.File, r => r.Score);
         }
 
@@ -199,7 +215,7 @@ internal static class StructuredSearchService
                 BestChunk = bestChunk,
                 BestChunkPos = bestChunkPos,
                 Score = finalScore,
-                Context = ContextResolver.GetContextForFile(store.Db, cand.File),
+                Context = ContextResolver.GetContextForFile(_db, cand.File),
                 Docid = DocidUtils.GetDocid(cand.Hash),
                 Explain = options.Explain ? BuildExplain(cand.File, rrfTraces, rerankScore, finalScore) : null,
             });

@@ -23,11 +23,12 @@ internal static class TestDbHelper
     public static void SeedDocument(IQmdDatabase db, string collection, string path,
         string content, string? title = null)
     {
+        var repo = new DocumentRepository(db);
         var hash = ContentHasher.HashContent(content);
         var now = "2025-01-01T00:00:00Z";
-        ContentHasher.InsertContent(db, hash, content, now);
+        repo.InsertContent(hash, content, now);
         title ??= TitleExtractor.ExtractTitle(content, path);
-        DocumentOperations.InsertDocument(db, collection, path, title, hash, now, now);
+        repo.InsertDocument(collection, path, title, hash, now, now);
     }
 
     /// <summary>

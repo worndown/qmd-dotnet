@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Qmd.Core.Content;
 using Qmd.Core.Configuration;
 using Qmd.Core.Database;
@@ -12,10 +12,16 @@ namespace Qmd.Core.Tests.Indexing;
 public class StatusOperationsTests : IDisposable
 {
     private readonly IQmdDatabase _db;
+    private readonly StatusRepository _statusRepo;
+    private readonly DocumentRepository _docRepo;
+    private readonly ConfigSyncService _configSync;
 
     public StatusOperationsTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
+        _statusRepo = new StatusRepository(_db);
+        _docRepo = new DocumentRepository(_db);
+        _configSync = new ConfigSyncService(_db);
     }
 
     public void Dispose() => _db.Dispose();
@@ -26,14 +32,14 @@ public class StatusOperationsTests : IDisposable
         {
             Collections = new() { [name] = new Collection { Path = path } }
         };
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
     }
 
     private void SeedDoc(string collection, string docPath, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(_db, hash, content, "2025-01-01");
-        DocumentOperations.InsertDocument(_db, collection, docPath, "Title", hash, "2025-01-01", "2025-01-01");
+        _docRepo.InsertContent(hash, content, "2025-01-01");
+        _docRepo.InsertDocument(collection, docPath, "Title", hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]
@@ -43,7 +49,7 @@ public class StatusOperationsTests : IDisposable
         SeedDoc("docs", "a.md", "Content A");
         SeedDoc("docs", "b.md", "Content B");
 
-        var status = StatusOperations.GetStatus(_db);
+        var status = _statusRepo.GetStatus();
         status.TotalDocuments.Should().Be(2);
         status.Collections.Should().HaveCount(1);
         status.Collections[0].Name.Should().Be("docs");
@@ -57,7 +63,7 @@ public class StatusOperationsTests : IDisposable
         SeedDoc("docs", "a.md", "Content A");
 
         // No embeddings yet, all should need embedding
-        StatusOperations.GetHashesNeedingEmbedding(_db).Should().Be(1);
+        _statusRepo.GetHashesNeedingEmbedding().Should().Be(1);
     }
 
     [Fact]
@@ -66,7 +72,7 @@ public class StatusOperationsTests : IDisposable
         SeedCollection("docs", "/docs");
         SeedDoc("docs", "a.md", "Content A");
 
-        var health = StatusOperations.GetIndexHealth(_db);
+        var health = _statusRepo.GetIndexHealth();
         health.TotalDocs.Should().Be(1);
         health.NeedsEmbedding.Should().Be(1);
     }
@@ -86,11 +92,11 @@ public class StatusOperationsTests : IDisposable
             }
         };
         _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
 
         SeedDoc("testcol", "doc1.md", "First doc content");
 
-        var status = StatusOperations.GetStatus(_db);
+        var status = _statusRepo.GetStatus();
         status.Collections.Should().HaveCountGreaterThanOrEqualTo(1);
         var col = status.Collections.FirstOrDefault(c => c.Name == "testcol");
         col.Should().NotBeNull();

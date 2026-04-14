@@ -12,10 +12,14 @@ namespace Qmd.Core.Tests.Retrieval;
 public class ContextResolverTests : IDisposable
 {
     private readonly IQmdDatabase _db;
+    private readonly ConfigSyncService _configSync;
+    private readonly DocumentRepository _docRepo;
 
     public ContextResolverTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
+        _configSync = new ConfigSyncService(_db);
+        _docRepo = new DocumentRepository(_db);
     }
 
     public void Dispose() => _db.Dispose();
@@ -35,7 +39,7 @@ public class ContextResolverTests : IDisposable
         };
         // Clear config hash to force re-sync
         _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
     }
 
     private void SeedCollectionWithGlobalContext(string name, string path,
@@ -54,15 +58,15 @@ public class ContextResolverTests : IDisposable
             }
         };
         _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        ConfigSync.SyncToDb(_db, config);
+        _configSync.SyncToDb(config);
     }
 
     private void InsertDoc(string collection, string displayPath, string title = "Test")
     {
         var body = $"# {title}\n\nTest content for {displayPath}.";
         var hash = ContentHasher.HashContent(body);
-        ContentHasher.InsertContent(_db, hash, body, "2025-01-01");
-        DocumentOperations.InsertDocument(_db, collection, displayPath, title, hash, "2025-01-01", "2025-01-01");
+        _docRepo.InsertContent(hash, body, "2025-01-01");
+        _docRepo.InsertDocument(collection, displayPath, title, hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]

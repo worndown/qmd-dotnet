@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
@@ -13,11 +13,13 @@ public class RerankerTests : IDisposable
 {
     private readonly IQmdDatabase _db;
     private readonly MockLlmService _llm;
+    private readonly RerankerService _reranker;
 
     public RerankerTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
         _llm = new MockLlmService();
+        _reranker = new RerankerService(_db, _llm);
     }
 
     public void Dispose() => _db.Dispose();
@@ -30,14 +32,14 @@ public class RerankerTests : IDisposable
             new("file1.md", "Content about APIs"),
             new("file2.md", "Content about databases"),
         };
-        var results = await Reranker.RerankAsync(_db, _llm, "API", docs);
+        var results = await _reranker.RerankAsync("API", docs);
         results.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Rerank_EmptyDocs_ReturnsEmpty()
     {
-        var results = await Reranker.RerankAsync(_db, _llm, "query", []);
+        var results = await _reranker.RerankAsync("query", []);
         results.Should().BeEmpty();
     }
 
@@ -49,8 +51,7 @@ public class RerankerTests : IDisposable
             new("a.md", "Content A"),
             new("b.md", "Content B"),
         };
-        var results = await Reranker.RerankAsync(_db, _llm, "query", docs);
-        // Mock returns empty results, so scores default to 0
+        var results = await _reranker.RerankAsync("query", docs);
         results.Should().HaveCount(2);
         results.Should().AllSatisfy(r => r.File.Should().NotBeNullOrEmpty());
     }
@@ -58,52 +59,45 @@ public class RerankerTests : IDisposable
     [Fact]
     public async Task Rerank_CachesResults()
     {
-        // Call rerank twice with same inputs, verify cache hit
         var scoringLlm = new ScoringMockLlmService();
+        var reranker = new RerankerService(_db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("doc1.md", "Content for caching test"),
         };
 
         // First call
-        await Reranker.RerankAsync(_db, scoringLlm, "cache test query", docs);
+        await reranker.RerankAsync("cache test query", docs);
         // Second call — should hit cache
-        var results = await Reranker.RerankAsync(_db, scoringLlm, "cache test query", docs);
+        var results = await reranker.RerankAsync("cache test query", docs);
 
         results.Should().HaveCount(1);
-        // The LLM should have been called only once (second call hits cache)
         scoringLlm.RerankCallCount.Should().Be(1);
     }
 
     [Fact]
     public async Task Rerank_DeduplicatesIdenticalChunksAcrossFiles()
     {
-        // Rerank deduplicates identical chunks across files
         var scoringLlm = new ScoringMockLlmService();
+        var reranker = new RerankerService(_db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("doc1.md", "Shared chunk text"),
             new("doc2.md", "Shared chunk text"),
         };
 
-        var results = await Reranker.RerankAsync(_db, scoringLlm, "shared", docs);
+        var results = await reranker.RerankAsync("shared", docs);
 
-        // Both documents should get results
         results.Should().HaveCount(2);
-
-        // The LLM rerank should only have been called once (identical text deduped)
         scoringLlm.RerankCallCount.Should().Be(1);
-        // And the deduplicated call should only have 1 unique text
         scoringLlm.LastRerankDocCount.Should().Be(1);
     }
 
     [Fact]
     public async Task Rerank_DedupMapsScoreBackToAllDuplicateFiles()
     {
-        // 3 docs: 2 share "shared chunk" text, 1 has "different chunk"
-        // rankAll should be called with only unique texts ["shared chunk", "different chunk"]
-        // Both files with "shared chunk" should receive the same score.
         var scoringLlm = new ScoringMockLlmService();
+        var reranker = new RerankerService(_db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("a.md", "shared chunk"),
@@ -111,21 +105,15 @@ public class RerankerTests : IDisposable
             new("c.md", "different chunk"),
         };
 
-        var results = await Reranker.RerankAsync(_db, scoringLlm, "query", docs);
+        var results = await reranker.RerankAsync("query", docs);
 
         results.Should().HaveCount(3);
-
-        // The LLM should only receive 2 unique texts (deduped)
         scoringLlm.LastRerankDocCount.Should().Be(2);
 
-        // Both "shared chunk" files should have the same score
         var scoreByFile = results.ToDictionary(r => r.File, r => r.Score);
         scoreByFile["a.md"].Should().Be(scoreByFile["b.md"]);
     }
 
-    /// <summary>
-    /// A mock LLM service that returns actual scores and tracks call counts.
-    /// </summary>
     private class ScoringMockLlmService : ILlmService
     {
         public string EmbedModelName => "mock-scorer";

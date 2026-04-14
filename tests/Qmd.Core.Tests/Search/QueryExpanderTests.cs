@@ -11,11 +11,13 @@ public class QueryExpanderTests : IDisposable
 {
     private readonly IQmdDatabase _db;
     private readonly MockLlmService _llm;
+    private readonly QueryExpanderService _expander;
 
     public QueryExpanderTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
         _llm = new MockLlmService();
+        _expander = new QueryExpanderService(_db, _llm);
     }
 
     public void Dispose() => _db.Dispose();
@@ -23,16 +25,16 @@ public class QueryExpanderTests : IDisposable
     [Fact]
     public async Task ExpandQuery_ReturnsExpansions()
     {
-        var results = await QueryExpander.ExpandQueryAsync(_db, _llm, "test query");
+        var results = await _expander.ExpandQueryAsync("test query");
         results.Should().NotBeEmpty();
     }
 
     [Fact]
     public async Task ExpandQuery_CachesResult()
     {
-        await QueryExpander.ExpandQueryAsync(_db, _llm, "cached query");
+        await _expander.ExpandQueryAsync("cached query");
         // Second call should hit cache
-        await QueryExpander.ExpandQueryAsync(_db, _llm, "cached query");
+        await _expander.ExpandQueryAsync("cached query");
 
         var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").GetDynamic();
         Convert.ToInt64(cacheCount!["cnt"]).Should().BeGreaterThan(0);
@@ -41,8 +43,8 @@ public class QueryExpanderTests : IDisposable
     [Fact]
     public async Task ExpandQuery_DifferentQueriesDifferentCache()
     {
-        await QueryExpander.ExpandQueryAsync(_db, _llm, "query A");
-        await QueryExpander.ExpandQueryAsync(_db, _llm, "query B");
+        await _expander.ExpandQueryAsync("query A");
+        await _expander.ExpandQueryAsync("query B");
 
         var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").GetDynamic();
         Convert.ToInt64(cacheCount!["cnt"]).Should().Be(2);

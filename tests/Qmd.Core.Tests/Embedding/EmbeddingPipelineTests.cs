@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Qmd.Core.Content;
+using FluentAssertions;
 using Qmd.Core.Database;
 using Qmd.Core.Documents;
 using Qmd.Core.Embedding;
@@ -14,26 +13,30 @@ public class EmbeddingPipelineTests : IDisposable
 {
     private readonly IQmdDatabase _db;
     private readonly MockLlmService _llm;
+    private readonly EmbeddingRepository _embeddingRepo;
+    private readonly DocumentRepository _docRepo;
 
     public EmbeddingPipelineTests()
     {
         _db = TestDbHelper.CreateInMemoryDb();
         _llm = new MockLlmService();
+        _embeddingRepo = new EmbeddingRepository(_db);
+        _docRepo = new DocumentRepository(_db);
     }
 
     public void Dispose() => _db.Dispose();
 
     private void SeedDoc(string path, string content)
     {
-        var hash = ContentHasher.HashContent(content);
-        ContentHasher.InsertContent(_db, hash, content, "2025-01-01");
-        DocumentOperations.InsertDocument(_db, "docs", path, path, hash, "2025-01-01", "2025-01-01");
+        var hash = Qmd.Core.Content.ContentHasher.HashContent(content);
+        _docRepo.InsertContent(hash, content, "2025-01-01");
+        _docRepo.InsertDocument("docs", path, path, hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]
     public async Task GenerateEmbeddings_NoPendingDocs_ReturnsZero()
     {
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm);
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo);
         result.DocsProcessed.Should().Be(0);
         result.ChunksEmbedded.Should().Be(0);
     }
@@ -45,7 +48,7 @@ public class EmbeddingPipelineTests : IDisposable
         // Ensure vec table exists before pipeline
         VecExtension.ResetForTesting();
 
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             ensureVecTable: dims => {
                 try { VecExtension.EnsureVecTable(_db, dims); } catch { /* vec not loaded */ }
             });
@@ -60,7 +63,7 @@ public class EmbeddingPipelineTests : IDisposable
     {
         SeedDoc("test.md", "Content to embed");
 
-        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             ensureVecTable: _ => { /* skip vec table for non-vec tests */ });
 
         // Verify content_vectors was populated
@@ -74,11 +77,11 @@ public class EmbeddingPipelineTests : IDisposable
         SeedDoc("test.md", "Content");
 
         // First run
-        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             ensureVecTable: _ => { });
 
         // Second run with force
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { Force = true },
             ensureVecTable: _ => { });
 
@@ -91,11 +94,11 @@ public class EmbeddingPipelineTests : IDisposable
         SeedDoc("test.md", "Content");
 
         // First run
-        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             ensureVecTable: _ => { });
 
         // Second run without force
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             ensureVecTable: _ => { });
 
         result.DocsProcessed.Should().Be(0); // Already embedded
@@ -108,7 +111,7 @@ public class EmbeddingPipelineTests : IDisposable
         SeedDoc("b.md", "Content B");
         var progressReports = new List<EmbedProgress>();
 
-        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { OnProgress = p => progressReports.Add(p) },
             ensureVecTable: _ => { });
 
@@ -123,7 +126,7 @@ public class EmbeddingPipelineTests : IDisposable
         for (int i = 0; i < 5; i++)
             SeedDoc($"{i}.md", $"Content {i}");
 
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { MaxDocsPerBatch = 2 },
             ensureVecTable: _ => { });
 
@@ -144,7 +147,7 @@ public class EmbeddingPipelineTests : IDisposable
         SeedDoc("b-two.md", docTwo);
         SeedDoc("c-three.md", docThree);
 
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { MaxDocsPerBatch = 64, MaxBatchBytes = batchLimit },
             ensureVecTable: _ => { });
 
@@ -161,7 +164,7 @@ public class EmbeddingPipelineTests : IDisposable
 
         SeedDoc("one.md", "# One\n\nAlpha");
 
-        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var result = await EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { Model = model },
             ensureVecTable: _ => { });
 
@@ -180,13 +183,13 @@ public class EmbeddingPipelineTests : IDisposable
     [Fact]
     public async Task GenerateEmbeddings_RejectsInvalidBatchLimits()
     {
-        var act1 = () => EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var act1 = () => EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { MaxDocsPerBatch = 0 },
             ensureVecTable: _ => { });
         await act1.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*maxDocsPerBatch*");
 
-        var act2 = () => EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm,
+        var act2 = () => EmbeddingPipeline.GenerateEmbeddingsAsync(_db, _llm, _embeddingRepo,
             new EmbedPipelineOptions { MaxBatchBytes = 0 },
             ensureVecTable: _ => { });
         await act2.Should().ThrowAsync<ArgumentException>()
