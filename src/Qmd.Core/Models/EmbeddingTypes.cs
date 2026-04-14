@@ -46,6 +46,6 @@ public class EmbedPipelineOptions
     public int MaxDocsPerBatch { get; init; } = 64;
     public int MaxBatchBytes { get; init; } = 64 * 1024 * 1024;
     public ChunkStrategy ChunkStrategy { get; init; } = ChunkStrategy.Regex;
-    public Action<EmbedProgress>? OnProgress { get; init; }
+    public IProgress<EmbedProgress>? Progress { get; init; }
     public CancellationToken CancellationToken { get; init; }
 }

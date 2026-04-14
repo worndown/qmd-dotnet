@@ -94,7 +94,7 @@ public class CollectionReindexerTests : IDisposable
         var progressReports = new List<Qmd.Core.Models.ReindexProgress>();
 
         await CollectionReindexer.ReindexCollectionAsync(_store, _tempDir, "**/*.md", "docs",
-            new ReindexOptions { OnProgress = p => progressReports.Add(p) });
+            new ReindexOptions { Progress = new TestHelpers.SyncProgress<Qmd.Core.Models.ReindexProgress>(p => progressReports.Add(p)) });
 
         progressReports.Should().HaveCount(2);
         progressReports.Last().Current.Should().Be(2);

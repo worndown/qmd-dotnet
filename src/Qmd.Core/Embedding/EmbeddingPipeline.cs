@@ -119,7 +119,7 @@ internal static class EmbeddingPipeline
                     totalDocsProcessed++;
                     totalBytesProcessed += doc.Bytes;
 
-                    options.OnProgress?.Invoke(new EmbedProgress(
+                    options.Progress?.Report(new EmbedProgress(
                         totalChunksEmbedded,
                         totalChunksDiscovered,
                         totalBytesProcessed,

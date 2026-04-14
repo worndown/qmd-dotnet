@@ -27,7 +27,7 @@ public static class PullCommand
                 try
                 {
                     var path = await LlmServiceFactory.ResolveModelAsync(uri, refresh,
-                        msg => AnsiConsole.MarkupLine($"  [grey]{msg}[/]"), token);
+                        new Progress<string>(msg => AnsiConsole.MarkupLine($"  [grey]{msg}[/]")), token);
                     AnsiConsole.MarkupLine($"  [green]OK[/] {path}");
                 }
                 catch (Exception ex)

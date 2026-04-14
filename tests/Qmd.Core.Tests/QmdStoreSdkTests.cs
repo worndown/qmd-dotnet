@@ -1256,7 +1256,7 @@ public class QmdStoreSdkTests
             var progress = new List<ReindexProgress>();
             await store.UpdateAsync(new UpdateOptions
             {
-                OnProgress = p => progress.Add(p),
+                Progress = new TestHelpers.SyncProgress<ReindexProgress>(p => progress.Add(p)),
             });
 
             progress.Count.Should().BeGreaterThan(0);

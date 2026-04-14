@@ -33,16 +33,16 @@ public static class LlmServiceFactory
     /// </summary>
     /// <param name="modelUri">HuggingFace URI or local path.</param>
     /// <param name="force">Re-download even if a cached copy exists.</param>
-    /// <param name="onProgress">Optional callback for progress messages.</param>
+    /// <param name="progress">Optional progress reporter for status messages.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Absolute path to the local model file.</returns>
     public static Task<string> ResolveModelAsync(
         string modelUri,
         bool force = false,
-        Action<string>? onProgress = null,
+        IProgress<string>? progress = null,
         CancellationToken ct = default)
     {
         var resolver = new ModelResolver();
-        return resolver.ResolveModelFileAsync(modelUri, force, onProgress, ct);
+        return resolver.ResolveModelFileAsync(modelUri, force, progress, ct);
     }
 }

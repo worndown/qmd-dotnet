@@ -390,8 +390,8 @@ public class UpdateOptions
     /// <summary>Restrict re-indexing to these collections. <c>null</c> updates all.</summary>
     public List<string>? Collections { get; init; }
 
-    /// <summary>Callback invoked with progress during re-indexing.</summary>
-    public Action<ReindexProgress>? OnProgress { get; init; }
+    /// <summary>Progress reporter invoked during re-indexing.</summary>
+    public IProgress<ReindexProgress>? Progress { get; init; }
 }
 
 /// <summary>
