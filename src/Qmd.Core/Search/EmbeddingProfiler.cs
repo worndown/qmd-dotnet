@@ -24,13 +24,13 @@ internal static class EmbeddingProfiler
 
         // Get total embedded chunk count and model dimensions
         var vecTableExists = db.Prepare(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
         if (vecTableExists == null)
             throw new InvalidOperationException("No vector index found. Run 'qmd embed' first.");
 
         var countRow = db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors WHERE model = $1")
-            .GetDynamic(model);
-        var totalChunks = Convert.ToInt32(countRow?["cnt"] ?? 0);
+            .Get<CountRow>(model);
+        var totalChunks = countRow?.Cnt ?? 0;
         if (totalChunks < 2)
             throw new InvalidOperationException($"Need at least 2 embedded chunks to profile (found {totalChunks}).");
 
@@ -54,7 +54,7 @@ internal static class EmbeddingProfiler
         if (options.Collections is { Count: > 0 })
             parameters.AddRange(options.Collections.Select(c => (object?)c));
 
-        var sampleRows = db.Prepare(sampleSql).AllDynamic(parameters.ToArray());
+        var sampleRows = db.Prepare(sampleSql).All<ChunkSampleRow>(parameters.ToArray());
         if (sampleRows.Count < 2)
             throw new InvalidOperationException($"Only {sampleRows.Count} chunks matched filters. Need at least 2.");
 
@@ -64,7 +64,7 @@ internal static class EmbeddingProfiler
         {
             ct.ThrowIfCancellationRequested();
 
-            var chunkText = row["chunk_text"]?.ToString() ?? "";
+            var chunkText = row.ChunkText ?? "";
             if (string.IsNullOrWhiteSpace(chunkText)) continue;
 
             var formatted = EmbeddingFormatter.FormatQueryForEmbedding(chunkText, model);
@@ -76,16 +76,14 @@ internal static class EmbeddingProfiler
             var embeddingBytes = EmbeddingOperations.FloatArrayToBytes(embedResult.Embedding);
             var vecResults = db.Prepare(
                 "SELECT hash_seq, distance FROM vectors_vec WHERE embedding MATCH $1 AND k = $2")
-                .AllDynamic(embeddingBytes, 11L); // top 11 so we can skip self-match
+                .All<VectorMatchRow>(embeddingBytes, 11L); // top 11 so we can skip self-match
 
-            var selfHash = row["hash"]!.ToString()! + "_" + row["seq"]!.ToString()!;
+            var selfHash = row.Hash + "_" + row.Seq;
             foreach (var vr in vecResults)
             {
-                var hashSeq = vr["hash_seq"]!.ToString()!;
-                if (hashSeq == selfHash) continue; // skip self
+                if (vr.HashSeq == selfHash) continue; // skip self
 
-                var distance = Convert.ToDouble(vr["distance"]);
-                var score = 1.0 - distance;
+                var score = 1.0 - vr.Distance;
                 allScores.Add(score);
             }
         }
@@ -97,8 +95,8 @@ internal static class EmbeddingProfiler
 
         // Get model dimensions from vector table schema
         var dimRow = db.Prepare(
-            "SELECT sql FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
-        var dimStr = dimRow?["sql"]?.ToString() ?? "";
+            "SELECT sql as value FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SingleValueRow>();
+        var dimStr = dimRow?.Value ?? "";
         var dimensions = 0;
         var floatIdx = dimStr.IndexOf("float[", StringComparison.Ordinal);
         if (floatIdx >= 0)

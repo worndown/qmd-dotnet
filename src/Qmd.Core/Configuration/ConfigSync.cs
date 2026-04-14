@@ -18,8 +18,8 @@ public static class ConfigSync
 
         // Check if hash matches stored hash
         var storedHash = db.Prepare("SELECT value FROM store_config WHERE key = $1")
-            .GetDynamic("config_hash");
-        if (storedHash != null && storedHash["value"]?.ToString() == hash)
+            .Get<SingleValueRow>("config_hash");
+        if (storedHash != null && storedHash.Value == hash)
             return; // Config unchanged
 
         // Sync collections
@@ -52,10 +52,10 @@ public static class ConfigSync
         }
 
         // Delete collections not in config
-        var dbCollections = db.Prepare("SELECT name FROM store_collections").AllDynamic();
+        var dbCollections = db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         foreach (var row in dbCollections)
         {
-            var name = row["name"]?.ToString();
+            var name = row.Name;
             if (name != null && !configNames.Contains(name))
             {
                 db.Prepare("DELETE FROM store_collections WHERE name = $1").Run(name);

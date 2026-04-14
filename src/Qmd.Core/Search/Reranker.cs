@@ -33,8 +33,8 @@ internal static class Reranker
         foreach (var doc in documents)
         {
             var cacheKey = ComputeCacheKey(rerankQuery, model, doc.Text);
-            var cached = db.Prepare("SELECT result FROM llm_cache WHERE hash = $1").GetDynamic(cacheKey);
-            if (cached?["result"] is string cachedScore && double.TryParse(cachedScore, out var score))
+            var cached = db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+            if (cached?.Value is string cachedScore && double.TryParse(cachedScore, out var score))
             {
                 cachedResults[doc.Text] = score;
             }

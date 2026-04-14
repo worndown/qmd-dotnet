@@ -1,4 +1,5 @@
 using Qmd.Core.Chunking;
+using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
 using Qmd.Core.Paths;
@@ -80,7 +81,7 @@ internal static class StructuredSearchService
         var vecSearches = searches.Where(s => s.Type is "vec" or "hyde").ToList();
 
         var vecTableExists = store.Db.Prepare(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
 
         if (vecTableExists != null && store.LlmService != null && vecSearches.Count > 0)
         {

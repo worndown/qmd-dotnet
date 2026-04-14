@@ -65,8 +65,8 @@ internal static class VecExtension
     {
         try
         {
-            var row = db.Prepare("SELECT vec_version() AS version").GetDynamic();
-            if (row == null || row["version"] is not string version || string.IsNullOrEmpty(version))
+            var row = db.Prepare("SELECT vec_version() AS value").Get<SingleValueRow>();
+            if (row == null || row.Value is not string version || string.IsNullOrEmpty(version))
                 throw new InvalidOperationException("vec_version() returned no version");
         }
         catch (Exception ex) when (ex is not InvalidOperationException)
@@ -86,11 +86,11 @@ internal static class VecExtension
 
         // Check if table already exists and validate dimensions + structure
         var existing = db.Prepare(
-            "SELECT sql FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
+            "SELECT sql as value FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SingleValueRow>();
 
         if (existing != null)
         {
-            var sql = existing["sql"]?.ToString() ?? "";
+            var sql = existing.Value ?? "";
             var match = System.Text.RegularExpressions.Regex.Match(sql, @"float\[(\d+)\]");
             var hasHashSeq = sql.Contains("hash_seq", StringComparison.OrdinalIgnoreCase);
             var hasCosine = sql.Contains("distance_metric=cosine", StringComparison.OrdinalIgnoreCase);

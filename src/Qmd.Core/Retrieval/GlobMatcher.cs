@@ -27,17 +27,17 @@ internal static class GlobMatcher
             FROM documents d
             JOIN content c ON c.hash = d.hash
             WHERE d.active = 1
-        ").AllDynamic();
+        ").All<GlobFileRow>();
 
         var glob = Glob.Parse(pattern);
         var results = new List<GlobMatch>();
 
         foreach (var f in allFiles)
         {
-            var virtualPath = f["virtual_path"]!.ToString()!;
-            var path = f["path"]!.ToString()!;
-            var collection = f["collection"]!.ToString()!;
-            var bodyLength = Convert.ToInt32(f["body_length"]);
+            var virtualPath = f.VirtualPath;
+            var path = f.Path;
+            var collection = f.Collection;
+            var bodyLength = f.BodyLength;
             var collectionPath = $"{collection}/{path}";
 
             if (glob.IsMatch(virtualPath) || glob.IsMatch(path) || glob.IsMatch(collectionPath))

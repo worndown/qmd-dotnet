@@ -50,7 +50,7 @@ internal static class DocumentFinder
             FROM documents d
             JOIN content ON content.hash = d.hash
             WHERE 'qmd://' || d.collection || '/' || d.path = $1 AND d.active = 1
-        ").GetDynamic(filepath);
+        ").Get<DocumentRow>(filepath);
 
         // Try fuzzy match by virtual path
         if (doc == null)
@@ -64,17 +64,17 @@ internal static class DocumentFinder
                 JOIN content ON content.hash = d.hash
                 WHERE 'qmd://' || d.collection || '/' || d.path LIKE $1 AND d.active = 1
                 LIMIT 1
-            ").GetDynamic($"%{filepath}");
+            ").Get<DocumentRow>($"%{filepath}");
         }
 
         // Try absolute/relative path via collections
         if (doc == null && !filepath.StartsWith("qmd://"))
         {
-            var collections = db.Prepare("SELECT name, path FROM store_collections").AllDynamic();
+            var collections = db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
             foreach (var coll in collections)
             {
-                var collName = coll["name"]!.ToString()!;
-                var collPath = coll["path"]?.ToString() ?? "";
+                var collName = coll.Name;
+                var collPath = coll.Path ?? "";
                 string? relativePath = null;
 
                 if (filepath.StartsWith(collPath + "/"))
@@ -92,7 +92,7 @@ internal static class DocumentFinder
                         FROM documents d
                         JOIN content ON content.hash = d.hash
                         WHERE d.collection = $1 AND d.path = $2 AND d.active = 1
-                    ").GetDynamic(collName, relativePath);
+                    ").Get<DocumentRow>(collName, relativePath);
                     if (doc != null) break;
                 }
             }
@@ -104,19 +104,19 @@ internal static class DocumentFinder
             return FindDocumentResult.Missing(filename, similar);
         }
 
-        var hash = doc["hash"]!.ToString()!;
-        var virtualPath = doc["virtual_path"]!.ToString()!;
+        var hash = doc.Hash;
+        var virtualPath = doc.VirtualPath;
         var result = new DocumentResult
         {
             Filepath = virtualPath,
-            DisplayPath = doc["display_path"]!.ToString()!,
-            Title = doc["title"]!.ToString()!,
+            DisplayPath = doc.DisplayPath,
+            Title = doc.Title,
             Hash = hash,
             DocId = DocidUtils.GetDocid(hash),
-            CollectionName = doc["collection"]!.ToString()!,
-            ModifiedAt = doc["modified_at"]?.ToString() ?? "",
-            BodyLength = Convert.ToInt32(doc["body_length"] ?? 0),
-            Body = includeBody ? doc["body"]?.ToString() : null,
+            CollectionName = doc.Collection,
+            ModifiedAt = doc.ModifiedAt,
+            BodyLength = doc.BodyLength,
+            Body = includeBody ? doc.Body : null,
             Context = ContextResolver.GetContextForFile(db, virtualPath),
         };
 
@@ -128,7 +128,7 @@ internal static class DocumentFinder
     /// </summary>
     public static string? GetDocumentBody(IQmdDatabase db, string filepath, int? fromLine = null, int? maxLines = null)
     {
-        Dictionary<string, object?>? row = null;
+        BodyRow? row = null;
 
         // Try virtual path
         if (filepath.StartsWith("qmd://"))
@@ -138,16 +138,16 @@ internal static class DocumentFinder
                 FROM documents d
                 JOIN content ON content.hash = d.hash
                 WHERE 'qmd://' || d.collection || '/' || d.path = $1 AND d.active = 1
-            ").GetDynamic(filepath);
+            ").Get<BodyRow>(filepath);
         }
 
         // Try absolute path via collections
         if (row == null)
         {
-            var collections = db.Prepare("SELECT name, path FROM store_collections").AllDynamic();
+            var collections = db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
             foreach (var coll in collections)
             {
-                var collPath = coll["path"]?.ToString() ?? "";
+                var collPath = coll.Path ?? "";
                 if (filepath.StartsWith(collPath + "/"))
                 {
                     var relativePath = filepath[(collPath.Length + 1)..];
@@ -156,7 +156,7 @@ internal static class DocumentFinder
                         FROM documents d
                         JOIN content ON content.hash = d.hash
                         WHERE d.collection = $1 AND d.path = $2 AND d.active = 1
-                    ").GetDynamic(coll["name"]!.ToString()!, relativePath);
+                    ").Get<BodyRow>(coll.Name, relativePath);
                     if (row != null) break;
                 }
             }
@@ -164,7 +164,7 @@ internal static class DocumentFinder
 
         if (row == null) return null;
 
-        var body = row["body"]?.ToString() ?? "";
+        var body = row.Body ?? "";
         if (fromLine.HasValue || maxLines.HasValue)
         {
             var lines = body.Split('\n');
@@ -186,9 +186,9 @@ internal static class DocumentFinder
             FROM documents d
             WHERE d.hash LIKE $1 AND d.active = 1
             LIMIT 1
-        ").GetDynamic($"{normalized}%");
+        ").Get<DocidRow>($"{normalized}%");
 
         if (row == null) return null;
-        return (row["filepath"]!.ToString()!, row["hash"]!.ToString()!);
+        return (row.Filepath, row.Hash);
     }
 }

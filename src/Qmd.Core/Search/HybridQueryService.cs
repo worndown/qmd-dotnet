@@ -81,7 +81,7 @@ internal static class HybridQueryService
 
         // Check if vector table exists
         var vecTableExists = store.Db.Prepare(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").GetDynamic();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
 
         if (vecTableExists != null && store.LlmService != null)
         {

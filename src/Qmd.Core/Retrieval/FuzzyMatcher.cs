@@ -35,11 +35,11 @@ internal static class FuzzyMatcher
     /// </summary>
     public static List<string> FindSimilarFiles(IQmdDatabase db, string query, int maxDistance = 3, int limit = 5)
     {
-        var allFiles = db.Prepare("SELECT path FROM documents WHERE active = 1").AllDynamic();
+        var allFiles = db.Prepare("SELECT path FROM documents WHERE active = 1").All<SinglePathRow>();
         var queryLower = query.ToLowerInvariant();
 
         return allFiles
-            .Select(f => (path: f["path"]!.ToString()!, dist: Levenshtein(f["path"]!.ToString()!.ToLowerInvariant(), queryLower)))
+            .Select(f => (path: f.Path, dist: Levenshtein(f.Path.ToLowerInvariant(), queryLower)))
             .Where(x => x.dist <= maxDistance)
             .OrderBy(x => x.dist)
             .Take(limit)

@@ -52,24 +52,23 @@ internal static class FtsSearcher
         sql += " ORDER BY fm.bm25_score ASC LIMIT $" + (parameters.Count + 1);
         parameters.Add((long)limit);
 
-        var rows = db.Prepare(sql).AllDynamic(parameters.ToArray());
+        var rows = db.Prepare(sql).All<FtsMatchRow>(parameters.ToArray());
 
         return rows.Select(row =>
         {
-            var bm25Score = Convert.ToDouble(row["bm25_score"]);
-            var score = Math.Abs(bm25Score) / (1 + Math.Abs(bm25Score));
-            var hash = row["hash"]!.ToString()!;
-            var body = row["body"]?.ToString() ?? "";
+            var score = Math.Abs(row.Bm25Score) / (1 + Math.Abs(row.Bm25Score));
+            var hash = row.Hash;
+            var body = row.Body ?? "";
 
-            var virtualPath = row["filepath"]!.ToString()!;
+            var virtualPath = row.Filepath;
             return new SearchResult
             {
                 Filepath = virtualPath,
-                DisplayPath = row["display_path"]!.ToString()!,
-                Title = row["title"]!.ToString()!,
+                DisplayPath = row.DisplayPath,
+                Title = row.Title,
                 Hash = hash,
                 DocId = DocidUtils.GetDocid(hash),
-                CollectionName = row["collection"]!.ToString()!,
+                CollectionName = row.Collection,
                 ModifiedAt = "",
                 BodyLength = body.Length,
                 Body = body,

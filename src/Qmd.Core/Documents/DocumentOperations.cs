@@ -57,7 +57,7 @@ internal static class DocumentOperations
     public static List<string> GetActiveDocumentPaths(IQmdDatabase db, string collection)
     {
         var rows = db.Prepare("SELECT path FROM documents WHERE collection = $1 AND active = 1")
-            .AllDynamic(collection);
-        return rows.Select(r => r["path"]!.ToString()!).ToList();
+            .All<SinglePathRow>(collection);
+        return rows.Select(r => r.Path).ToList();
     }
 }
