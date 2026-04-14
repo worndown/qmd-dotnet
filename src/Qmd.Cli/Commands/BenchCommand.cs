@@ -27,7 +27,7 @@ public static class BenchCommand
             var resolvedPath = Path.GetFullPath(fixturePath);
             if (!File.Exists(resolvedPath))
             {
-                Console.Error.WriteLine($"Fixture file not found: {resolvedPath}");
+                CliContext.Console.WriteErrorLine($"Fixture file not found: {resolvedPath}");
                 return 1;
             }
 
@@ -35,7 +35,7 @@ public static class BenchCommand
             var fixture = JsonSerializer.Deserialize<BenchmarkFixture>(raw);
             if (fixture?.Queries is not { Count: > 0 })
             {
-                Console.Error.WriteLine("Invalid fixture: missing 'queries' array");
+                CliContext.Console.WriteErrorLine("Invalid fixture: missing 'queries' array");
                 return 1;
             }
 
@@ -49,11 +49,11 @@ public static class BenchCommand
 
             if (json)
             {
-                Console.Write(BenchmarkRunner.FormatJson(result));
+                CliContext.Console.Write(BenchmarkRunner.FormatJson(result));
             }
             else
             {
-                Console.Write(BenchmarkRunner.FormatTable(result));
+                CliContext.Console.Write(BenchmarkRunner.FormatTable(result));
             }
 
             return 0;

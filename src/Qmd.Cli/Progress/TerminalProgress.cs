@@ -6,30 +6,30 @@ namespace Qmd.Cli.Progress;
 /// </summary>
 public static class OscProgress
 {
-    internal static bool IsTty => !Console.IsErrorRedirected;
+    internal static bool IsTty => !CliContext.Console.IsErrorRedirected;
 
     public static void Set(int percent)
     {
         if (IsTty)
-            Console.Error.Write($"\x1b]9;4;1;{percent}\x07");
+            CliContext.Console.WriteError($"\x1b]9;4;1;{percent}\x07");
     }
 
     public static void Clear()
     {
         if (IsTty)
-            Console.Error.Write("\x1b]9;4;0\x07");
+            CliContext.Console.WriteError("\x1b]9;4;0\x07");
     }
 
     public static void Indeterminate()
     {
         if (IsTty)
-            Console.Error.Write("\x1b]9;4;3\x07");
+            CliContext.Console.WriteError("\x1b]9;4;3\x07");
     }
 
     public static void Error()
     {
         if (IsTty)
-            Console.Error.Write("\x1b]9;4;2\x07");
+            CliContext.Console.WriteError("\x1b]9;4;2\x07");
     }
 
     // Build the OSC string without writing (useful for testing)
@@ -47,13 +47,13 @@ public static class CursorHelper
     public static void Hide()
     {
         if (OscProgress.IsTty)
-            Console.Error.Write("\x1b[?25l");
+            CliContext.Console.WriteError("\x1b[?25l");
     }
 
     public static void Show()
     {
         if (OscProgress.IsTty)
-            Console.Error.Write("\x1b[?25h");
+            CliContext.Console.WriteError("\x1b[?25h");
     }
 }
 

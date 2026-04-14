@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Reflection;
 using LLama.Native;
+using Qmd.Cli;
 using Qmd.Cli.Commands;
 using Qmd.Core;
 
@@ -37,7 +38,7 @@ root.Subcommands.Add(ProfileEmbeddingsCommand.Create());
 NativeLibraryConfig.All.WithLogCallback((level, message) =>
 {
     if (level >= LLamaLogLevel.Error)
-        Console.Error.Write(message);
+        CliContext.Console.WriteError(message);
 });
 
 // Parse first, capture global option, then invoke
@@ -52,12 +53,12 @@ try
 }
 catch (QmdException ex)
 {
-    Console.Error.WriteLine($"ERROR: {ex.Message}");
+    CliContext.Console.WriteErrorLine($"ERROR: {ex.Message}");
     return 1;
 }
 catch (InvalidOperationException ex)
 {
-    Console.Error.WriteLine($"ERROR: {ex.Message}");
+    CliContext.Console.WriteErrorLine($"ERROR: {ex.Message}");
     return 1;
 }
 

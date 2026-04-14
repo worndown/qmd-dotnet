@@ -62,9 +62,9 @@ public static class CollectionCommand
             await store.AddCollectionAsync(name, path, mask,
                 ignore.Length > 0 ? ignore.ToList() : null);
             // Auto-index the new collection
-            Console.WriteLine($"Indexing '{name}'...");
+            CliContext.Console.WriteLine($"Indexing '{name}'...");
             var result = await store.UpdateAsync(new UpdateOptions { Collections = [name] });
-            Console.WriteLine($"Collection '{name}' added. Indexed {result.Indexed} files.");
+            CliContext.Console.WriteLine($"Collection '{name}' added. Indexed {result.Indexed} files.");
         });
 
         // collection remove <name>
@@ -75,10 +75,7 @@ public static class CollectionCommand
         {
             var name = parseResult.GetValue(removeName) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            if (await store.RemoveCollectionAsync(name))
-                Console.WriteLine($"Collection '{name}' removed.");
-            else
-                Console.Error.WriteLine($"Collection '{name}' not found.");
+            await HandleRemoveAsync(store, name);
         });
 
         // collection rename <old> <new>
@@ -91,10 +88,7 @@ public static class CollectionCommand
             var old = parseResult.GetValue(oldName) ?? throw new InvalidOperationException("Required argument 'old' was not provided.");
             var @new = parseResult.GetValue(newName) ?? throw new InvalidOperationException("Required argument 'new' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            if (await store.RenameCollectionAsync(old, @new))
-                Console.WriteLine($"Collection '{old}' renamed to '{@new}'.");
-            else
-                Console.Error.WriteLine($"Collection '{old}' not found.");
+            await HandleRenameAsync(store, old, @new);
         });
 
         // collection show <name>
@@ -105,27 +99,7 @@ public static class CollectionCommand
         {
             var name = parseResult.GetValue(showNameArg);
             await using var store = await CliHelper.CreateStoreAsync();
-            var collections = await store.ListCollectionsAsync();
-            var coll = collections.FirstOrDefault(c => c.Name == name);
-            if (coll == null)
-            {
-                Console.Error.WriteLine($"Collection '{name}' not found.");
-                return;
-            }
-            Console.WriteLine($"Name:    {coll.Name}");
-            Console.WriteLine($"Path:    {coll.Path}");
-            Console.WriteLine($"Pattern: {coll.Pattern}");
-            Console.WriteLine($"Include: {(coll.IncludeByDefault != false ? "yes" : "no")}");
-            if (coll.Update != null)
-                Console.WriteLine($"Update:  {coll.Update}");
-            if (coll.Ignore is { Count: > 0 })
-                Console.WriteLine($"Ignore:  {string.Join(", ", coll.Ignore)}");
-            if (coll.Context is { Count: > 0 })
-            {
-                Console.WriteLine("Contexts:");
-                foreach (var (path, ctx) in coll.Context)
-                    Console.WriteLine($"  {path}: {ctx}");
-            }
+            await HandleShowAsync(store, name!);
         });
 
         // collection update-cmd <name> [command]
@@ -138,12 +112,7 @@ public static class CollectionCommand
             var name = parseResult.GetValue(updateCmdName) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             var command = parseResult.GetValue(updateCmdValue);
             await using var store = await CliHelper.CreateStoreAsync();
-            var result = await store.UpdateCollectionSettingsAsync(name,
-                update: command, clearUpdate: command == null);
-            if (!result) { Console.Error.WriteLine($"Collection '{name}' not found."); return; }
-            Console.WriteLine(command != null
-                ? $"Update command set for '{name}': {command}"
-                : $"Update command cleared for '{name}'.");
+            await HandleUpdateCmdAsync(store, name, command);
         });
 
         // collection include <name>
@@ -153,9 +122,7 @@ public static class CollectionCommand
         {
             var name = parseResult.GetValue(includeNameArg) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: true);
-            if (!result) { Console.Error.WriteLine($"Collection '{name}' not found."); return; }
-            Console.WriteLine($"Collection '{name}' included in default searches.");
+            await HandleIncludeAsync(store, name);
         });
 
         // collection exclude <name>
@@ -165,9 +132,7 @@ public static class CollectionCommand
         {
             var name = parseResult.GetValue(excludeNameArg) ?? throw new InvalidOperationException("Required argument 'name' was not provided.");
             await using var store = await CliHelper.CreateStoreAsync();
-            var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: false);
-            if (!result) { Console.Error.WriteLine($"Collection '{name}' not found."); return; }
-            Console.WriteLine($"Collection '{name}' excluded from default searches.");
+            await HandleExcludeAsync(store, name);
         });
 
         cmd.Subcommands.Add(listCmd);
@@ -179,6 +144,71 @@ public static class CollectionCommand
         cmd.Subcommands.Add(includeCmd);
         cmd.Subcommands.Add(excludeCmd);
         return cmd;
+    }
+
+    internal static async Task HandleRemoveAsync(IQmdStore store, string name)
+    {
+        if (await store.RemoveCollectionAsync(name))
+            CliContext.Console.WriteLine($"Collection '{name}' removed.");
+        else
+            CliContext.Console.WriteErrorLine($"Collection '{name}' not found.");
+    }
+
+    internal static async Task HandleRenameAsync(IQmdStore store, string old, string @new)
+    {
+        if (await store.RenameCollectionAsync(old, @new))
+            CliContext.Console.WriteLine($"Collection '{old}' renamed to '{@new}'.");
+        else
+            CliContext.Console.WriteErrorLine($"Collection '{old}' not found.");
+    }
+
+    internal static async Task HandleShowAsync(IQmdStore store, string name)
+    {
+        var collections = await store.ListCollectionsAsync();
+        var coll = collections.FirstOrDefault(c => c.Name == name);
+        if (coll == null)
+        {
+            CliContext.Console.WriteErrorLine($"Collection '{name}' not found.");
+            return;
+        }
+        CliContext.Console.WriteLine($"Name:    {coll.Name}");
+        CliContext.Console.WriteLine($"Path:    {coll.Path}");
+        CliContext.Console.WriteLine($"Pattern: {coll.Pattern}");
+        CliContext.Console.WriteLine($"Include: {(coll.IncludeByDefault != false ? "yes" : "no")}");
+        if (coll.Update != null)
+            CliContext.Console.WriteLine($"Update:  {coll.Update}");
+        if (coll.Ignore is { Count: > 0 })
+            CliContext.Console.WriteLine($"Ignore:  {string.Join(", ", coll.Ignore)}");
+        if (coll.Context is { Count: > 0 })
+        {
+            CliContext.Console.WriteLine("Contexts:");
+            foreach (var (path, ctx) in coll.Context)
+                CliContext.Console.WriteLine($"  {path}: {ctx}");
+        }
+    }
+
+    internal static async Task HandleUpdateCmdAsync(IQmdStore store, string name, string? command)
+    {
+        var result = await store.UpdateCollectionSettingsAsync(name,
+            update: command, clearUpdate: command == null);
+        if (!result) { CliContext.Console.WriteErrorLine($"Collection '{name}' not found."); return; }
+        CliContext.Console.WriteLine(command != null
+            ? $"Update command set for '{name}': {command}"
+            : $"Update command cleared for '{name}'.");
+    }
+
+    internal static async Task HandleIncludeAsync(IQmdStore store, string name)
+    {
+        var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: true);
+        if (!result) { CliContext.Console.WriteErrorLine($"Collection '{name}' not found."); return; }
+        CliContext.Console.WriteLine($"Collection '{name}' included in default searches.");
+    }
+
+    internal static async Task HandleExcludeAsync(IQmdStore store, string name)
+    {
+        var result = await store.UpdateCollectionSettingsAsync(name, includeByDefault: false);
+        if (!result) { CliContext.Console.WriteErrorLine($"Collection '{name}' not found."); return; }
+        CliContext.Console.WriteLine($"Collection '{name}' excluded from default searches.");
     }
 
     private static string FormatTimeAgo(string isoDate)

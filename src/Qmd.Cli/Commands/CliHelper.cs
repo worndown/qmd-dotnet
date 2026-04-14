@@ -17,8 +17,14 @@ internal static class CliHelper
     /// </summary>
     public static string? IndexName { get; set; }
 
+    /// <summary>
+    /// Optional factory override for testing. When set, CreateStoreAsync uses this instead of the filesystem path.
+    /// </summary>
+    internal static Func<Task<IQmdStore>>? StoreFactory { get; set; }
+
     public static async Task<IQmdStore> CreateStoreAsync()
     {
+        if (StoreFactory != null) return await StoreFactory();
         QmdPaths.EnableProductionMode();
         var dbPath = IndexName != null
             ? QmdPaths.GetDefaultDbPath(IndexName)
@@ -99,13 +105,13 @@ internal static class CliHelper
         switch (format)
         {
             case OutputFormat.Json:
-                Console.Write("[]");
+                CliContext.Console.Write("[]");
                 return;
             case OutputFormat.Csv:
-                Console.Write("docid,score,file,title,context,line,snippet");
+                CliContext.Console.Write("docid,score,file,title,context,line,snippet");
                 return;
             case OutputFormat.Xml:
-                Console.Write("<results></results>");
+                CliContext.Console.Write("<results></results>");
                 return;
             case OutputFormat.Md:
             case OutputFormat.Files:
@@ -114,9 +120,9 @@ internal static class CliHelper
 
         // CLI format: show a helpful message
         if (scoreHint != null)
-            Console.Error.WriteLine(scoreHint);
+            CliContext.Console.WriteErrorLine(scoreHint);
         else
-            Console.Error.WriteLine("No results found.");
+            CliContext.Console.WriteErrorLine("No results found.");
     }
 
     /// <summary>

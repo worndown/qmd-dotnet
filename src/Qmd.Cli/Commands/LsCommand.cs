@@ -30,12 +30,12 @@ public static class LsCommand
                 // List all collections
                 if (collections.Count == 0)
                 {
-                    Console.WriteLine("No collections found. Run 'qmd collection add .' to index files.");
+                    CliContext.Console.WriteLine("No collections found. Run 'qmd collection add .' to index files.");
                     return;
                 }
 
                 AnsiConsole.MarkupLine("[bold]Collections:[/]");
-                Console.WriteLine();
+                CliContext.Console.WriteLine();
                 foreach (var coll in collections)
                 {
                     var status = await store.GetStatusAsync();
@@ -55,7 +55,7 @@ public static class LsCommand
                 var parsed = VirtualPaths.Parse(pathArgVal);
                 if (parsed == null)
                 {
-                    Console.Error.WriteLine($"Invalid virtual path: {pathArgVal}");
+                    CliContext.Console.WriteErrorLine($"Invalid virtual path: {pathArgVal}");
                     return;
                 }
                 collectionName = parsed.CollectionName;
@@ -72,8 +72,8 @@ public static class LsCommand
             var coll2 = collections.FirstOrDefault(c => c.Name == collectionName);
             if (coll2 == null)
             {
-                Console.Error.WriteLine($"Collection not found: {collectionName}");
-                Console.Error.WriteLine("Run 'qmd ls' to see available collections.");
+                CliContext.Console.WriteErrorLine($"Collection not found: {collectionName}");
+                CliContext.Console.WriteErrorLine("Run 'qmd ls' to see available collections.");
                 return;
             }
 
@@ -83,9 +83,9 @@ public static class LsCommand
             if (files.Count == 0)
             {
                 if (pathPrefix != null)
-                    Console.WriteLine($"No files found under qmd://{collectionName}/{pathPrefix}");
+                    CliContext.Console.WriteLine($"No files found under qmd://{collectionName}/{pathPrefix}");
                 else
-                    Console.WriteLine($"No files found in collection: {collectionName}");
+                    CliContext.Console.WriteLine($"No files found in collection: {collectionName}");
                 return;
             }
 

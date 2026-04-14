@@ -79,14 +79,14 @@ public static class UpdateCommand
                         var rate = info.Current / elapsed;
                         var remaining = (info.Total - info.Current) / rate;
                         var eta = info.Current > 2 ? $" ETA: {ProgressFormatting.FormatEta(remaining)}" : "";
-                        Console.Error.Write($"\rIndexing: {info.Current}/{info.Total}{eta}        ");
+                        CliContext.Console.WriteError($"\rIndexing: {info.Current}/{info.Total}{eta}        ");
                     }
                 }),
             });
 
             OscProgress.Clear();
             if (isTty)
-                Console.Error.Write("\r                                                \r");
+                CliContext.Console.WriteError("\r                                                \r");
 
             AnsiConsole.MarkupLine($"  Indexed: [green]{result.Indexed}[/]  Updated: {result.Updated}  Unchanged: {result.Unchanged}  Removed: {result.Removed}");
         });

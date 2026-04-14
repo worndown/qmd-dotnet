@@ -62,7 +62,7 @@ public static class EmbedCommand
                         var eta = elapsed > 2 ? ProgressFormatting.FormatEta(etaSec) : "...";
                         var errStr = info.Errors > 0 ? $" {info.Errors} err" : "";
 
-                        Console.Error.Write($"\r{bar} {percentStr}% {info.ChunksEmbedded}/{info.TotalChunks}{errStr} {throughput} ETA {eta}   ");
+                        CliContext.Console.WriteError($"\r{bar} {percentStr}% {info.ChunksEmbedded}/{info.TotalChunks}{errStr} {throughput} ETA {eta}   ");
                     }
                 }),
             });
@@ -78,7 +78,7 @@ public static class EmbedCommand
             {
                 var totalBar = ProgressFormatting.RenderProgressBar(100);
                 var totalTimeSec = result.DurationMs / 1000.0;
-                Console.Error.WriteLine($"\r{totalBar} 100%                                    ");
+                CliContext.Console.WriteErrorLine($"\r{totalBar} 100%                                    ");
                 AnsiConsole.MarkupLine($"\n[green]Done![/] Embedded [bold]{result.ChunksEmbedded}[/] chunks from [bold]{result.DocsProcessed}[/] documents in [bold]{ProgressFormatting.FormatEta(totalTimeSec)}[/]");
                 if (result.Errors > 0)
                     AnsiConsole.MarkupLine($"[yellow]{result.Errors} chunks failed[/]");

@@ -82,7 +82,7 @@ public static class VsearchCommand
 
             var output = SearchResultFormatter.Format(results, outputFormat,
                 new FormatOptions { Full = full, Query = query, LineNumbers = lineNumbers, Intent = intent });
-            Console.Write(output);
+            CliContext.Console.Write(output);
         });
 
         return cmd;
