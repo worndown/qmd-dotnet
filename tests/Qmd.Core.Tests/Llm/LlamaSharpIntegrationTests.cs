@@ -35,7 +35,10 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         var result = await llm.EmbedAsync("Hello world");
 
         result.Should().NotBeNull();
-        result!.Embedding.Should().HaveCount(768); // embeddinggemma-300M
+        // Exact dimension depends on the active model (768 for embeddinggemma-300M,
+        // 1024 for Qwen3-Embedding-0.6B, etc.) — just verify a sane range.
+        result!.Embedding.Should().HaveCountGreaterThan(0)
+            .And.HaveCountLessThan(8192);
     }
 
     [Fact]
