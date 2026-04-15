@@ -16,9 +16,9 @@ public static class PullCommand
             var refresh = parseResult.GetValue(refreshOpt);
             var models = new[]
             {
-                ("embed",    LlmServiceFactory.DefaultEmbedModel),
-                ("rerank",   LlmServiceFactory.DefaultRerankModel),
-                ("generate", LlmServiceFactory.DefaultGenerateModel),
+                ("embed",    LlmServiceFactory.ResolveEmbedModel()),
+                ("rerank",   LlmServiceFactory.ResolveRerankModel()),
+                ("generate", LlmServiceFactory.ResolveGenerateModel()),
             };
 
             foreach (var (role, uri) in models)

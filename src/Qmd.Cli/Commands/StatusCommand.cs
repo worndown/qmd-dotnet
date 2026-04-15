@@ -54,9 +54,9 @@ public static class StatusCommand
             // Models
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[bold]Models[/]");
-            AnsiConsole.MarkupLine($"  Embed:    [dim]{LlmServiceFactory.DefaultEmbedModel}[/]");
-            AnsiConsole.MarkupLine($"  Rerank:   [dim]{LlmServiceFactory.DefaultRerankModel}[/]");
-            AnsiConsole.MarkupLine($"  Generate: [dim]{LlmServiceFactory.DefaultGenerateModel}[/]");
+            AnsiConsole.MarkupLine($"  Embed:    [dim]{LlmServiceFactory.ResolveEmbedModel()}[/]");
+            AnsiConsole.MarkupLine($"  Rerank:   [dim]{LlmServiceFactory.ResolveRerankModel()}[/]");
+            AnsiConsole.MarkupLine($"  Generate: [dim]{LlmServiceFactory.ResolveGenerateModel()}[/]");
 
             // AST chunking
             AnsiConsole.WriteLine();

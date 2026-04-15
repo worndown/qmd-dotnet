@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
@@ -113,13 +114,13 @@ public static class BenchmarkRunner
             foreach (var backend in activeBackends)
             {
                 if (!options.Json)
-                    Console.Error.Write($"  {query.Id} / {backend.Name}...");
+                    await Console.Error.WriteAsync($"  {query.Id} / {backend.Name}...");
 
                 var backendResult = await RunQueryAsync(store, backend, query, collections);
                 backends[backend.Name] = backendResult;
 
                 if (!options.Json)
-                    Console.Error.WriteLine($" {Math.Round(backendResult.LatencyMs)}ms");
+                    await Console.Error.WriteLineAsync($" {Math.Round(backendResult.LatencyMs):N0}ms");
             }
 
             results.Add(new QueryResult
@@ -248,39 +249,46 @@ public static class BenchmarkRunner
     /// <returns>A formatted multi-line string suitable for console output.</returns>
     public static string FormatTable(BenchmarkResult benchResult)
     {
-        var sb = new StringBuilder();
+        int queryIdWidth = Math.Max(Math.Min(32, benchResult.Results.Max(x => x.Id.Length)), 8);
+        int headerWidth = queryIdWidth + 45;
+        var sb = new StringBuilder(16 * 1024);
 
-        sb.AppendLine($"{Pad("Query", 25)} {Pad("Backend", 8)} {Pad("P@k", 6)} {Pad("Recall", 7)} {Pad("MRR", 6)} {Pad("F1", 6)} {Pad("ms", 8)}");
-        sb.AppendLine(new string('-', 70));
+        sb.AppendLine(new string('-', headerWidth));
+        sb.AppendLine($"{"Query ID".PadLeft(queryIdWidth)}  Backend   P@k Recall    MRR     F1    Time");
+        sb.AppendLine(new string('-', headerWidth));
 
         foreach (var r in benchResult.Results)
         {
             foreach (var (backend, br) in r.Backends)
             {
                 sb.AppendLine(
-                    $"{Pad(r.Id, 25)} {Pad(backend, 8)} {Num(br.PrecisionAtK)} {Num(br.Recall)}  {Num(br.Mrr)} {Num(br.F1)} {Math.Round(br.LatencyMs).ToString().PadLeft(7)}ms");
+                    $"{Truncate(r.Id, queryIdWidth)}  {backend.PadRight(7)} {br.PrecisionAtK.ToString("F2").PadLeft(5)} {br.Recall.ToString("F2").PadLeft(6)}  {br.Mrr.ToString("F2").PadLeft(5)} {br.F1.ToString("F2").PadLeft(6)} {Math.Round(br.LatencyMs).ToString("N0", CultureInfo.CurrentCulture).PadLeft(7)}");
             }
             sb.AppendLine();
         }
 
-        sb.AppendLine("Summary:");
-        sb.AppendLine(new string('-', 70));
+        sb.AppendLine("Summary (averages):");
+        sb.AppendLine(new string('-', 69));
 
         foreach (var (name, s) in benchResult.Summary)
         {
             sb.AppendLine(
-                $"  {Pad(name, 8)} P@k={Num3(s.AvgPrecision)} Recall={Num3(s.AvgRecall)} MRR={Num3(s.AvgMrr)} F1={Num3(s.AvgF1)} Avg={Math.Round(s.AvgLatencyMs)}ms");
+                $"  {name.PadRight(8)} P@k:{Num3(s.AvgPrecision)}  Recall:{Num3(s.AvgRecall)}  MRR:{Num3(s.AvgMrr)}  F1:{Num3(s.AvgF1)}  {Math.Round(s.AvgLatencyMs).ToString("N0").PadLeft(5)}ms");
         }
 
         return sb.ToString();
 
-        static string Pad(string s, int n)
+        static string Truncate(string s, int n)
         {
-            if (s.Length > n) s = s[..n];
-            return s.PadRight(n);
+            if (s.Length > n)
+            {
+                s = s[..(n - 2)];
+                s += "..";
+            }
+
+            return s.PadLeft(n);
         }
 
-        static string Num(double n) => n.ToString("F2").PadLeft(5);
         static string Num3(double n) => n.ToString("F3").PadLeft(6);
     }
 

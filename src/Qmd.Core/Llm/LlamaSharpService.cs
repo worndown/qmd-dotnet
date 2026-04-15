@@ -52,9 +52,9 @@ internal class LlamaSharpService : ILlmService
     public LlamaSharpService(LlamaSharpOptions? options = null)
     {
         options ??= new LlamaSharpOptions();
-        _embedModelUri = options.EmbedModel ?? Environment.GetEnvironmentVariable("QMD_EMBED_MODEL") ?? LlmConstants.DefaultEmbedModel;
-        _generateModelUri = options.GenerateModel ?? Environment.GetEnvironmentVariable("QMD_GENERATE_MODEL") ?? LlmConstants.DefaultGenerateModel;
-        _rerankModelUri = options.RerankModel ?? Environment.GetEnvironmentVariable("QMD_RERANK_MODEL") ?? LlmConstants.DefaultRerankModel;
+        _embedModelUri = LlmServiceFactory.ResolveEmbedModel(options.EmbedModel);
+        _generateModelUri = LlmServiceFactory.ResolveGenerateModel(options.GenerateModel);
+        _rerankModelUri = LlmServiceFactory.ResolveRerankModel(options.RerankModel);
         _modelResolver = new ModelResolver(cacheDir: options.ModelCacheDir);
 
         _expandContextSize = ResolveExpandContextSize(options.ExpandContextSize);

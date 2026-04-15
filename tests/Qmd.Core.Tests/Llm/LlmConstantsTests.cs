@@ -97,6 +97,82 @@ public class LlmConstantsTests
     }
 
     [Fact]
+    public void ResolveEmbedModel_ReturnsDefault_WhenNoOverride()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
+            LlmServiceFactory.ResolveEmbedModel().Should().Be(LlmConstants.DefaultEmbedModel);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveEmbedModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:custom/embed/model.gguf");
+            LlmServiceFactory.ResolveEmbedModel().Should().Be("hf:custom/embed/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveEmbedModel_ConfigOverridesEnvVar()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:env/embed/model.gguf");
+            LlmServiceFactory.ResolveEmbedModel("hf:config/embed/model.gguf")
+                .Should().Be("hf:config/embed/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveRerankModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_RERANK_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_RERANK_MODEL", "hf:custom/rerank/model.gguf");
+            LlmServiceFactory.ResolveRerankModel().Should().Be("hf:custom/rerank/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_RERANK_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveGenerateModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_GENERATE_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_GENERATE_MODEL", "hf:custom/gen/model.gguf");
+            LlmServiceFactory.ResolveGenerateModel().Should().Be("hf:custom/gen/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_GENERATE_MODEL", original);
+        }
+    }
+
+    [Fact]
     public void ExpandContextSize_UsesDefault_WhenNoEnvOrConfig()
     {
         var original = Environment.GetEnvironmentVariable("QMD_EXPAND_CONTEXT_SIZE");

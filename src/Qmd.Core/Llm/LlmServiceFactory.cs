@@ -28,6 +28,30 @@ public static class LlmServiceFactory
         new LlamaSharpService(options);
 
     /// <summary>
+    /// Resolve the effective embed model URI: explicit override &gt; <c>QMD_EMBED_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveEmbedModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_EMBED_MODEL")
+           ?? LlmConstants.DefaultEmbedModel;
+
+    /// <summary>
+    /// Resolve the effective rerank model URI: explicit override &gt; <c>QMD_RERANK_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveRerankModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_RERANK_MODEL")
+           ?? LlmConstants.DefaultRerankModel;
+
+    /// <summary>
+    /// Resolve the effective generate model URI: explicit override &gt; <c>QMD_GENERATE_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveGenerateModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_GENERATE_MODEL")
+           ?? LlmConstants.DefaultGenerateModel;
+
+    /// <summary>
     /// Resolve a model URI to a local file path, downloading from HuggingFace if needed.
     /// Accepts <c>hf:user/repo/file.gguf</c> URIs or absolute local paths.
     /// </summary>
