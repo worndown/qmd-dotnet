@@ -1,9 +1,9 @@
 {
-  "description": "General knowledge eval: 6 documents across photography, baking, networking, plants, finance, and running",
-  "version": 1,
+  "description": "Expanded eval corpus: 20 documents, 55 queries across 7 difficulty types. Tests exact keyword, semantic, alias, cross-domain, hard, multi-match, and negative retrieval.",
+  "version": 2,
   "queries": [
     {
-      "id": "exact-rrf-composition",
+      "id": "exact-rule-of-thirds",
       "query": "rule of thirds",
       "type": "exact",
       "description": "Direct keyword match in photography document",
@@ -35,6 +35,54 @@
       "expected_in_top_k": 1
     },
     {
+      "id": "exact-aes-gcm",
+      "query": "AES-GCM encryption mode",
+      "type": "exact",
+      "description": "Direct keyword match in cryptography document",
+      "expected_files": ["encryption-and-cryptography.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-dovetail-joint",
+      "query": "dovetail joint woodworking",
+      "type": "exact",
+      "description": "Direct keyword match in woodworking document",
+      "expected_files": ["home-woodworking.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-barre-chord",
+      "query": "barre chord guitar",
+      "type": "exact",
+      "description": "Direct keyword match in guitar document",
+      "expected_files": ["guitar-for-beginners.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-cpr-compressions",
+      "query": "CPR chest compressions rate",
+      "type": "exact",
+      "description": "Direct keyword match in first aid document",
+      "expected_files": ["first-aid-essentials.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-ev-regenerative-braking",
+      "query": "regenerative braking electric vehicle",
+      "type": "exact",
+      "description": "Direct keyword match in EV document",
+      "expected_files": ["electric-vehicles.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-derailleur-barrel-adjuster",
+      "query": "derailleur barrel adjuster cable tension",
+      "type": "exact",
+      "description": "Direct keyword match in bicycle document",
+      "expected_files": ["bicycle-maintenance.md"],
+      "expected_in_top_k": 1
+    },
+    {
       "id": "semantic-framing",
       "query": "how to make the subject stand out in a photo",
       "type": "semantic",
@@ -46,7 +94,7 @@
       "id": "semantic-gluten",
       "query": "how does dough develop structure",
       "type": "semantic",
-      "description": "Conceptual match for autolyse and stretch-and-fold — no keyword 'gluten' vs 'structure'",
+      "description": "Conceptual match for autolyse and stretch-and-fold — 'structure' vs 'gluten'",
       "expected_files": ["sourdough-bread-baking.md"],
       "expected_in_top_k": 3
     },
@@ -83,6 +131,110 @@
       "expected_in_top_k": 3
     },
     {
+      "id": "semantic-espresso-grind",
+      "query": "why is my coffee shot running too fast",
+      "type": "semantic",
+      "description": "Conceptual match for dialing in espresso grind — no keyword 'fast' in doc",
+      "expected_files": ["coffee-brewing-methods.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-gut-health",
+      "query": "foods that support healthy digestion",
+      "type": "semantic",
+      "description": "Conceptual match for probiotics and fermented foods",
+      "expected_files": ["fermentation-and-preserving.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-muscle-growth",
+      "query": "how to gain muscle mass effectively",
+      "type": "semantic",
+      "description": "Conceptual match for hypertrophy, progressive overload, protein",
+      "expected_files": ["strength-training-fundamentals.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-jet-lag",
+      "query": "how to fix your body clock after traveling",
+      "type": "semantic",
+      "description": "Conceptual match for circadian rhythm and light exposure",
+      "expected_files": ["sleep-and-recovery-science.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-server-hardening",
+      "query": "securing a new cloud server against attackers",
+      "type": "semantic",
+      "description": "Conceptual match for SSH keys, firewall, disabling root login",
+      "expected_files": ["linux-server-administration.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-color-mixing",
+      "query": "how to create vibrant greens and oranges in a painting",
+      "type": "semantic",
+      "description": "Conceptual match for glazing and color theory in watercolor",
+      "expected_files": ["watercolor-painting.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-smooth-transitions",
+      "query": "how to make scene changes feel seamless in a film",
+      "type": "semantic",
+      "description": "Conceptual match for J-cuts, L-cuts, and match cuts",
+      "expected_files": ["video-editing-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-tomato-problems",
+      "query": "black spots on the bottom of my tomatoes",
+      "type": "semantic",
+      "description": "Conceptual match for blossom end rot caused by inconsistent watering",
+      "expected_files": ["vegetable-gardening.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-puppy-accidents",
+      "query": "my puppy keeps going to the bathroom inside",
+      "type": "semantic",
+      "description": "Conceptual match for house training and enzymatic cleaner",
+      "expected_files": ["dog-training-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-self-employment-tax",
+      "query": "how to handle taxes when you work for yourself",
+      "type": "semantic",
+      "description": "Conceptual match for quarterly estimated taxes and deductions",
+      "expected_files": ["freelancing-guide.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-flat-tire",
+      "query": "what to do when your bike tire goes flat on a ride",
+      "type": "semantic",
+      "description": "Conceptual match for fixing a flat procedure",
+      "expected_files": ["bicycle-maintenance.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-planets-tonight",
+      "query": "what can I see in the sky without a telescope",
+      "type": "semantic",
+      "description": "Conceptual match for naked-eye planets and constellation observation",
+      "expected_files": ["amateur-astronomy.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-range-anxiety",
+      "query": "will my car make it to the destination in winter",
+      "type": "semantic",
+      "description": "Conceptual match for cold weather range reduction in EVs",
+      "expected_files": ["electric-vehicles.md"],
+      "expected_in_top_k": 5
+    },
+    {
       "id": "alias-negative-space",
       "query": "empty areas around the subject in a picture",
       "type": "alias",
@@ -107,10 +259,58 @@
       "expected_in_top_k": 3
     },
     {
+      "id": "alias-cold-brew-concentrate",
+      "query": "making coffee without any heat",
+      "type": "alias",
+      "description": "Paraphrase of cold brew — no keyword overlap with 'cold brew'",
+      "expected_files": ["coffee-brewing-methods.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-scoby",
+      "query": "the jelly-like disc floating in my tea",
+      "type": "alias",
+      "description": "Paraphrase of kombucha SCOBY — no technical keywords",
+      "expected_files": ["fermentation-and-preserving.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-deload",
+      "query": "taking an easy week at the gym to recover",
+      "type": "alias",
+      "description": "Paraphrase of deload week — no keyword 'deload'",
+      "expected_files": ["strength-training-fundamentals.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-ssh-lockdown",
+      "query": "preventing hackers from guessing my server login",
+      "type": "alias",
+      "description": "Paraphrase of SSH key auth and disabling password login",
+      "expected_files": ["linux-server-administration.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-pocket-screws",
+      "query": "fast hidden screws for joining boards at an angle",
+      "type": "alias",
+      "description": "Paraphrase of pocket-hole joinery — indirect description",
+      "expected_files": ["home-woodworking.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "alias-heimlich",
+      "query": "what to do when someone can't breathe because food is stuck",
+      "type": "alias",
+      "description": "Paraphrase of choking / abdominal thrusts procedure",
+      "expected_files": ["first-aid-essentials.md"],
+      "expected_in_top_k": 3
+    },
+    {
       "id": "cross-hydration",
       "query": "what ratio of water to use",
       "type": "cross-domain",
-      "description": "Ambiguous query — could match baking hydration or plant watering. Baking has explicit ratio discussion.",
+      "description": "Ambiguous — could match baking hydration, coffee ratio, or plant watering",
       "expected_files": ["sourdough-bread-baking.md"],
       "expected_in_top_k": 5
     },
@@ -118,8 +318,56 @@
       "id": "cross-injury-prevention",
       "query": "how to avoid knee problems",
       "type": "cross-domain",
-      "description": "Should match runner's knee in marathon document",
+      "description": "Could match runner's knee in marathon or strength training mobility section",
       "expected_files": ["marathon-training-plan.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-recovery-sleep-vs-training",
+      "query": "why rest days are important for performance",
+      "type": "cross-domain",
+      "description": "Overlaps marathon recovery, strength training recovery, and sleep science",
+      "expected_files": ["sleep-and-recovery-science.md", "strength-training-fundamentals.md", "marathon-training-plan.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-fermentation-overlap",
+      "query": "how to keep a living culture alive",
+      "type": "cross-domain",
+      "description": "Ambiguous — sourdough starter vs kombucha SCOBY vs kefir grains",
+      "expected_files": ["sourdough-bread-baking.md", "fermentation-and-preserving.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-pest-control",
+      "query": "getting rid of tiny bugs on my plants",
+      "type": "cross-domain",
+      "description": "Overlaps indoor plant pests and vegetable garden pests — both have aphids",
+      "expected_files": ["indoor-plant-care.md", "vegetable-gardening.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-color-theory",
+      "query": "complementary colors for visual impact",
+      "type": "cross-domain",
+      "description": "Overlaps photography color theory and watercolor color theory",
+      "expected_files": ["photography-composition.md", "watercolor-painting.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-backup-strategy",
+      "query": "keeping copies of important data safe offsite",
+      "type": "cross-domain",
+      "description": "Overlaps home network backup strategy and linux server backup",
+      "expected_files": ["home-network-security.md", "linux-server-administration.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-income-taxes",
+      "query": "tax deductions for the self-employed",
+      "type": "cross-domain",
+      "description": "Overlaps personal finance tax section and freelancing tax section",
+      "expected_files": ["freelancing-guide.md", "personal-finance-basics.md"],
       "expected_in_top_k": 5
     },
     {
@@ -134,21 +382,77 @@
       "id": "hard-taper",
       "query": "reducing training before a competition",
       "type": "hard",
-      "description": "Conceptual match for tapering section — no shared terms with 'taper'",
+      "description": "Conceptual match for tapering section — no keyword 'taper'",
       "expected_files": ["marathon-training-plan.md"],
       "expected_in_top_k": 5
     },
     {
-      "id": "negative-woodworking",
-      "query": "how to build a dovetail joint",
+      "id": "hard-bloom",
+      "query": "CO2 escaping from freshly ground beans",
+      "type": "hard",
+      "description": "Matches the bloom step in pour-over — indirect technical detail",
+      "expected_files": ["coffee-brewing-methods.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-forward-secrecy",
+      "query": "even if the key is stolen later old messages are safe",
+      "type": "hard",
+      "description": "Conceptual match for TLS 1.3 forward secrecy — indirect phrasing",
+      "expected_files": ["encryption-and-cryptography.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-sleep-hormone",
+      "query": "why does blue light at night make it hard to sleep",
+      "type": "hard",
+      "description": "Matches melatonin suppression from screen light — no keyword 'melatonin'",
+      "expected_files": ["sleep-and-recovery-science.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-wet-on-wet",
+      "query": "paint spreading uncontrollably on the paper",
+      "type": "hard",
+      "description": "Matches blooms/backruns in wet-on-wet technique — described as an accident",
+      "expected_files": ["watercolor-painting.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-clicker",
+      "query": "marking the exact moment my pet does something right",
+      "type": "hard",
+      "description": "Matches clicker training and verbal marker concept — no keyword 'clicker'",
+      "expected_files": ["dog-training-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-cassini-division",
+      "query": "the dark gap visible in the rings",
+      "type": "hard",
+      "description": "Matches Saturn's Cassini Division — vague phrasing, no keyword 'Saturn'",
+      "expected_files": ["amateur-astronomy.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "negative-quantum-computing",
+      "query": "programming a quantum circuit with qubits and gates",
       "type": "negative",
       "description": "Topic not present in any document — should return no results or very low scores",
       "expected_files": [],
       "expected_in_top_k": 1
     },
     {
-      "id": "negative-astronomy",
-      "query": "observing Saturn's rings with a telescope",
+      "id": "negative-scuba-diving",
+      "query": "decompression stops when ascending from a deep dive",
+      "type": "negative",
+      "description": "Topic not present in any document — should return no results or very low scores",
+      "expected_files": [],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "negative-knitting",
+      "query": "casting on stitches with circular needles",
       "type": "negative",
       "description": "Topic not present in any document — should return no results or very low scores",
       "expected_files": [],
