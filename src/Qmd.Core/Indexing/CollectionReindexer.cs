@@ -19,7 +19,8 @@ internal static class CollectionReindexer
         string collectionPath,
         string globPattern,
         string collectionName,
-        ReindexOptions? options = null)
+        ReindexOptions? options = null,
+        CancellationToken ct = default)
     {
         var now = DateTime.UtcNow.ToString("o");
         var documentRepo = store.DocumentRepo;
@@ -50,6 +51,8 @@ internal static class CollectionReindexer
 
         foreach (var relativeFile in files)
         {
+            ct.ThrowIfCancellationRequested();
+
             var filepath = Path.GetFullPath(Path.Combine(collectionPath, relativeFile));
             var handelized = Handelize.Convert(relativeFile);
             seenPaths.Add(handelized);
@@ -57,7 +60,7 @@ internal static class CollectionReindexer
             string content;
             try
             {
-                content = await File.ReadAllTextAsync(filepath);
+                content = await File.ReadAllTextAsync(filepath, ct);
             }
             catch (IOException)
             {

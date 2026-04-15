@@ -31,7 +31,7 @@ public interface IQmdStore : IAsyncDisposable
     /// </summary>
     /// <param name="query">Search query string.</param>
     /// <param name="options">Limit and collection filters.</param>
-    Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null);
+    Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null, CancellationToken ct = default);
 
     /// <summary>
     /// Vector similarity search using pre-computed embeddings (no reranking).
@@ -68,7 +68,7 @@ public interface IQmdStore : IAsyncDisposable
     /// </summary>
     /// <param name="pathOrDocId">File path, <c>qmd://collection/path</c>, or <c>#docid</c>.</param>
     /// <param name="options">Whether to include the full body.</param>
-    Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null);
+    Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null, CancellationToken ct = default);
 
     /// <summary>
     /// Retrieve the raw body text of a document, with optional line slicing.
@@ -76,7 +76,7 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="pathOrDocId">File path, virtual path, or doc id.</param>
     /// <param name="options">Optional line range (<see cref="BodyOptions.FromLine"/>, <see cref="BodyOptions.MaxLines"/>).</param>
     /// <returns>The document body (or sliced portion), or <c>null</c> if not found.</returns>
-    Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null);
+    Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null, CancellationToken ct = default);
 
     /// <summary>
     /// Retrieve multiple documents by glob pattern or comma-separated list of paths/docids.
@@ -87,7 +87,7 @@ public interface IQmdStore : IAsyncDisposable
     /// </param>
     /// <param name="options">Body inclusion flag and max-bytes threshold for skipping large files.</param>
     /// <returns>Matched documents and any errors for unresolved entries.</returns>
-    Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null);
+    Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null, CancellationToken ct = default);
 
     /// <summary>
     /// List files in a collection, optionally filtered by a path prefix (SQL LIKE).
@@ -95,7 +95,7 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="collection">Collection name.</param>
     /// <param name="pathPrefix">Optional prefix to filter paths (e.g. <c>wiki/concepts</c>).</param>
     /// <returns>File entries sorted by path, with body length.</returns>
-    Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null);
+    Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get the combined context string for a file path (hierarchical, most-specific-first).
@@ -110,13 +110,13 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="query">File path or partial path to match against.</param>
     /// <param name="maxDistance">Maximum edit distance (default 3).</param>
     /// <param name="limit">Maximum number of suggestions (default 5).</param>
-    Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5);
+    Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5, CancellationToken ct = default);
 
     /// <summary>
     /// List all active (non-deleted) document paths in a collection.
     /// </summary>
     /// <param name="collection">Collection name.</param>
-    Task<List<string>> GetActiveDocumentPathsAsync(string collection);
+    Task<List<string>> GetActiveDocumentPathsAsync(string collection, CancellationToken ct = default);
 
     #endregion
 

@@ -45,7 +45,7 @@ public static class BenchCommand
             {
                 Json = json,
                 Collection = collection,
-            });
+            }, token);
 
             if (json)
             {

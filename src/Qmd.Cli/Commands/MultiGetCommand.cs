@@ -42,7 +42,7 @@ public static class MultiGetCommand
             {
                 MaxBytes = maxBytes,
                 IncludeBody = true,
-            });
+            }, token);
 
             foreach (var error in errors)
                 CliContext.Console.WriteErrorLine(error);

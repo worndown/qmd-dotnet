@@ -38,15 +38,16 @@ public static class GetCommand
             }
 
             await using var store = await CliHelper.CreateStoreAsync();
-            await HandleGetAsync(store, file, fromLine, maxLines, lineNumbers);
+            await HandleGetAsync(store, file, fromLine, maxLines, lineNumbers, token);
         });
 
         return cmd;
     }
 
-    internal static async Task HandleGetAsync(IQmdStore store, string file, int? fromLine, int? maxLines, bool lineNumbers)
+    internal static async Task HandleGetAsync(IQmdStore store, string file, int? fromLine, int? maxLines, bool lineNumbers,
+        CancellationToken ct = default)
     {
-        var result = await store.GetAsync(file, new GetOptions { IncludeBody = true });
+        var result = await store.GetAsync(file, new GetOptions { IncludeBody = true }, ct);
         if (result.IsFound)
         {
             var doc = result.Document!;

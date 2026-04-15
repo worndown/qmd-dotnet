@@ -28,7 +28,7 @@ public class LlmConstantsTests
     public void DefaultGenerateModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultGenerateModel.Should().Be(
-            "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf");
+            "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q8_0.gguf");
     }
 
     [Fact]

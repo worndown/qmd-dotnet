@@ -31,29 +31,29 @@ public class BenchmarkRunOptions
 /// </summary>
 public static class BenchmarkRunner
 {
-    private record Backend(string Name, Func<IQmdStore, string, int, List<string>?, Task<List<string>>> Run);
+    private record Backend(string Name, Func<IQmdStore, string, int, List<string>?, CancellationToken, Task<List<string>>> Run);
 
     private static readonly List<Backend> AllBackends =
     [
-        new("bm25", async (store, query, limit, collections) =>
+        new("bm25", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchLexAsync(query, new LexSearchOptions
             {
                 Limit = limit,
                 Collections = collections,
-            });
+            }, ct);
             return results.Select(r => r.Filepath).ToList();
         }),
-        new("vector", async (store, query, limit, collections) =>
+        new("vector", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchVectorAsync(query, new VectorSearchOptions
             {
                 Limit = limit,
                 Collections = collections,
-            });
+            }, ct);
             return results.Select(r => r.Filepath).ToList();
         }),
-        new("hybrid", async (store, query, limit, collections) =>
+        new("hybrid", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchAsync(new SearchOptions
             {
@@ -61,10 +61,10 @@ public static class BenchmarkRunner
                 Limit = limit,
                 Collections = collections,
                 SkipRerank = true,
-            });
+            }, ct);
             return results.Select(r => r.File).ToList();
         }),
-        new("full", async (store, query, limit, collections) =>
+        new("full", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchAsync(new SearchOptions
             {
@@ -72,7 +72,7 @@ public static class BenchmarkRunner
                 Limit = limit,
                 Collections = collections,
                 SkipRerank = false,
-            });
+            }, ct);
             return results.Select(r => r.File).ToList();
         }),
     ];
@@ -90,7 +90,8 @@ public static class BenchmarkRunner
     public static async Task<BenchmarkResult> RunBenchmarkAsync(
         IQmdStore store,
         BenchmarkFixture fixture,
-        BenchmarkRunOptions? options = null)
+        BenchmarkRunOptions? options = null,
+        CancellationToken ct = default)
     {
         options ??= new BenchmarkRunOptions();
 
@@ -109,6 +110,8 @@ public static class BenchmarkRunner
         var results = new List<QueryResult>();
         foreach (var query in fixture.Queries)
         {
+            ct.ThrowIfCancellationRequested();
+
             var backends = new Dictionary<string, BackendResult>();
 
             foreach (var backend in activeBackends)
@@ -116,7 +119,7 @@ public static class BenchmarkRunner
                 if (!options.Json)
                     await Console.Error.WriteAsync($"  {query.Id} / {backend.Name}...");
 
-                var backendResult = await RunQueryAsync(store, backend, query, collections);
+                var backendResult = await RunQueryAsync(store, backend, query, collections, ct);
                 backends[backend.Name] = backendResult;
 
                 if (!options.Json)
@@ -152,7 +155,8 @@ public static class BenchmarkRunner
         IQmdStore store,
         Backend backend,
         BenchmarkQuery query,
-        List<string>? collections)
+        List<string>? collections,
+        CancellationToken ct = default)
     {
         var limit = Math.Max(query.ExpectedInTopK, 10);
         var sw = Stopwatch.StartNew();
@@ -160,7 +164,7 @@ public static class BenchmarkRunner
         List<string> resultFiles;
         try
         {
-            resultFiles = await backend.Run(store, query.Query, limit, collections);
+            resultFiles = await backend.Run(store, query.Query, limit, collections, ct);
         }
         catch
         {

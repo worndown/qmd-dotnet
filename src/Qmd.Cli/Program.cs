@@ -47,9 +47,16 @@ var indexVal = parseResult.GetValue(indexOpt);
 if (indexVal != null)
     CliHelper.IndexName = indexVal;
 
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (_, e) =>
+{
+    e.Cancel = true;
+    cts.Cancel();
+};
+
 try
 {
-    return await parseResult.InvokeAsync();
+    return await parseResult.InvokeAsync(cancellationToken: cts.Token);
 }
 catch (QmdException ex)
 {

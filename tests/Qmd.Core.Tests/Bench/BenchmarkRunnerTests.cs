@@ -248,7 +248,7 @@ public class BenchmarkRunnerTests : IAsyncDisposable
     {
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-        public Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null)
+        public Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null, CancellationToken ct = default)
         {
             // Return a.md and b.md for any query
             var results = new List<SearchResult>
@@ -271,16 +271,16 @@ public class BenchmarkRunnerTests : IAsyncDisposable
         public Task<List<ExpandedQuery>> ExpandQueryAsync(string query, ExpandQuerySdkOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
-        public Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null)
+        public Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
-        public Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null)
+        public Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
-        public Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null)
+        public Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
-        public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null)
+        public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
         public Task AddCollectionAsync(string name, string path, string pattern = "**/*.md", List<string>? ignore = null)
@@ -334,10 +334,10 @@ public class BenchmarkRunnerTests : IAsyncDisposable
         public Task<string?> GetContextForFileAsync(string filepath)
             => throw new NotSupportedException();
 
-        public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
+        public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5, CancellationToken ct = default)
             => throw new NotSupportedException();
 
-        public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+        public Task<List<string>> GetActiveDocumentPathsAsync(string collection, CancellationToken ct = default)
             => throw new NotSupportedException();
 
         public Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
