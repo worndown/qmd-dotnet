@@ -232,12 +232,6 @@ internal class HybridQueryService : IHybridQueryService
                 double rrfScore = 1.0 / rrfRank;
                 finalScore = rrfWeight * rrfScore + (1 - rrfWeight) * rerankScore;
 
-                // When BM25 contributed nothing, the RRF positional score is
-                // artificially high.  Cap the blended score at the best raw
-                // vector similarity so it cannot exceed the actual semantic
-                // relevance signal.
-                if (!hasFts && bestVecScore > 0)
-                    finalScore = Math.Min(finalScore, bestVecScore);
             }
             else
             {

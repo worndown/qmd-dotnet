@@ -10,13 +10,13 @@ public static class SearchConstants
     /// Pre-reranking gate: when BM25 returns nothing, discard vector results
     /// below this cosine similarity threshold before RRF fusion.
     /// </summary>
-    public const double VecOnlyGateThreshold = 0.55;
+    public const double VecOnlyGateThreshold = 0.25;
 
     /// <summary>
     /// Reranker gate: when the best reranker score (Qwen3-Reranker, [0-1]) is
     /// below this value, treat the entire result set as irrelevant.
     /// </summary>
-    public const double RerankGateThreshold = 0.1;
+    public const double RerankGateThreshold = 0.05;
 
     /// <summary>
     /// Post-fusion confidence gap: drop results scoring below this fraction
