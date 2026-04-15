@@ -7,15 +7,6 @@ namespace Qmd.Core.Llm;
 /// </summary>
 public static class LlmServiceFactory
 {
-    /// <summary>Default HuggingFace URI for the embedding model.</summary>
-    public static string DefaultEmbedModel => LlmConstants.DefaultEmbedModel;
-
-    /// <summary>Default HuggingFace URI for the reranking model.</summary>
-    public static string DefaultRerankModel => LlmConstants.DefaultRerankModel;
-
-    /// <summary>Default HuggingFace URI for the query-expansion model.</summary>
-    public static string DefaultGenerateModel => LlmConstants.DefaultGenerateModel;
-
     /// <summary>
     /// Create the default <see cref="ILlmService"/> backed by LLamaSharp.
     /// Models are loaded lazily on first use; this call returns immediately.
