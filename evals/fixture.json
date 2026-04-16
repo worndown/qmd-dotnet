@@ -1,6 +1,6 @@
 {
-  "description": "Expanded eval corpus: 20 documents, 55 queries across 7 difficulty types. Tests exact keyword, semantic, alias, cross-domain, hard, multi-match, and negative retrieval.",
-  "version": 2,
+  "description": "Expanded eval corpus: 37 documents, 100 queries across 7 difficulty types. Tests exact keyword, semantic, alias, cross-domain, hard, multi-match, and negative retrieval.",
+  "version": 3,
   "queries": [
     {
       "id": "exact-rule-of-thirds",
@@ -80,6 +80,54 @@
       "type": "exact",
       "description": "Direct keyword match in bicycle document",
       "expected_files": ["bicycle-maintenance.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-bltouch-bed-leveling",
+      "query": "BLTouch auto bed leveling mesh compensation",
+      "type": "exact",
+      "description": "Direct keyword match for ABL probe in 3D printing document",
+      "expected_files": ["3d-printing-basics.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-dry-hopping",
+      "query": "dry hopping IPA aroma",
+      "type": "exact",
+      "description": "Direct keyword match in beer brewing document",
+      "expected_files": ["home-brewing-beer.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-nitrogen-cycle",
+      "query": "nitrogen cycle ammonia nitrite aquarium",
+      "type": "exact",
+      "description": "Direct keyword match in aquarium document",
+      "expected_files": ["aquarium-keeping.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-figure-eight-knot",
+      "query": "figure-eight follow-through climbing knot",
+      "type": "exact",
+      "description": "Direct keyword match in rock climbing document",
+      "expected_files": ["rock-climbing-basics.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-macronutrients",
+      "query": "protein carbohydrates fat macronutrients",
+      "type": "exact",
+      "description": "Direct keyword match in meal prep document",
+      "expected_files": ["meal-prep-nutrition.md"],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "exact-vermicomposting",
+      "query": "vermicomposting red wiggler worms castings",
+      "type": "exact",
+      "description": "Direct keyword match in composting document",
+      "expected_files": ["home-composting.md"],
       "expected_in_top_k": 1
     },
     {
@@ -235,6 +283,110 @@
       "expected_in_top_k": 5
     },
     {
+      "id": "semantic-print-warping",
+      "query": "why do my printed parts lift off the build plate",
+      "type": "semantic",
+      "description": "Conceptual match for bed adhesion and warping in 3D printing",
+      "expected_files": ["3d-printing-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-off-flavors",
+      "query": "my homemade beer tastes like bananas",
+      "type": "semantic",
+      "description": "Conceptual match for ester production from stressed or warm yeast",
+      "expected_files": ["home-brewing-beer.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-fish-dying",
+      "query": "new fish keep dying in my aquarium within days",
+      "type": "semantic",
+      "description": "Conceptual match for uncycled tank ammonia poisoning",
+      "expected_files": ["aquarium-keeping.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-fear-falling",
+      "query": "how to get comfortable with falling while climbing",
+      "type": "semantic",
+      "description": "Conceptual match for practicing fall technique and communication",
+      "expected_files": ["rock-climbing-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-counting-calories",
+      "query": "easiest way to track what I eat every day",
+      "type": "semantic",
+      "description": "Conceptual match for macro tracking and TDEE",
+      "expected_files": ["meal-prep-nutrition.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-echo-recording",
+      "query": "my podcast sounds like I'm recording in a bathroom",
+      "type": "semantic",
+      "description": "Conceptual match for room acoustics and acoustic treatment",
+      "expected_files": ["podcasting-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-lost-trail",
+      "query": "what to do when you can't find the hiking path anymore",
+      "type": "semantic",
+      "description": "Conceptual match for navigation with map/compass and GPS",
+      "expected_files": ["hiking-backpacking.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-power-outage",
+      "query": "using stored energy from the sun when the grid goes down",
+      "type": "semantic",
+      "description": "Conceptual match for battery storage and grid outage backup",
+      "expected_files": ["home-solar-energy.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-clay-cracking",
+      "query": "my pottery keeps cracking when I fire it",
+      "type": "semantic",
+      "description": "Conceptual match for kiln firing issues — quartz inversion, dunting",
+      "expected_files": ["pottery-ceramics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-bird-songs",
+      "query": "identifying what kind of bird is singing in my yard",
+      "type": "semantic",
+      "description": "Conceptual match for birding by ear and Merlin Sound ID",
+      "expected_files": ["birdwatching-basics.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-visible-mending",
+      "query": "decorative repairs on torn clothing using contrasting thread",
+      "type": "semantic",
+      "description": "Conceptual match for sashiko-style patching and visible mending",
+      "expected_files": ["basic-sewing-mending.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-stress-body",
+      "query": "why does my heart race and stomach hurt when I'm anxious",
+      "type": "semantic",
+      "description": "Conceptual match for sympathetic nervous system fight-or-flight response",
+      "expected_files": ["meditation-mindfulness.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "semantic-smelly-compost",
+      "query": "my compost bin smells terrible and attracts flies",
+      "type": "semantic",
+      "description": "Conceptual match for troubleshooting anaerobic compost — too wet, too many greens",
+      "expected_files": ["home-composting.md"],
+      "expected_in_top_k": 3
+    },
+    {
       "id": "alias-negative-space",
       "query": "empty areas around the subject in a picture",
       "type": "alias",
@@ -307,6 +459,54 @@
       "expected_in_top_k": 3
     },
     {
+      "id": "alias-hangboard",
+      "query": "training on a small wooden board with edges mounted on the wall",
+      "type": "alias",
+      "description": "Paraphrase of hangboard training — no keyword 'hangboard'",
+      "expected_files": ["rock-climbing-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "alias-net-metering",
+      "query": "selling excess electricity from your roof back to the power company",
+      "type": "alias",
+      "description": "Paraphrase of net metering — no keyword 'net metering'",
+      "expected_files": ["home-solar-energy.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-mash-temperature",
+      "query": "controlling sweetness in beer by adjusting hot water temperature",
+      "type": "alias",
+      "description": "Paraphrase of mash temperature and enzyme activity",
+      "expected_files": ["home-brewing-beer.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-rennet",
+      "query": "the enzyme that turns liquid milk into solid curds",
+      "type": "alias",
+      "description": "Paraphrase of rennet coagulation — no keyword 'rennet'",
+      "expected_files": ["cheese-making.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-worm-castings",
+      "query": "dark crumbly stuff that composting worms produce",
+      "type": "alias",
+      "description": "Paraphrase of worm castings — no keyword 'castings' or 'vermicompost'",
+      "expected_files": ["home-composting.md"],
+      "expected_in_top_k": 3
+    },
+    {
+      "id": "alias-vagus-nerve",
+      "query": "the body's built-in calming switch activated by slow exhaling",
+      "type": "alias",
+      "description": "Paraphrase of vagus nerve stimulation via extended exhale",
+      "expected_files": ["meditation-mindfulness.md"],
+      "expected_in_top_k": 3
+    },
+    {
       "id": "cross-hydration",
       "query": "what ratio of water to use",
       "type": "cross-domain",
@@ -368,6 +568,70 @@
       "type": "cross-domain",
       "description": "Overlaps personal finance tax section and freelancing tax section",
       "expected_files": ["freelancing-guide.md", "personal-finance-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-yeast-temperature",
+      "query": "keeping yeast at the right temperature during fermentation",
+      "type": "cross-domain",
+      "description": "Overlaps beer brewing (ale yeast 15-22C), sourdough (bulk ferment temp), and general fermentation",
+      "expected_files": ["home-brewing-beer.md", "sourdough-bread-baking.md", "fermentation-and-preserving.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-audio-noise",
+      "query": "reducing background noise in audio recordings",
+      "type": "cross-domain",
+      "description": "Overlaps podcasting (noise reduction, noise gate) and video editing (audio cleanup)",
+      "expected_files": ["podcasting-basics.md", "video-editing-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-optics-magnification",
+      "query": "choosing the right magnification for observing distant objects",
+      "type": "cross-domain",
+      "description": "Overlaps birdwatching (binoculars 8x42, spotting scopes) and astronomy (telescope types)",
+      "expected_files": ["birdwatching-basics.md", "amateur-astronomy.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-pre-workout-fuel",
+      "query": "what to eat before a hard workout or race",
+      "type": "cross-domain",
+      "description": "Overlaps meal prep (pre-workout nutrition) and marathon (glycogen, carb loading)",
+      "expected_files": ["meal-prep-nutrition.md", "marathon-training-plan.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-anxiety-calm",
+      "query": "calming your nervous system when feeling overwhelmed",
+      "type": "cross-domain",
+      "description": "Overlaps meditation (parasympathetic, vagus nerve) and sleep science (stress, cortisol)",
+      "expected_files": ["meditation-mindfulness.md", "sleep-and-recovery-science.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-water-chemistry",
+      "query": "getting the pH right for living organisms in water",
+      "type": "cross-domain",
+      "description": "Overlaps aquarium (pH 6.5-7.8, KH buffer) and home brewing (mash pH 5.2-5.6)",
+      "expected_files": ["aquarium-keeping.md", "home-brewing-beer.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-glazing-coating",
+      "query": "applying a glossy protective coating to a handmade piece",
+      "type": "cross-domain",
+      "description": "Overlaps pottery (glaze firing) and watercolor (glazing technique)",
+      "expected_files": ["pottery-ceramics.md", "watercolor-painting.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "cross-sanitation",
+      "query": "sanitizing equipment to prevent contamination in food production",
+      "type": "cross-domain",
+      "description": "Overlaps home brewing (Star San, sanitation), cheese making (sanitize equipment), and fermentation",
+      "expected_files": ["home-brewing-beer.md", "cheese-making.md", "fermentation-and-preserving.md"],
       "expected_in_top_k": 5
     },
     {
@@ -435,6 +699,70 @@
       "expected_in_top_k": 5
     },
     {
+      "id": "hard-elephant-foot",
+      "query": "bottom layers wider than the rest of the 3D print",
+      "type": "hard",
+      "description": "Matches elephant's foot troubleshooting — no keyword 'elephant'",
+      "expected_files": ["3d-printing-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-sparge",
+      "query": "rinsing grain to extract every last bit of sugar",
+      "type": "hard",
+      "description": "Matches sparging step in all-grain brewing — no keyword 'sparge'",
+      "expected_files": ["home-brewing-beer.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-soft-catch",
+      "query": "stepping forward while holding the rope to cushion the climber's fall",
+      "type": "hard",
+      "description": "Matches soft catch belaying technique — indirect description",
+      "expected_files": ["rock-climbing-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-tyrosine-crystals",
+      "query": "white crunchy bits inside aged hard cheese",
+      "type": "hard",
+      "description": "Matches tyrosine crystal formation during affinage — no keyword 'tyrosine'",
+      "expected_files": ["cheese-making.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-cathole",
+      "query": "digging a small hole in the woods for human waste disposal",
+      "type": "hard",
+      "description": "Matches cathole in Leave No Trace — no keyword 'cathole'",
+      "expected_files": ["hiking-backpacking.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-pop-filter",
+      "query": "stopping the burst of air from P sounds that distorts the microphone",
+      "type": "hard",
+      "description": "Matches plosives and pop filter — no keyword 'pop filter'",
+      "expected_files": ["podcasting-basics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-quartz-inversion",
+      "query": "the critical temperature where ceramic suddenly expands and cracks",
+      "type": "hard",
+      "description": "Matches quartz inversion at 573C — no keyword 'quartz'",
+      "expected_files": ["pottery-ceramics.md"],
+      "expected_in_top_k": 5
+    },
+    {
+      "id": "hard-thread-shank",
+      "query": "creating a gap behind the button so layered fabric lies flat",
+      "type": "hard",
+      "description": "Matches thread shank with toothpick technique — no keyword 'shank'",
+      "expected_files": ["basic-sewing-mending.md"],
+      "expected_in_top_k": 5
+    },
+    {
       "id": "negative-quantum-computing",
       "query": "programming a quantum circuit with qubits and gates",
       "type": "negative",
@@ -453,6 +781,22 @@
     {
       "id": "negative-knitting",
       "query": "casting on stitches with circular needles",
+      "type": "negative",
+      "description": "Topic not present in any document — should return no results or very low scores",
+      "expected_files": [],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "negative-sailing",
+      "query": "trimming the jib and adjusting the boom in heavy wind",
+      "type": "negative",
+      "description": "Topic not present in any document — should return no results or very low scores",
+      "expected_files": [],
+      "expected_in_top_k": 1
+    },
+    {
+      "id": "negative-beekeeping",
+      "query": "inspecting hive frames for queen cells and capped brood",
       "type": "negative",
       "description": "Topic not present in any document — should return no results or very low scores",
       "expected_files": [],
