@@ -1,5 +1,6 @@
 using Qmd.Core.Configuration;
 using Qmd.Core.Models;
+using Qmd.Core.Search;
 
 namespace Qmd.Core;
 
@@ -225,6 +226,15 @@ public interface IQmdStore : IAsyncDisposable
     /// <param name="options">Sample size and optional collection filter.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default);
+
+    /// <summary>Active search configuration (thresholds, weights).</summary>
+    SearchConfig SearchConfig { get; set; }
+
+    /// <summary>Save a search config to the database and activate it.</summary>
+    Task SaveSearchConfigAsync(SearchConfig config);
+
+    /// <summary>Delete saved search config and revert to defaults.</summary>
+    Task ResetSearchConfigAsync();
 
     /// <summary>
     /// Perform database maintenance: clear the LLM response cache, remove inactive and

@@ -34,6 +34,7 @@ root.Subcommands.Add(PullCommand.Create());
 root.Subcommands.Add(SkillCommand.Create());
 root.Subcommands.Add(BenchCommand.Create());
 root.Subcommands.Add(ProfileEmbeddingsCommand.Create());
+root.Subcommands.Add(AutotuneCommand.Create());
 
 NativeLibraryConfig.All.WithLogCallback((level, message) =>
 {

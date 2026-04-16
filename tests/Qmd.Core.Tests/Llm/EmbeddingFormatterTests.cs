@@ -36,10 +36,11 @@ public class EmbeddingFormatterTests : IDisposable
     }
 
     [Fact]
-    public void FormatQueryForEmbedding_DefaultModel_TaskPrefix()
+    public void FormatQueryForEmbedding_DefaultModel_InstructFormat()
     {
         var result = EmbeddingFormatter.FormatQueryForEmbedding("test query");
-        result.Should().Be("task: search result | query: test query");
+        result.Should().StartWith("Instruct:");
+        result.Should().Contain("Query: test query");
     }
 
     [Fact]
@@ -54,14 +55,14 @@ public class EmbeddingFormatterTests : IDisposable
     public void FormatDocForEmbedding_DefaultModel_WithTitle()
     {
         var result = EmbeddingFormatter.FormatDocForEmbedding("content", "My Title");
-        result.Should().Be("title: My Title | text: content");
+        result.Should().Be("My Title\ncontent");
     }
 
     [Fact]
     public void FormatDocForEmbedding_DefaultModel_WithoutTitle()
     {
         var result = EmbeddingFormatter.FormatDocForEmbedding("content");
-        result.Should().Be("title: none | text: content");
+        result.Should().Be("content");
     }
 
     [Fact]

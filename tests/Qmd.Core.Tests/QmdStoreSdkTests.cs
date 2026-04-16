@@ -3,6 +3,7 @@ using Qmd.Core.Configuration;
 using Qmd.Core.Database;
 using Qmd.Core.Llm;
 using Qmd.Core.Models;
+using Qmd.Core.Search;
 using Qmd.Core.Store;
 
 namespace Qmd.Core.Tests;
@@ -95,6 +96,8 @@ public class QmdStoreSdkTests
         var db = new SqliteDatabase(":memory:");
         var configManager = new ConfigManager(new InlineConfigSource(config));
         var store = new QmdStore(db, configManager, new StubLlmService());
+        // Disable FTS gate — test corpus has no vectors, so gating FTS would return empty results
+        store.SearchConfig = new SearchConfig { FtsMinSignal = 0.0 };
 
         var now = DateTime.UtcNow.ToString("o");
 

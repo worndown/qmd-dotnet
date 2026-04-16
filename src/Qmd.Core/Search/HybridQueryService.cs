@@ -19,6 +19,7 @@ internal class HybridQueryService : IHybridQueryService
     private readonly IRerankerService _reranker;
     private readonly IQmdDatabase _db;
     private readonly ILlmService _llmService;
+    private readonly SearchConfig _config;
 
     public HybridQueryService(
         IFtsSearchService ftsSearch,
@@ -26,7 +27,8 @@ internal class HybridQueryService : IHybridQueryService
         IQueryExpanderService queryExpander,
         IRerankerService reranker,
         IQmdDatabase db,
-        ILlmService llmService)
+        ILlmService llmService,
+        SearchConfig searchConfig)
     {
         _ftsSearch = ftsSearch;
         _vectorSearch = vectorSearch;
@@ -34,6 +36,7 @@ internal class HybridQueryService : IHybridQueryService
         _reranker = reranker;
         _db = db;
         _llmService = llmService;
+        _config = searchConfig;
     }
 
     public async Task<List<HybridQueryResult>> HybridQueryAsync(
@@ -56,6 +59,7 @@ internal class HybridQueryService : IHybridQueryService
         var strongSignal = intent == null
             && topScore >= SearchConstants.StrongSignalMinScore
             && (topScore - secondScore) >= SearchConstants.StrongSignalMinGap;
+        var ftsWeak = topScore < _config.FtsMinSignal;
 
         // =====================================================================
         // Step 2: Query Expansion (skip if strong signal)
@@ -73,7 +77,7 @@ internal class HybridQueryService : IHybridQueryService
         var rankedListMeta = new List<RankedListMeta>();
 
         // 3a: Original FTS results as first list (only if non-empty to avoid wasting weight slots)
-        if (initialFts.Count > 0)
+        if (initialFts.Count > 0 && !ftsWeak)
         {
             rankedLists.Add(initialFts.Select(r => new RankedResult(
                 r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
@@ -81,14 +85,19 @@ internal class HybridQueryService : IHybridQueryService
         }
 
         // 3b: Expanded lex queries
-        foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
+        // When FTS lists are excluded, the positional weight rule (i < 2 -> 2.0)
+        // shifts from FTS noise to the first 2 vector lists, amplifying vector signal.
+        if (!ftsWeak)
         {
-            var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
-            if (ftsResults.Count > 0)
+            foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
             {
-                rankedLists.Add(ftsResults.Select(r => new RankedResult(
-                    r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
-                rankedListMeta.Add(new RankedListMeta("fts", "lex", eq.Query));
+                var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
+                if (ftsResults.Count > 0)
+                {
+                    rankedLists.Add(ftsResults.Select(r => new RankedResult(
+                        r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
+                    rankedListMeta.Add(new RankedListMeta("fts", "lex", eq.Query));
+                }
             }
         }
 
@@ -147,7 +156,7 @@ internal class HybridQueryService : IHybridQueryService
 
         // Gate: when BM25 found nothing and all vector scores are below the noise
         // floor, there is no evidence of relevance — return empty early.
-        if (!hasFts && bestVecScore < SearchConstants.VecOnlyGateThreshold && rankedLists.Count > 0)
+        if (!hasFts && bestVecScore < _config.VecOnlyGateThreshold && rankedLists.Count > 0)
             return [];
 
         // =====================================================================
@@ -212,7 +221,7 @@ internal class HybridQueryService : IHybridQueryService
             if (options.Diagnostics != null)
                 options.Diagnostics.BestRerankScore = bestRerank;
 
-            if (!hasFts && bestRerank < SearchConstants.RerankGateThreshold)
+            if (!hasFts && bestRerank < _config.RerankGateThreshold)
                 return [];
         }
 
@@ -272,7 +281,7 @@ internal class HybridQueryService : IHybridQueryService
         if (results.Count > 1)
         {
             var topBlended = results[0].Score;
-            var floor = topBlended * SearchConstants.ConfidenceGapRatio;
+            var floor = topBlended * _config.ConfidenceGapRatio;
             results = results.Where(r => r.Score >= floor).ToList();
         }
 

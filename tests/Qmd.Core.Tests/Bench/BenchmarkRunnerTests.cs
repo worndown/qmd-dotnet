@@ -343,6 +343,14 @@ public class BenchmarkRunnerTests : IAsyncDisposable
         public Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
 
+        public SearchConfig SearchConfig { get; set; } = new();
+
+        public Task SaveSearchConfigAsync(SearchConfig config)
+            => throw new NotSupportedException();
+
+        public Task ResetSearchConfigAsync()
+            => throw new NotSupportedException();
+
         public Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
             => throw new NotSupportedException();
     }

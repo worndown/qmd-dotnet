@@ -24,7 +24,8 @@ Embedding models convert text into high-dimensional vectors. Ideally, unrelated 
 | Raw BERT-base-uncased | ~0.44 | [Su et al. 2021](https://ar5iv.labs.arxiv.org/html/2104.05274) |
 | BGE models | ~0.60+ | [BAAI model card](https://huggingface.co/BAAI/bge-reranker-base) |
 | OpenAI text-embedding-ada-002 | 0.68-0.81 | [Blue Yonder](https://tech.blueyonder.com/text-embedding-and-cosine-similarity/) |
-| embeddinggemma (QMD default) | ~0.45 (observed) | Empirical — use `profile-embeddings` to measure on your corpus |
+| embeddinggemma (300M) | ~0.45 (observed) | Empirical |
+| Qwen3-Embedding-0.6B (QMD default) | ~0.32 (observed) | Empirical — use `profile-embeddings` to measure on your corpus |
 
 This means a vector search for something completely absent from your documents will still return results with similarity scores around 0.45 — not because they're relevant, but because same-language text shares structural patterns in the embedding space.
 
@@ -75,23 +76,31 @@ This is a known limitation of RRF. As Turnbull notes: "RRF'ing bad search into g
 
 ## Safeguards
 
-QMD applies several layers of filtering to mitigate false positives, particularly when keyword search returns nothing:
+QMD applies several layers of filtering to mitigate false positives:
 
-1. **Vector-score gate** — When BM25 finds no matches and all vector similarity scores are below 0.55 (the typical noise ceiling for most embedding models), the pipeline returns empty results before fusion even runs.
+1. **Adaptive FTS gate** (`FtsMinSignal`, default 0.3) — After the BM25 probe, if the best normalized BM25 score (`|bm25|/(1+|bm25|)`, mapped to [0,1)) is below this threshold, the FTS ranked lists are excluded from RRF fusion entirely. This prevents low-quality keyword matches from diluting the vector signal. When FTS lists are excluded, the positional weight rule (`i < 2 → weight 2.0`) shifts from FTS noise to the first two vector lists, amplifying the stronger signal. The pipeline degrades gracefully to vector-only fusion.
 
-2. **Reranker gate** — After reranking, if BM25 found nothing and the best reranker score is below 0.1, results are discarded. The reranker outputs calibrated probabilities where scores near zero indicate the model considers the document irrelevant.
+2. **Vector-score gate** (`VecOnlyGateThreshold`, default 0.25) — When BM25 finds no matches (or was gated out) and all vector similarity scores are below this threshold, the pipeline returns empty results before fusion runs. The default of 0.25 is calibrated for Qwen3-Embedding's similarity scale (median ~0.32).
 
-3. **Score cap** — When BM25 is absent, the blended score is clamped to the best raw vector similarity. This prevents the RRF positional component from inflating scores beyond what the embedding model actually measured.
+3. **Reranker gate** (`RerankGateThreshold`, default 0.05) — After reranking, if BM25 found nothing and the best reranker score is below this value, results are discarded. The reranker outputs calibrated probabilities where scores near zero indicate the model considers the document irrelevant.
 
-4. **Confidence gap filter** — Results scoring below 50% of the top result's blended score are dropped. This separates a confident cluster of results from trailing noise.
+4. **Confidence gap filter** (`ConfidenceGapRatio`, default 0.5) — Results scoring below 50% of the top result's blended score are dropped. This separates a confident cluster of results from trailing noise.
 
-5. **Raised defaults** — `vsearch --min-score` defaults to 0.5 (filtering out the ~0.45 noise floor), and `query --min-score` defaults to 0.2. Both can be overridden on the command line.
+5. **Raised defaults** — `vsearch --min-score` defaults to 0.5, and `query --min-score` defaults to 0.2. Both can be overridden on the command line.
+
+The four threshold values (safeguards 1–4) are model- and corpus-dependent. They can be automatically calibrated using `qmd autotune` and are persisted in the database. Use `qmd status` to see active values.
 
 ---
 
 ## Calibrating Thresholds
 
-The default thresholds are conservative starting points. For optimal results, profile your actual corpus using `qmd profile-embeddings`. See [Calibrating Search Thresholds](profile-embeddings.md) for a full guide.
+The default thresholds are conservative starting points tuned for Qwen3-Embedding-0.6B. For optimal results:
+
+- **Quick calibration:** Run `qmd autotune` to derive `VecOnlyGateThreshold` from your corpus's embedding similarity profile.
+- **Thorough calibration:** Run `qmd autotune --fixture <fixture.json>` to grid-search `FtsMinSignal` and `ConfidenceGapRatio` against a benchmark fixture and find the combination that maximizes hybrid F1.
+- **Manual inspection:** Run `qmd profile-embeddings` to see the raw similarity distribution. See [Calibrating Search Thresholds](profile-embeddings.md) for a full guide.
+
+Autotuned thresholds are saved to the database and loaded automatically. Use `qmd autotune --reset` to revert to defaults.
 
 ---
 

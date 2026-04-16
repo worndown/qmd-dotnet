@@ -67,6 +67,7 @@ internal class QmdStore : IQmdStore, IDisposable
         ApplyServices(CreateDefaultServices(Db, llmService));
         SchemaInitializer.Initialize(Db);
         VecExtension.TryLoad(Db);
+        SearchConfig = SearchConfigRepository.Load(Db);
         SyncConfig(configManager.LoadConfig());
     }
 
@@ -80,6 +81,7 @@ internal class QmdStore : IQmdStore, IDisposable
         ApplyServices(CreateDefaultServices(Db, llmService));
         SchemaInitializer.Initialize(Db);
         VecExtension.TryLoad(Db);
+        SearchConfig = SearchConfigRepository.Load(Db);
         SyncConfig(configManager.LoadConfig());
     }
 
@@ -110,6 +112,7 @@ internal class QmdStore : IQmdStore, IDisposable
     public IQmdDatabase Db { get; }
     public string DbPath { get; }
     public ILlmService? LlmService { get; set; }
+    public SearchConfig SearchConfig { get; set; } = new();
 
     private ILlmService GetLlmService() =>
         LlmService ?? throw new QmdModelException("LLM service not configured. Call EmbedAsync or configure LlamaSharpService.");
@@ -121,7 +124,7 @@ internal class QmdStore : IQmdStore, IDisposable
             FtsSearch, VectorSearch,
             new QueryExpanderService(Db, llm),
             new RerankerService(Db, llm),
-            Db, llm);
+            Db, llm, SearchConfig);
     }
 
     private StructuredSearchService CreateStructuredSearchService()
@@ -544,6 +547,20 @@ internal class QmdStore : IQmdStore, IDisposable
     public async Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
     {
         return await EmbeddingProfiler.ProfileAsync(Db, GetLlmService(), options, ct);
+    }
+
+    public Task SaveSearchConfigAsync(SearchConfig config)
+    {
+        SearchConfigRepository.Save(Db, config);
+        SearchConfig = config;
+        return Task.CompletedTask;
+    }
+
+    public Task ResetSearchConfigAsync()
+    {
+        SearchConfigRepository.Delete(Db);
+        SearchConfig = new SearchConfig();
+        return Task.CompletedTask;
     }
 
     #endregion

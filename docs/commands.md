@@ -43,6 +43,7 @@ Complete reference for all `qmd` commands and subcommands.
   - [status](#qmd-status)
   - [bench](#qmd-bench)
   - [profile-embeddings](#qmd-profile-embeddings)
+  - [autotune](#qmd-autotune)
 
 ---
 
@@ -429,11 +430,11 @@ qmd pull [options]
 | `--refresh` | Re-download all models even if already cached |
 
 The three models downloaded are:
-- **Embedding model** (embeddinggemma-300M) — used by `vsearch` and `query`
+- **Embedding model** (Qwen3-Embedding-0.6B) — used by `vsearch` and `query`
 - **Reranker** (Qwen3-Reranker-0.6B) — used by `query`
 - **Generator** — used for query expansion in `vsearch` and `query`
 
-Total download size is approximately 1.5 GB. Only needed once.
+Total download size is approximately 2 GB. Only needed once.
 
 ---
 
@@ -518,6 +519,7 @@ Output includes:
 - Last update timestamp
 - MCP daemon status (running / stopped)
 - Paths to available models (embed, rerank, generate)
+- Search config: active thresholds and whether they are autotuned or defaults
 - AST chunking: supported languages
 - Per-collection status table
 - Any warnings or recommendations
@@ -562,3 +564,37 @@ Outputs a percentile table (min, P5, P25, median, mean, P75, P95, max) and a sug
 ```bash
 qmd profile-embeddings --sample-size 500 --collection notes
 ```
+
+---
+
+### `qmd autotune`
+
+Automatically calibrate search thresholds for your corpus and embedding model. Two modes: profile-based (fast, derives thresholds from embedding similarity distribution) and bench-based (thorough, grid-searches thresholds against a benchmark fixture).
+
+```
+qmd autotune [options]
+```
+
+| Option | Short | Default | Description |
+|---|---|---|---|
+| `--fixture` | `-f` | — | Path to benchmark fixture JSON for grid search |
+| `--dry-run` | — | — | Print recommendation without saving |
+| `--reset` | — | — | Remove saved config and revert to defaults |
+| `--sample-size` | `-n` | `100` | Sample size for embedding profiling |
+| `--collection` | `-c` | — | Filter by collection (repeatable) |
+
+**Profile-based** (no `--fixture`): Profiles the embedding model's similarity distribution and derives `VecOnlyGateThreshold` from the P25 percentile. Fast — takes seconds.
+
+**Bench-based** (`--fixture`): Runs the profile step first, then grid-searches 9 combinations of `FtsMinSignal` and `ConfidenceGapRatio` against the hybrid backend. Only saves if the best combination improves over the baseline F1 score.
+
+Saved thresholds are stored in the database and loaded automatically on every subsequent search. Use `qmd status` to see active thresholds. Use `--reset` to revert to defaults.
+
+**Examples:**
+```bash
+qmd autotune                                    # profile-based, save
+qmd autotune --dry-run                          # preview without saving
+qmd autotune --fixture evals/fixture.json       # grid search, save best
+qmd autotune --reset                            # revert to defaults
+```
+
+See [Calibrating Search Thresholds](profile-embeddings.md) for background on why thresholds need calibration per model and corpus.

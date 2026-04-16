@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Qmd.Core.Chunking;
 using Qmd.Core.Llm;
 using Qmd.Core.Paths;
+using Qmd.Core.Search;
 using Spectre.Console;
 
 namespace Qmd.Cli.Commands;
@@ -57,6 +58,21 @@ public static class StatusCommand
             AnsiConsole.MarkupLine($"  Embed:    [dim]{LlmServiceFactory.ResolveEmbedModel()}[/]");
             AnsiConsole.MarkupLine($"  Rerank:   [dim]{LlmServiceFactory.ResolveRerankModel()}[/]");
             AnsiConsole.MarkupLine($"  Generate: [dim]{LlmServiceFactory.ResolveGenerateModel()}[/]");
+
+            // Search config
+            AnsiConsole.WriteLine();
+            var defaults = new SearchConfig();
+            var sc = store.SearchConfig;
+            var isCustom = sc.VecOnlyGateThreshold != defaults.VecOnlyGateThreshold
+                || sc.RerankGateThreshold != defaults.RerankGateThreshold
+                || sc.ConfidenceGapRatio != defaults.ConfidenceGapRatio
+                || sc.FtsMinSignal != defaults.FtsMinSignal;
+            var label = isCustom ? "[green]autotuned[/]" : "[dim]defaults[/]";
+            AnsiConsole.MarkupLine($"[bold]Search Config[/] ({label})");
+            AnsiConsole.MarkupLine($"  VecOnlyGateThreshold: [dim]{sc.VecOnlyGateThreshold:F2}[/]");
+            AnsiConsole.MarkupLine($"  RerankGateThreshold:  [dim]{sc.RerankGateThreshold:F2}[/]");
+            AnsiConsole.MarkupLine($"  ConfidenceGapRatio:   [dim]{sc.ConfidenceGapRatio:F2}[/]");
+            AnsiConsole.MarkupLine($"  FtsMinSignal:         [dim]{sc.FtsMinSignal:F2}[/]");
 
             // AST chunking
             AnsiConsole.WriteLine();

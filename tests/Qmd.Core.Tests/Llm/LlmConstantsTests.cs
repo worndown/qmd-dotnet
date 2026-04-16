@@ -15,14 +15,14 @@ public class LlmConstantsTests
     public void DefaultEmbedModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultEmbedModel.Should().Be(
-            "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf");
+            "hf:worndown/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-f16.gguf");
     }
 
     [Fact]
     public void DefaultRerankModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultRerankModel.Should().Be(
-            "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf");
+            "hf:worndown/Qwen3-Reranker-0.6B-GGUF/Qwen3-Reranker-0.6B-f16.gguf");
     }
 
     [Fact]
@@ -251,10 +251,15 @@ public class LlmConstantsTests
             var formatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
             formatted.Should().Contain("Instruct:");
 
-            // Set to default (non-Qwen3) — should use task prefix format
+            // Default model is now Qwen3 — should still use instruct format
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
             var defaultFormatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
-            defaultFormatted.Should().Contain("task: search result");
+            defaultFormatted.Should().Contain("Instruct:");
+
+            // Explicitly set to a non-Qwen3 model — should use task prefix format
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:org/embeddinggemma-300M-GGUF/model.gguf");
+            var gemmaFormatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
+            gemmaFormatted.Should().Contain("task: search result");
         }
         finally
         {
