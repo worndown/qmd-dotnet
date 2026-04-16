@@ -4,7 +4,7 @@ internal static class LlmConstants
 {
     public const string DefaultEmbedModel = "hf:worndown/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-f16.gguf";
     public const string DefaultRerankModel = "hf:worndown/Qwen3-Reranker-0.6B-GGUF/Qwen3-Reranker-0.6B-f16.gguf";
-    public const string DefaultGenerateModel = "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q8_0.gguf";
+    public const string DefaultGenerateModel = "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-f16.gguf";
 
     public const int EmbedContextSize = 2048;
     public const int RerankContextSize = 4096;
