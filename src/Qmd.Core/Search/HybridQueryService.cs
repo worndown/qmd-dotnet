@@ -59,7 +59,15 @@ internal class HybridQueryService : IHybridQueryService
         var strongSignal = intent == null
             && topScore >= SearchConstants.StrongSignalMinScore
             && (topScore - secondScore) >= SearchConstants.StrongSignalMinGap;
-        var ftsWeak = topScore < _config.FtsMinSignal;
+        // When the caller's MinScore is below FtsMinSignal, relax the gate so
+        // that valid-but-weak BM25 matches (e.g. single-word queries scoring 20-25%)
+        // are included in RRF fusion instead of being silently discarded.
+        var effectiveFtsMin = options.MinScore > 0
+            ? Math.Min(options.MinScore, _config.FtsMinSignal)
+            : _config.FtsMinSignal;
+        var ftsWeak = topScore < effectiveFtsMin;
+        if (options.Diagnostics != null && effectiveFtsMin < _config.FtsMinSignal)
+            options.Diagnostics.RelaxedGates.Add($"FtsMinSignal ({_config.FtsMinSignal:F2} -> {effectiveFtsMin:F2})");
 
         // =====================================================================
         // Step 2: Query Expansion (skip if strong signal)
@@ -156,7 +164,14 @@ internal class HybridQueryService : IHybridQueryService
 
         // Gate: when BM25 found nothing and all vector scores are below the noise
         // floor, there is no evidence of relevance — return empty early.
-        if (!hasFts && bestVecScore < _config.VecOnlyGateThreshold && rankedLists.Count > 0)
+        // Relaxed by MinScore so that --min-score can override an aggressive
+        // autotuned threshold that would otherwise silently discard results.
+        var effectiveVecGate = options.MinScore > 0
+            ? Math.Min(options.MinScore, _config.VecOnlyGateThreshold)
+            : _config.VecOnlyGateThreshold;
+        if (options.Diagnostics != null && effectiveVecGate < _config.VecOnlyGateThreshold)
+            options.Diagnostics.RelaxedGates.Add($"VecOnlyGateThreshold ({_config.VecOnlyGateThreshold:F2} -> {effectiveVecGate:F2})");
+        if (!hasFts && bestVecScore < effectiveVecGate && rankedLists.Count > 0)
             return [];
 
         // =====================================================================
@@ -214,6 +229,8 @@ internal class HybridQueryService : IHybridQueryService
         // =====================================================================
         // Step 6b: Reranker gate — if the best reranker score is near zero,
         // the reranker considers everything irrelevant.
+        // Same MinScore relaxation as the other gates: lets the caller lower
+        // the bar when they explicitly accept lower-confidence results.
         // =====================================================================
         if (rerankScores is { Count: > 0 })
         {
@@ -221,7 +238,12 @@ internal class HybridQueryService : IHybridQueryService
             if (options.Diagnostics != null)
                 options.Diagnostics.BestRerankScore = bestRerank;
 
-            if (!hasFts && bestRerank < _config.RerankGateThreshold)
+            var effectiveRerankGate = options.MinScore > 0
+                ? Math.Min(options.MinScore, _config.RerankGateThreshold)
+                : _config.RerankGateThreshold;
+            if (options.Diagnostics != null && effectiveRerankGate < _config.RerankGateThreshold)
+                options.Diagnostics.RelaxedGates.Add($"RerankGateThreshold ({_config.RerankGateThreshold:F2} -> {effectiveRerankGate:F2})");
+            if (!hasFts && bestRerank < effectiveRerankGate)
                 return [];
         }
 

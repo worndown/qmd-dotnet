@@ -45,6 +45,14 @@ internal class VectorSearchQueryService
 
         // Expand query — filter to vec/hyde only (lex queries target FTS, not vector)
         var allExpanded = await _queryExpander.ExpandQueryAsync(query, null, intent, ct);
+        // When intent is provided, also include non-intent expansions as a baseline.
+        // Intent-modified expansions can paradoxically score relevant documents lower
+        // than generic expansions; merging both ensures intent can only help, not hurt.
+        if (intent != null)
+        {
+            var baseline = await _queryExpander.ExpandQueryAsync(query, null, null, ct);
+            allExpanded.AddRange(baseline);
+        }
         var vecExpanded = allExpanded.Where(q => q.Type != "lex").ToList();
 
         // Run original + vec/hyde expanded through vector search sequentially

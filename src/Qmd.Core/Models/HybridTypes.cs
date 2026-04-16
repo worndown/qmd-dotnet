@@ -66,6 +66,8 @@ public class HybridQueryDiagnostics
     public double BestVecScore { get; set; }
     /// <summary>Best reranker score (0-1, from Qwen3-Reranker).</summary>
     public double BestRerankScore { get; set; }
+    /// <summary>Gates that were relaxed because --min-score was below the configured threshold.</summary>
+    public List<string> RelaxedGates { get; set; } = [];
 }
 
 public class StructuredSearchOptions
