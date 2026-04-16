@@ -110,10 +110,9 @@ internal static class DocumentChunker
     {
         // Stage 1: Character-based initial chunking with conservative estimate
         // Use 3 chars/token (prose ~4, code ~2, mixed ~3)
-        const int avgCharsPerToken = 3;
-        var maxChars = maxTokens * avgCharsPerToken;
-        var overlapChars = overlapTokens * avgCharsPerToken;
-        var windowChars = windowTokens * avgCharsPerToken;
+        var maxChars = maxTokens * ChunkConstants.AvgCharsPerToken;
+        var overlapChars = overlapTokens * ChunkConstants.AvgCharsPerToken;
+        var windowChars = windowTokens * ChunkConstants.AvgCharsPerToken;
 
         var charChunks = ChunkDocument(content, filepath, chunkStrategy, maxChars, overlapChars, windowChars);
 

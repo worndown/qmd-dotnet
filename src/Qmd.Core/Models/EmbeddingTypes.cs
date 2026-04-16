@@ -1,3 +1,5 @@
+using Qmd.Core.Llm;
+
 namespace Qmd.Core.Models;
 
 public record EmbedProgress(int ChunksEmbedded, int TotalChunks, long BytesProcessed, long TotalBytes, int Errors);
@@ -43,8 +45,8 @@ public class EmbedPipelineOptions
 {
     public bool Force { get; init; }
     public string? Model { get; init; }
-    public int MaxDocsPerBatch { get; init; } = 64;
-    public int MaxBatchBytes { get; init; } = 64 * 1024 * 1024;
+    public int MaxDocsPerBatch { get; init; } = LlmConstants.DefaultMaxDocsPerBatch;
+    public int MaxBatchBytes { get; init; } = LlmConstants.DefaultMaxBatchBytes;
     public ChunkStrategy ChunkStrategy { get; init; } = ChunkStrategy.Regex;
     public IProgress<EmbedProgress>? Progress { get; init; }
     public CancellationToken CancellationToken { get; init; }

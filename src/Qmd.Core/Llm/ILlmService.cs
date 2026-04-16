@@ -4,7 +4,6 @@ namespace Qmd.Core.Llm;
 
 /// <summary>
 /// Core LLM abstraction. Implemented by LlamaSharpService in Qmd.Llm.
-/// All methods are async with CancellationToken support.
 /// </summary>
 public interface ILlmService : IAsyncDisposable
 {
