@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-18
+
 ### New features
 
 - `qmd autotune` command: tunes search thresholds automatically, either by deriving them from the embedding similarity distribution (profile-only mode) or by running a grid search over `FtsMinSignal` × `ConfidenceGapRatio`. Configuration is persisted per-index as `SearchConfig` in the database. `qmd status` now shows the active config.
@@ -10,7 +12,7 @@
 ### Search
 
 - `--min-score` now relaxes internal gate thresholds (`FtsMinSignal`, `VecOnlyGateThreshold`, `RerankGateThreshold`) when set below their configured defaults, so callers can explicitly trade precision for recall. Relaxed gates are reported in `HybridQueryDiagnostics` and surfaced as a CLI warning.
-- `FtsMinSignal` default lowered 0.30 → 0.15; `vsearch --min-score` default lowered 0.5 → 0.3.
+- `FtsMinSignal` default lowered 0.30 -> 0.15; `vsearch --min-score` default lowered 0.5 -> 0.3.
 - Vector search now merges intent-expansion and baseline-expansion candidates, so `--intent` can only improve recall, not reduce it.
 - Removed the vec-only score cap to reduce false negatives.
 
@@ -23,7 +25,7 @@
 ### SDK / public API
 
 - All `IQmdStore` methods now accept a `CancellationToken`.
-- `LlmServiceFactory` now exposes `ResolveEmbedModel()`, `ResolveRerankModel()`, and `ResolveGenerateModel()` — unifying the config-override → env-var → default fallback chain used by all callers.
+- `LlmServiceFactory` now exposes `ResolveEmbedModel()`, `ResolveRerankModel()`, and `ResolveGenerateModel()` — unifying the config-override -> env-var -> default fallback chain used by all callers.
 
 ### Internal
 
@@ -73,7 +75,7 @@
 ### Search
 
 - Mitigate vector search false positives when BM25 returns no matches: vector-score gate (cosine < 0.55), reranker gate (score < 0.1), score cap at best raw vector similarity, and post-fusion confidence gap filter (50%).
-- Raise default `--min-score` for `vsearch` from 0.3 → 0.5 and `query` from 0.0 → 0.2. Emit a stderr warning when results are semantic-only.
+- Raise default `--min-score` for `vsearch` from 0.3 -> 0.5 and `query` from 0.0 -> 0.2. Emit a stderr warning when results are semantic-only.
 
 ### New features
 
