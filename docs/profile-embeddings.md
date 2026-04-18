@@ -4,7 +4,9 @@ The `qmd profile-embeddings` command measures the cosine similarity distribution
 
 ## Why calibration matters
 
-Embedding models produce a **noise floor**: unrelated documents in the same language share a baseline cosine similarity well above zero — a phenomenon called anisotropy. For the default embedding model (embeddinggemma-300M), this floor is approximately 0.45. A `--min-score` threshold that works well for one corpus or model may not work for another, so qmd provides this command to measure the actual distribution on your data.
+Embedding models produce a **noise floor**: unrelated documents in the same language share a baseline cosine similarity well above zero — a phenomenon called anisotropy. For the default embedding model (Qwen3-Embedding-0.6B), this floor is approximately 0.32. A `--min-score` threshold that works well for one corpus or model may not work for another, so qmd provides this command to measure the actual distribution on your data.
+
+> **Tip:** If you want to automatically apply profiling results to qmd's internal search thresholds, use `qmd autotune` instead. It runs `profile-embeddings` internally and derives optimal thresholds from the results. The `profile-embeddings` command is useful when you want to inspect the raw distribution manually.
 
 ## Running the command
 
@@ -62,3 +64,18 @@ Note that `query` uses a different blended score (RRF + reranker) and its defaul
 - After adding a large new collection with different content or vocabulary
 - If you switch to a different embedding model (via `qmd pull`)
 - If `vsearch` is returning too many irrelevant results (raise the threshold) or too few results (lower it)
+
+## Automatic calibration with `autotune`
+
+For automatic threshold calibration, use `qmd autotune`:
+
+```bash
+qmd autotune                              # profile-based: fast, derives VecOnlyGateThreshold from P25
+qmd autotune --fixture evals/fixture.json # bench-based: grid-searches FtsMinSignal + ConfidenceGapRatio
+qmd autotune --dry-run                    # preview without saving
+qmd autotune --reset                      # revert to defaults
+```
+
+Autotune saves calibrated thresholds to the database. They are loaded automatically on every subsequent search. Use `qmd status` to see which thresholds are active.
+
+See the [Command Reference](commands.md#qmd-autotune) for full option details.

@@ -28,7 +28,8 @@ internal class CollectionReindexerService : ICollectionReindexerService
         string collectionPath,
         string globPattern,
         string collectionName,
-        ReindexOptions? options = null)
+        ReindexOptions? options = null,
+        CancellationToken ct = default)
     {
         var now = DateTime.UtcNow.ToString("o");
 
@@ -57,6 +58,8 @@ internal class CollectionReindexerService : ICollectionReindexerService
 
         foreach (var relativeFile in files)
         {
+            ct.ThrowIfCancellationRequested();
+
             var filepath = Path.GetFullPath(Path.Combine(collectionPath, relativeFile));
             var handelized = Handelize.Convert(relativeFile);
             seenPaths.Add(handelized);
@@ -64,7 +67,7 @@ internal class CollectionReindexerService : ICollectionReindexerService
             string content;
             try
             {
-                content = await File.ReadAllTextAsync(filepath);
+                content = await File.ReadAllTextAsync(filepath, ct);
             }
             catch (IOException)
             {

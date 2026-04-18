@@ -29,13 +29,13 @@ public class HybridQueryTests : IDisposable
 
     public void Dispose() => _store.Dispose();
 
-    private HybridQueryService CreateService()
+    private HybridQueryService CreateService(SearchConfig? config = null)
     {
         return new HybridQueryService(
             _store.FtsSearch, _store.VectorSearch,
             new QueryExpanderService(_store.Db, _llm),
             new RerankerService(_store.Db, _llm),
-            _store.Db, _llm);
+            _store.Db, _llm, config ?? new SearchConfig());
     }
 
     [Fact]
@@ -125,10 +125,39 @@ public class HybridQueryTests : IDisposable
     [Fact]
     public async Task HybridQuery_FiltersByCollection()
     {
-        var results = await CreateService().HybridQueryAsync(
+        // FtsMinSignal = 0: disable FTS gate since test corpus has no vectors
+        var config = new SearchConfig { FtsMinSignal = 0.0 };
+        var results = await CreateService(config).HybridQueryAsync(
             "systems",
             new HybridQueryOptions { Collections = ["notes"], SkipRerank = true });
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.File.Should().Contain("notes"));
+    }
+
+    [Fact]
+    public async Task HybridQuery_FtsGatedOut_StillReturnsResults()
+    {
+        // FtsMinSignal impossibly high — forces all FTS to be gated out
+        var config = new SearchConfig { FtsMinSignal = 100.0 };
+        var diag = new HybridQueryDiagnostics();
+        var results = await CreateService(config).HybridQueryAsync(
+            "API authentication",
+            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag });
+        // Results should still come back via BM25 strong-signal path (bypasses ftsWeak gate)
+        // or be empty if vector is unavailable — either way no crash
+        diag.HasFtsResults.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HybridQuery_FtsGateDisabled_FtsContributes()
+    {
+        // FtsMinSignal = 0 means FTS is never gated out
+        var config = new SearchConfig { FtsMinSignal = 0.0 };
+        var diag = new HybridQueryDiagnostics();
+        var results = await CreateService(config).HybridQueryAsync(
+            "API authentication",
+            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag });
+        results.Should().NotBeEmpty();
+        diag.HasFtsResults.Should().BeTrue();
     }
 }

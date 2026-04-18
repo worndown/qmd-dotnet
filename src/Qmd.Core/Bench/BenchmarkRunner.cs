@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
@@ -30,29 +31,29 @@ public class BenchmarkRunOptions
 /// </summary>
 public static class BenchmarkRunner
 {
-    private record Backend(string Name, Func<IQmdStore, string, int, List<string>?, Task<List<string>>> Run);
+    private record Backend(string Name, Func<IQmdStore, string, int, List<string>?, CancellationToken, Task<List<string>>> Run);
 
     private static readonly List<Backend> AllBackends =
     [
-        new("bm25", async (store, query, limit, collections) =>
+        new("bm25", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchLexAsync(query, new LexSearchOptions
             {
                 Limit = limit,
                 Collections = collections,
-            });
+            }, ct);
             return results.Select(r => r.Filepath).ToList();
         }),
-        new("vector", async (store, query, limit, collections) =>
+        new("vector", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchVectorAsync(query, new VectorSearchOptions
             {
                 Limit = limit,
                 Collections = collections,
-            });
+            }, ct);
             return results.Select(r => r.Filepath).ToList();
         }),
-        new("hybrid", async (store, query, limit, collections) =>
+        new("hybrid", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchAsync(new SearchOptions
             {
@@ -60,10 +61,10 @@ public static class BenchmarkRunner
                 Limit = limit,
                 Collections = collections,
                 SkipRerank = true,
-            });
+            }, ct);
             return results.Select(r => r.File).ToList();
         }),
-        new("full", async (store, query, limit, collections) =>
+        new("full", async (store, query, limit, collections, ct) =>
         {
             var results = await store.SearchAsync(new SearchOptions
             {
@@ -71,7 +72,7 @@ public static class BenchmarkRunner
                 Limit = limit,
                 Collections = collections,
                 SkipRerank = false,
-            });
+            }, ct);
             return results.Select(r => r.File).ToList();
         }),
     ];
@@ -89,7 +90,8 @@ public static class BenchmarkRunner
     public static async Task<BenchmarkResult> RunBenchmarkAsync(
         IQmdStore store,
         BenchmarkFixture fixture,
-        BenchmarkRunOptions? options = null)
+        BenchmarkRunOptions? options = null,
+        CancellationToken ct = default)
     {
         options ??= new BenchmarkRunOptions();
 
@@ -108,18 +110,20 @@ public static class BenchmarkRunner
         var results = new List<QueryResult>();
         foreach (var query in fixture.Queries)
         {
+            ct.ThrowIfCancellationRequested();
+
             var backends = new Dictionary<string, BackendResult>();
 
             foreach (var backend in activeBackends)
             {
                 if (!options.Json)
-                    Console.Error.Write($"  {query.Id} / {backend.Name}...");
+                    await Console.Error.WriteAsync($"  {query.Id} / {backend.Name}...");
 
-                var backendResult = await RunQueryAsync(store, backend, query, collections);
+                var backendResult = await RunQueryAsync(store, backend, query, collections, ct);
                 backends[backend.Name] = backendResult;
 
                 if (!options.Json)
-                    Console.Error.WriteLine($" {Math.Round(backendResult.LatencyMs)}ms");
+                    await Console.Error.WriteLineAsync($" {Math.Round(backendResult.LatencyMs):N0}ms");
             }
 
             results.Add(new QueryResult
@@ -151,7 +155,8 @@ public static class BenchmarkRunner
         IQmdStore store,
         Backend backend,
         BenchmarkQuery query,
-        List<string>? collections)
+        List<string>? collections,
+        CancellationToken ct = default)
     {
         var limit = Math.Max(query.ExpectedInTopK, 10);
         var sw = Stopwatch.StartNew();
@@ -159,7 +164,7 @@ public static class BenchmarkRunner
         List<string> resultFiles;
         try
         {
-            resultFiles = await backend.Run(store, query.Query, limit, collections);
+            resultFiles = await backend.Run(store, query.Query, limit, collections, ct);
         }
         catch
         {
@@ -248,39 +253,46 @@ public static class BenchmarkRunner
     /// <returns>A formatted multi-line string suitable for console output.</returns>
     public static string FormatTable(BenchmarkResult benchResult)
     {
-        var sb = new StringBuilder();
+        int queryIdWidth = Math.Max(Math.Min(32, benchResult.Results.Max(x => x.Id.Length)), 8);
+        int headerWidth = queryIdWidth + 45;
+        var sb = new StringBuilder(16 * 1024);
 
-        sb.AppendLine($"{Pad("Query", 25)} {Pad("Backend", 8)} {Pad("P@k", 6)} {Pad("Recall", 7)} {Pad("MRR", 6)} {Pad("F1", 6)} {Pad("ms", 8)}");
-        sb.AppendLine(new string('-', 70));
+        sb.AppendLine(new string('-', headerWidth));
+        sb.AppendLine($"{"Query ID".PadLeft(queryIdWidth)}  Backend   P@k Recall    MRR     F1    Time");
+        sb.AppendLine(new string('-', headerWidth));
 
         foreach (var r in benchResult.Results)
         {
             foreach (var (backend, br) in r.Backends)
             {
                 sb.AppendLine(
-                    $"{Pad(r.Id, 25)} {Pad(backend, 8)} {Num(br.PrecisionAtK)} {Num(br.Recall)}  {Num(br.Mrr)} {Num(br.F1)} {Math.Round(br.LatencyMs).ToString().PadLeft(7)}ms");
+                    $"{Truncate(r.Id, queryIdWidth)}  {backend.PadRight(7)} {br.PrecisionAtK.ToString("F2").PadLeft(5)} {br.Recall.ToString("F2").PadLeft(6)}  {br.Mrr.ToString("F2").PadLeft(5)} {br.F1.ToString("F2").PadLeft(6)} {Math.Round(br.LatencyMs).ToString("N0", CultureInfo.CurrentCulture).PadLeft(7)}");
             }
             sb.AppendLine();
         }
 
-        sb.AppendLine("Summary:");
-        sb.AppendLine(new string('-', 70));
+        sb.AppendLine("Summary (averages):");
+        sb.AppendLine(new string('-', 69));
 
         foreach (var (name, s) in benchResult.Summary)
         {
             sb.AppendLine(
-                $"  {Pad(name, 8)} P@k={Num3(s.AvgPrecision)} Recall={Num3(s.AvgRecall)} MRR={Num3(s.AvgMrr)} F1={Num3(s.AvgF1)} Avg={Math.Round(s.AvgLatencyMs)}ms");
+                $"  {name.PadRight(8)} P@k:{Num3(s.AvgPrecision)}  Recall:{Num3(s.AvgRecall)}  MRR:{Num3(s.AvgMrr)}  F1:{Num3(s.AvgF1)}  {Math.Round(s.AvgLatencyMs).ToString("N0").PadLeft(5)}ms");
         }
 
         return sb.ToString();
 
-        static string Pad(string s, int n)
+        static string Truncate(string s, int n)
         {
-            if (s.Length > n) s = s[..n];
-            return s.PadRight(n);
+            if (s.Length > n)
+            {
+                s = s[..(n - 2)];
+                s += "..";
+            }
+
+            return s.PadLeft(n);
         }
 
-        static string Num(double n) => n.ToString("F2").PadLeft(5);
         static string Num3(double n) => n.ToString("F3").PadLeft(6);
     }
 

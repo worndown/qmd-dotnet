@@ -1,3 +1,4 @@
+using Qmd.Core.Llm;
 using Qmd.Core.Models;
 
 namespace Qmd.Core.Embedding;
@@ -9,8 +10,8 @@ internal static class BatchAssembler
 {
     public static List<List<PendingEmbeddingDoc>> BuildBatches(
         List<PendingEmbeddingDoc> docs,
-        int maxDocsPerBatch = 64,
-        int maxBatchBytes = 64 * 1024 * 1024)
+        int maxDocsPerBatch = LlmConstants.DefaultMaxDocsPerBatch,
+        int maxBatchBytes = LlmConstants.DefaultMaxBatchBytes)
     {
         var batches = new List<List<PendingEmbeddingDoc>>();
         var currentBatch = new List<PendingEmbeddingDoc>();

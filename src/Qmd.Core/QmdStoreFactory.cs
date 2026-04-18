@@ -1,10 +1,6 @@
 using Qmd.Core.Configuration;
 using Qmd.Core.Database;
-using Qmd.Core.Documents;
-using Qmd.Core.Embedding;
-using Qmd.Core.Indexing;
 using Qmd.Core.Llm;
-using Qmd.Core.Search;
 using Qmd.Core.Store;
 
 namespace Qmd.Core;

@@ -7,15 +7,6 @@ namespace Qmd.Core.Llm;
 /// </summary>
 public static class LlmServiceFactory
 {
-    /// <summary>Default HuggingFace URI for the embedding model.</summary>
-    public static string DefaultEmbedModel => LlmConstants.DefaultEmbedModel;
-
-    /// <summary>Default HuggingFace URI for the reranking model.</summary>
-    public static string DefaultRerankModel => LlmConstants.DefaultRerankModel;
-
-    /// <summary>Default HuggingFace URI for the query-expansion model.</summary>
-    public static string DefaultGenerateModel => LlmConstants.DefaultGenerateModel;
-
     /// <summary>
     /// Create the default <see cref="ILlmService"/> backed by LLamaSharp.
     /// Models are loaded lazily on first use; this call returns immediately.
@@ -26,6 +17,30 @@ public static class LlmServiceFactory
     /// </param>
     public static ILlmService Create(LlamaSharpOptions? options = null) =>
         new LlamaSharpService(options);
+
+    /// <summary>
+    /// Resolve the effective embed model URI: explicit override &gt; <c>QMD_EMBED_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveEmbedModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_EMBED_MODEL")
+           ?? LlmConstants.DefaultEmbedModel;
+
+    /// <summary>
+    /// Resolve the effective rerank model URI: explicit override &gt; <c>QMD_RERANK_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveRerankModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_RERANK_MODEL")
+           ?? LlmConstants.DefaultRerankModel;
+
+    /// <summary>
+    /// Resolve the effective generate model URI: explicit override &gt; <c>QMD_GENERATE_MODEL</c> env var &gt; hardcoded default.
+    /// </summary>
+    public static string ResolveGenerateModel(string? configOverride = null)
+        => configOverride
+           ?? Environment.GetEnvironmentVariable("QMD_GENERATE_MODEL")
+           ?? LlmConstants.DefaultGenerateModel;
 
     /// <summary>
     /// Resolve a model URI to a local file path, downloading from HuggingFace if needed.

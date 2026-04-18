@@ -41,7 +41,7 @@ qmd search "getUser" --collection api-docs --format json
 
 ## `qmd vsearch` — Semantic Search
 
-Finds documents by meaning using an embedding model (embeddinggemma-300M) and cosine similarity via sqlite-vec. Generates alternative phrasings via query expansion to improve recall.
+Finds documents by meaning using an embedding model (Qwen3-Embedding-0.6B) and cosine similarity via sqlite-vec. Generates alternative phrasings via query expansion to improve recall.
 
 ```
 qmd vsearch <query> [options]
@@ -64,7 +64,7 @@ Options:
 qmd vsearch "handling errors" --intent "Python exception handling"
 ```
 
-**`--min-score`:** Cosine similarity ranges from 0 to 1. The default of 0.5 is set above the noise floor for the default embedding model. Lower values return more results but increase false positives. Use `qmd profile-embeddings` to find the right threshold for your corpus.
+**`--min-score`:** Cosine similarity ranges from 0 to 1. The default of 0.5 is set above the noise floor for the default embedding model. Lower values return more results but increase false positives. Use `qmd profile-embeddings` to measure the distribution for your corpus, or `qmd autotune` to automatically calibrate thresholds.
 
 **Example:**
 ```bash
@@ -186,21 +186,23 @@ Score semantics differ by command:
 - **`vsearch`** — Cosine similarity in [0, 1]. Default is 0.5, which is above the noise floor for the default embedding model. See note on anisotropy below.
 - **`query`** — Blended RRF/reranker score. Default is 0.2. This mode has additional built-in safeguards on top of `--min-score`.
 
-See [Calibrating Search Thresholds](profile-embeddings.md) for a step-by-step guide to running `qmd profile-embeddings` and interpreting the output.
+See [Calibrating Search Thresholds](profile-embeddings.md) for a step-by-step guide to running `qmd profile-embeddings` and interpreting the output. To automatically calibrate internal pipeline thresholds (vector-score gate, FTS gate, confidence gap), use `qmd autotune`.
 
 ---
 
 ## Safeguards against false positives
 
-The `query` command has five layers of protection that activate when BM25 returns no results and only vector search contributes to the fusion:
+The `query` command has five layers of protection against irrelevant results:
 
-1. **Vector-score gate** — Returns empty if all vector scores are below 0.55
-2. **Reranker gate** — Returns empty if the best reranker score is below 0.1
-3. **Score cap** — Clamps blended scores to the best raw cosine similarity
-4. **Confidence gap filter** — Drops results scoring below 50% of the top result
+1. **Adaptive FTS gate** — When BM25's best normalized score is below `FtsMinSignal` (default 0.3), FTS ranked lists are excluded from RRF fusion. This prevents low-quality keyword matches from diluting the vector signal. The positional RRF weight (2.0) shifts from FTS lists to the first two vector lists, amplifying the stronger signal.
+2. **Vector-score gate** — When BM25 returns nothing and all vector scores are below `VecOnlyGateThreshold` (default 0.25), the pipeline returns empty before fusion runs.
+3. **Reranker gate** — After reranking, if BM25 found nothing and the best reranker score is below `RerankGateThreshold` (default 0.05), results are discarded.
+4. **Confidence gap filter** — Drops results scoring below `ConfidenceGapRatio` (default 50%) of the top result's blended score.
 5. **Raised defaults** — `vsearch --min-score 0.5`, `query --min-score 0.2`
 
-These exist because embedding models produce a **noise floor**: unrelated documents in the same language share roughly 0.45 cosine similarity due to structural patterns in the embedding space (anisotropy). Without safeguards, purely vector-driven results can surface documents that are not genuinely relevant.
+These exist because embedding models produce a **noise floor**: unrelated documents in the same language share a baseline cosine similarity due to structural patterns in the embedding space (anisotropy). Without safeguards, purely vector-driven results can surface documents that are not genuinely relevant.
+
+The threshold values in safeguards 1–4 are configurable via `qmd autotune`, which calibrates them for your specific embedding model and corpus. Use `qmd status` to see active thresholds.
 
 For the full explanation of RRF mechanics, score blending, and the research behind these defaults, see [Hybrid Search Internals](hybrid-search-guide.md).
 
@@ -208,7 +210,7 @@ For the full explanation of RRF mechanics, score blending, and the research behi
 
 ## Limitations
 
-qmd runs entirely locally with small models — embeddinggemma at 300M parameters for embeddings and Qwen3-Reranker at 0.6B parameters for reranking — backed by sqlite-vec for vector storage. It works well for personal and project document collections, but it is not comparable to cloud search services powered by much larger models and purpose-built vector databases.
+qmd runs entirely locally with small models — Qwen3-Embedding at 0.6B parameters for embeddings and Qwen3-Reranker at 0.6B parameters for reranking — backed by sqlite-vec for vector storage. It works well for personal and project document collections, but it is not comparable to cloud search services powered by much larger models and purpose-built vector databases.
 
 - **`search`** returns nothing if query terms are absent from the corpus — there is no fuzzy or stemming fallback
 - **`vsearch`** can return false positives at low `--min-score` thresholds due to embedding anisotropy

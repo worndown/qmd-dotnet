@@ -100,6 +100,7 @@ public static class QueryCommand
                         {
                             Query = query,
                             Limit = limit,
+                            MinScore = minScore,
                             Collections = collList,
                             Intent = intent,
                             SkipRerank = noRerank,
@@ -113,6 +114,9 @@ public static class QueryCommand
 
             if (diagnostics is { HasFtsResults: false } && results.Count > 0)
                 CliContext.Console.WriteErrorLine("Note: no keyword matches found -- results are based on semantic similarity only and may be less precise.");
+
+            if (diagnostics is { RelaxedGates.Count: > 0 })
+                CliContext.Console.WriteErrorLine($"Note: --min-score {minScore} relaxed internal gate(s): {string.Join(", ", diagnostics.RelaxedGates)}");
 
             if (minScore > 0)
                 results = results.Where(r => r.Score >= minScore).ToList();

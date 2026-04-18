@@ -78,7 +78,7 @@ public static class LsCommand
             }
 
             // Query files using SQL LIKE prefix match
-            var files = await store.ListFilesAsync(collectionName, pathPrefix);
+            var files = await store.ListFilesAsync(collectionName, pathPrefix, token);
 
             if (files.Count == 0)
             {

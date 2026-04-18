@@ -34,6 +34,7 @@ root.Subcommands.Add(PullCommand.Create());
 root.Subcommands.Add(SkillCommand.Create());
 root.Subcommands.Add(BenchCommand.Create());
 root.Subcommands.Add(ProfileEmbeddingsCommand.Create());
+root.Subcommands.Add(AutotuneCommand.Create());
 
 NativeLibraryConfig.All.WithLogCallback((level, message) =>
 {
@@ -47,9 +48,16 @@ var indexVal = parseResult.GetValue(indexOpt);
 if (indexVal != null)
     CliHelper.IndexName = indexVal;
 
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (_, e) =>
+{
+    e.Cancel = true;
+    cts.Cancel();
+};
+
 try
 {
-    return await parseResult.InvokeAsync();
+    return await parseResult.InvokeAsync(cancellationToken: cts.Token);
 }
 catch (QmdException ex)
 {

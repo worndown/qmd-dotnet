@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-18
+
+### New features
+
+- `qmd autotune` command: tunes search thresholds automatically, either by deriving them from the embedding similarity distribution (profile-only mode) or by running a grid search over `FtsMinSignal` × `ConfidenceGapRatio`. Configuration is persisted per-index as `SearchConfig` in the database. `qmd status` now shows the active config.
+- Ctrl+C support: `Console.CancelKeyPress` is hooked on startup and propagates cancellation cleanly through all store and reindex operations.
+
+### Search
+
+- `--min-score` now relaxes internal gate thresholds (`FtsMinSignal`, `VecOnlyGateThreshold`, `RerankGateThreshold`) when set below their configured defaults, so callers can explicitly trade precision for recall. Relaxed gates are reported in `HybridQueryDiagnostics` and surfaced as a CLI warning.
+- `FtsMinSignal` default lowered 0.30 -> 0.15; `vsearch --min-score` default lowered 0.5 -> 0.3.
+- Vector search now merges intent-expansion and baseline-expansion candidates, so `--intent` can only improve recall, not reduce it.
+- Removed the vec-only score cap to reduce false negatives.
+
+### Models
+
+- Default embed and rerank models switched to f16 GGUF variants (`worndown/Qwen3-Embedding-0.6B-GGUF` and `worndown/Qwen3-Reranker-0.6B-GGUF`).
+- Default generate (query expansion) model switched to f16 quantization.
+- Intent sampling set to greedy (Temperature=0, TopK/TopP removed) for deterministic query expansion output.
+
+### SDK / public API
+
+- All `IQmdStore` methods now accept a `CancellationToken`.
+- `LlmServiceFactory` now exposes `ResolveEmbedModel()`, `ResolveRerankModel()`, and `ResolveGenerateModel()` — unifying the config-override -> env-var -> default fallback chain used by all callers.
+
+### Internal
+
+- Skill content (`qmd_skill.md`, `mcp_setup.md`) moved from hardcoded base64 strings in `EmbeddedSkills.cs` to embedded resource files. `SkillInstaller.Install()` now returns `SkillInstallResult` with a `SymlinkOutcome` enum, including a new `ClaudeNotDetected` case.
+- `CharBasedTokenizer` moved to the test project; `AvgCharsPerToken` extracted to `ChunkConstants` so `DocumentChunker` and tests share the same value; batch limits in `BatchAssembler` and `EmbedPipelineOptions` now reference `LlmConstants` instead of duplicating magic numbers.
+- Deterministic builds enabled.
+
+### Tests
+
+- LLM tests serialized via `LlmEnvironmentCollection` to prevent resource contention across `EmbeddingFormatterTests`, `LlmConstantsTests`, and `LlamaSharpIntegrationTests`; embedding dimension assertion relaxed to a sane range.
+- Eval corpus expanded: 14 corpus documents and 45 queries added.
+
+### Docs
+
+- Added `docs/custom-models.md`: `QMD_*` environment variables reference, `hf:` URI format, step-by-step Hugging Face URL conversion, local file paths, model cache location, and caveats (re-embedding, prompt format detection, context size).
+
 ## [1.2.0] - 2026-04-14
 
 ### New features
@@ -35,7 +75,7 @@
 ### Search
 
 - Mitigate vector search false positives when BM25 returns no matches: vector-score gate (cosine < 0.55), reranker gate (score < 0.1), score cap at best raw vector similarity, and post-fusion confidence gap filter (50%).
-- Raise default `--min-score` for `vsearch` from 0.3 → 0.5 and `query` from 0.0 → 0.2. Emit a stderr warning when results are semantic-only.
+- Raise default `--min-score` for `vsearch` from 0.3 -> 0.5 and `query` from 0.0 -> 0.2. Emit a stderr warning when results are semantic-only.
 
 ### New features
 

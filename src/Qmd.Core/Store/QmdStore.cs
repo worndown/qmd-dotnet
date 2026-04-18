@@ -67,6 +67,7 @@ internal class QmdStore : IQmdStore, IDisposable
         ApplyServices(CreateDefaultServices(Db, llmService));
         SchemaInitializer.Initialize(Db);
         VecExtension.TryLoad(Db);
+        SearchConfig = SearchConfigRepository.Load(Db);
         SyncConfig(configManager.LoadConfig());
     }
 
@@ -80,6 +81,7 @@ internal class QmdStore : IQmdStore, IDisposable
         ApplyServices(CreateDefaultServices(Db, llmService));
         SchemaInitializer.Initialize(Db);
         VecExtension.TryLoad(Db);
+        SearchConfig = SearchConfigRepository.Load(Db);
         SyncConfig(configManager.LoadConfig());
     }
 
@@ -110,6 +112,7 @@ internal class QmdStore : IQmdStore, IDisposable
     public IQmdDatabase Db { get; }
     public string DbPath { get; }
     public ILlmService? LlmService { get; set; }
+    public SearchConfig SearchConfig { get; set; } = new();
 
     private ILlmService GetLlmService() =>
         LlmService ?? throw new QmdModelException("LLM service not configured. Call EmbedAsync or configure LlamaSharpService.");
@@ -121,7 +124,7 @@ internal class QmdStore : IQmdStore, IDisposable
             FtsSearch, VectorSearch,
             new QueryExpanderService(Db, llm),
             new RerankerService(Db, llm),
-            Db, llm);
+            Db, llm, SearchConfig);
     }
 
     private StructuredSearchService CreateStructuredSearchService()
@@ -171,6 +174,7 @@ internal class QmdStore : IQmdStore, IDisposable
 
     public Task<CleanupResult> CleanupAsync(CleanupOptions? options = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         options ??= new CleanupOptions();
 
         int cacheDeleted = 0, inactiveDeleted = 0, orphanedCollectionDocs = 0, orphanedContent = 0, orphanedVectors = 0;
@@ -237,8 +241,9 @@ internal class QmdStore : IQmdStore, IDisposable
         return await CreateStructuredSearchService().SearchAsync(searches, options, ct);
     }
 
-    public Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null)
+    public Task<List<SearchResult>> SearchLexAsync(string query, LexSearchOptions? options = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         options ??= new LexSearchOptions();
         return Task.FromResult(FtsSearch.Search(query, options.Limit, options.Collections));
     }
@@ -281,15 +286,17 @@ internal class QmdStore : IQmdStore, IDisposable
 
     #region Retrieval
 
-    public Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null)
+    public Task<FindDocumentResult> GetAsync(string pathOrDocId, GetOptions? options = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var docFinder = new DocumentFinderService(Db, new FuzzyMatcherService(Db), new ContextResolverService(Db));
         var result = docFinder.FindDocument(pathOrDocId, options?.IncludeBody ?? false);
         return Task.FromResult(result);
     }
 
-    public Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null)
+    public Task<string?> GetDocumentBodyAsync(string pathOrDocId, BodyOptions? options = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var docFinder = new DocumentFinderService(Db, new FuzzyMatcherService(Db), new ContextResolverService(Db));
         var findResult = docFinder.FindDocument(pathOrDocId);
         if (!findResult.IsFound) return Task.FromResult<string?>(null);
@@ -298,8 +305,9 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(body);
     }
 
-    public Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null)
+    public Task<(List<MultiGetResult> Docs, List<string> Errors)> MultiGetAsync(string pattern, MultiGetOptions? options = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         options ??= new MultiGetOptions();
         var contextResolver = new ContextResolverService(Db);
         var fuzzyMatcher = new FuzzyMatcherService(Db);
@@ -309,8 +317,9 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult((docs, errors));
     }
 
-    public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null)
+    public Task<List<ListFileEntry>> ListFilesAsync(string collection, string? pathPrefix = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var results = new List<ListFileEntry>();
         List<ListFileRow> rows;
         if (pathPrefix != null)
@@ -351,13 +360,15 @@ internal class QmdStore : IQmdStore, IDisposable
         return Task.FromResult(GetContextForFile(filepath));
     }
 
-    public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5)
+    public Task<List<string>> FindSimilarFilesAsync(string query, int maxDistance = 3, int limit = 5, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         return Task.FromResult(FindSimilarFiles(query, maxDistance, limit));
     }
 
-    public Task<List<string>> GetActiveDocumentPathsAsync(string collection)
+    public Task<List<string>> GetActiveDocumentPathsAsync(string collection, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         return Task.FromResult(GetActiveDocumentPaths(collection));
     }
 
@@ -501,7 +512,7 @@ internal class QmdStore : IQmdStore, IDisposable
                 {
                     IgnorePatterns = coll.Ignore,
                     Progress = options?.Progress,
-                });
+                }, ct);
             totalIndexed += result.Indexed;
             totalUpdated += result.Updated;
             totalUnchanged += result.Unchanged;
@@ -516,6 +527,15 @@ internal class QmdStore : IQmdStore, IDisposable
 
     public async Task<EmbedResult> EmbedAsync(EmbedPipelineOptions? options = null, CancellationToken ct = default)
     {
+        options ??= new EmbedPipelineOptions();
+        if (ct != default && options.CancellationToken == default)
+            options = new EmbedPipelineOptions
+            {
+                Force = options.Force, Model = options.Model,
+                MaxDocsPerBatch = options.MaxDocsPerBatch, MaxBatchBytes = options.MaxBatchBytes,
+                ChunkStrategy = options.ChunkStrategy, Progress = options.Progress,
+                CancellationToken = ct,
+            };
         return await new EmbeddingPipelineService(Db, GetLlmService(), EmbeddingRepo)
             .GenerateEmbeddingsAsync(options, dims => VecExtension.EnsureVecTable(Db, dims));
     }
@@ -527,6 +547,20 @@ internal class QmdStore : IQmdStore, IDisposable
     public async Task<EmbeddingProfile> ProfileEmbeddingsAsync(EmbeddingProfileOptions? options = null, CancellationToken ct = default)
     {
         return await EmbeddingProfiler.ProfileAsync(Db, GetLlmService(), options, ct);
+    }
+
+    public Task SaveSearchConfigAsync(SearchConfig config)
+    {
+        SearchConfigRepository.Save(Db, config);
+        SearchConfig = config;
+        return Task.CompletedTask;
+    }
+
+    public Task ResetSearchConfigAsync()
+    {
+        SearchConfigRepository.Delete(Db);
+        SearchConfig = new SearchConfig();
+        return Task.CompletedTask;
     }
 
     #endregion

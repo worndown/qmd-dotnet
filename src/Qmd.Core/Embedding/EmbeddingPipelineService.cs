@@ -35,7 +35,7 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
         if (options.MaxBatchBytes <= 0)
             throw new ArgumentException("maxBatchBytes must be positive", nameof(options));
 
-        var model = options.Model ?? LlmConstants.DefaultEmbedModel;
+        var model = options.Model ?? _llmService.EmbedModelName;
         var sw = Stopwatch.StartNew();
 
         if (options.Force)

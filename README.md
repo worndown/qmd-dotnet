@@ -96,42 +96,6 @@ qmd query "consistency vs availability in distributed systems"
 
 ---
 
-## How it works
-
-qmd operates in two phases: an indexing phase that builds the search store, and a query phase that retrieves results.
-
-```mermaid
-flowchart LR
-    subgraph INDEX["Indexing phase"]
-        direction LR
-        A[Markdown files\non disk] -->|qmd update| B[(Document index\nSQLite FTS5)]
-        B -->|qmd embed| C[(Vector store\nsqlite-vec)]
-    end
-
-    subgraph QUERY["Query phase"]
-        direction LR
-        Q[User query] --> SEL{Search mode}
-        SEL -->|search| BM25[BM25\nkeyword]
-        SEL -->|vsearch| VEC[Vector\ncosine sim]
-        SEL -->|query| HYB[BM25 + Vector\nRRF fusion]
-        HYB --> RR[LLM reranker\nQwen3-0.6B]
-        BM25 --> RES[Results]
-        VEC --> RES
-        RR --> RES
-    end
-
-    C -.->|embeddings| VEC
-    C -.->|embeddings| HYB
-    B -.->|FTS5 index| BM25
-    B -.->|FTS5 index| HYB
-```
-
-- **`search`** — BM25 full-text search, fast, no models required
-- **`vsearch`** — vector cosine similarity, finds results by meaning
-- **`query`** — hybrid: BM25 + vector results merged via RRF, then ranked by an LLM reranker
-
----
-
 ## Features
 
 - **Hybrid search** — BM25 full-text, vector semantic, and hybrid mode with reciprocal rank fusion
@@ -146,6 +110,7 @@ flowchart LR
 
 - [Search Guide](docs/search-guide.md) — Choosing between search modes, output formats, and tuning `--min-score`
 - [Command Reference](docs/commands.md) — Complete CLI reference for all commands and options
+- [Custom Models](docs/custom-models.md) — Overriding the default models via `QMD_*` environment variables and converting Hugging Face URLs to `hf:` URIs
 - [Calibrating Search Thresholds](docs/profile-embeddings.md) — Using `profile-embeddings` to find the right `--min-score` for your corpus
 - [Hybrid Search Internals](docs/hybrid-search-guide.md) — RRF fusion, scoring, safeguards, benchmarking, and threshold calibration
 
@@ -154,7 +119,7 @@ flowchart LR
 ## Prerequisites
 
 - Windows 10/11
-- CUDA 12 toolkit (optional, for GPU acceleration)
+- CUDA 12 toolkit (optional, but strongly recommended — CPU inference is very slow)
 
 > The self-contained binary from GitHub Releases does not require .NET to be installed. If you are building from source, you will need the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
 

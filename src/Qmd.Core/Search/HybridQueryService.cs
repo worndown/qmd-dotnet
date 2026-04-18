@@ -19,6 +19,7 @@ internal class HybridQueryService : IHybridQueryService
     private readonly IRerankerService _reranker;
     private readonly IQmdDatabase _db;
     private readonly ILlmService _llmService;
+    private readonly SearchConfig _config;
 
     public HybridQueryService(
         IFtsSearchService ftsSearch,
@@ -26,7 +27,8 @@ internal class HybridQueryService : IHybridQueryService
         IQueryExpanderService queryExpander,
         IRerankerService reranker,
         IQmdDatabase db,
-        ILlmService llmService)
+        ILlmService llmService,
+        SearchConfig searchConfig)
     {
         _ftsSearch = ftsSearch;
         _vectorSearch = vectorSearch;
@@ -34,6 +36,7 @@ internal class HybridQueryService : IHybridQueryService
         _reranker = reranker;
         _db = db;
         _llmService = llmService;
+        _config = searchConfig;
     }
 
     public async Task<List<HybridQueryResult>> HybridQueryAsync(
@@ -56,6 +59,15 @@ internal class HybridQueryService : IHybridQueryService
         var strongSignal = intent == null
             && topScore >= SearchConstants.StrongSignalMinScore
             && (topScore - secondScore) >= SearchConstants.StrongSignalMinGap;
+        // When the caller's MinScore is below FtsMinSignal, relax the gate so
+        // that valid-but-weak BM25 matches (e.g. single-word queries scoring 20-25%)
+        // are included in RRF fusion instead of being silently discarded.
+        var effectiveFtsMin = options.MinScore > 0
+            ? Math.Min(options.MinScore, _config.FtsMinSignal)
+            : _config.FtsMinSignal;
+        var ftsWeak = topScore < effectiveFtsMin;
+        if (options.Diagnostics != null && effectiveFtsMin < _config.FtsMinSignal)
+            options.Diagnostics.RelaxedGates.Add($"FtsMinSignal ({_config.FtsMinSignal:F2} -> {effectiveFtsMin:F2})");
 
         // =====================================================================
         // Step 2: Query Expansion (skip if strong signal)
@@ -73,7 +85,7 @@ internal class HybridQueryService : IHybridQueryService
         var rankedListMeta = new List<RankedListMeta>();
 
         // 3a: Original FTS results as first list (only if non-empty to avoid wasting weight slots)
-        if (initialFts.Count > 0)
+        if (initialFts.Count > 0 && !ftsWeak)
         {
             rankedLists.Add(initialFts.Select(r => new RankedResult(
                 r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
@@ -81,14 +93,19 @@ internal class HybridQueryService : IHybridQueryService
         }
 
         // 3b: Expanded lex queries
-        foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
+        // When FTS lists are excluded, the positional weight rule (i < 2 -> 2.0)
+        // shifts from FTS noise to the first 2 vector lists, amplifying vector signal.
+        if (!ftsWeak)
         {
-            var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
-            if (ftsResults.Count > 0)
+            foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
             {
-                rankedLists.Add(ftsResults.Select(r => new RankedResult(
-                    r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
-                rankedListMeta.Add(new RankedListMeta("fts", "lex", eq.Query));
+                var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
+                if (ftsResults.Count > 0)
+                {
+                    rankedLists.Add(ftsResults.Select(r => new RankedResult(
+                        r.Filepath, r.DisplayPath, r.Title, r.Body ?? "", r.Score, r.Hash)).ToList());
+                    rankedListMeta.Add(new RankedListMeta("fts", "lex", eq.Query));
+                }
             }
         }
 
@@ -147,7 +164,14 @@ internal class HybridQueryService : IHybridQueryService
 
         // Gate: when BM25 found nothing and all vector scores are below the noise
         // floor, there is no evidence of relevance — return empty early.
-        if (!hasFts && bestVecScore < SearchConstants.VecOnlyGateThreshold && rankedLists.Count > 0)
+        // Relaxed by MinScore so that --min-score can override an aggressive
+        // autotuned threshold that would otherwise silently discard results.
+        var effectiveVecGate = options.MinScore > 0
+            ? Math.Min(options.MinScore, _config.VecOnlyGateThreshold)
+            : _config.VecOnlyGateThreshold;
+        if (options.Diagnostics != null && effectiveVecGate < _config.VecOnlyGateThreshold)
+            options.Diagnostics.RelaxedGates.Add($"VecOnlyGateThreshold ({_config.VecOnlyGateThreshold:F2} -> {effectiveVecGate:F2})");
+        if (!hasFts && bestVecScore < effectiveVecGate && rankedLists.Count > 0)
             return [];
 
         // =====================================================================
@@ -205,6 +229,8 @@ internal class HybridQueryService : IHybridQueryService
         // =====================================================================
         // Step 6b: Reranker gate — if the best reranker score is near zero,
         // the reranker considers everything irrelevant.
+        // Same MinScore relaxation as the other gates: lets the caller lower
+        // the bar when they explicitly accept lower-confidence results.
         // =====================================================================
         if (rerankScores is { Count: > 0 })
         {
@@ -212,7 +238,12 @@ internal class HybridQueryService : IHybridQueryService
             if (options.Diagnostics != null)
                 options.Diagnostics.BestRerankScore = bestRerank;
 
-            if (!hasFts && bestRerank < SearchConstants.RerankGateThreshold)
+            var effectiveRerankGate = options.MinScore > 0
+                ? Math.Min(options.MinScore, _config.RerankGateThreshold)
+                : _config.RerankGateThreshold;
+            if (options.Diagnostics != null && effectiveRerankGate < _config.RerankGateThreshold)
+                options.Diagnostics.RelaxedGates.Add($"RerankGateThreshold ({_config.RerankGateThreshold:F2} -> {effectiveRerankGate:F2})");
+            if (!hasFts && bestRerank < effectiveRerankGate)
                 return [];
         }
 
@@ -232,12 +263,6 @@ internal class HybridQueryService : IHybridQueryService
                 double rrfScore = 1.0 / rrfRank;
                 finalScore = rrfWeight * rrfScore + (1 - rrfWeight) * rerankScore;
 
-                // When BM25 contributed nothing, the RRF positional score is
-                // artificially high.  Cap the blended score at the best raw
-                // vector similarity so it cannot exceed the actual semantic
-                // relevance signal.
-                if (!hasFts && bestVecScore > 0)
-                    finalScore = Math.Min(finalScore, bestVecScore);
             }
             else
             {
@@ -278,7 +303,7 @@ internal class HybridQueryService : IHybridQueryService
         if (results.Count > 1)
         {
             var topBlended = results[0].Score;
-            var floor = topBlended * SearchConstants.ConfidenceGapRatio;
+            var floor = topBlended * _config.ConfidenceGapRatio;
             results = results.Where(r => r.Score >= floor).ToList();
         }
 

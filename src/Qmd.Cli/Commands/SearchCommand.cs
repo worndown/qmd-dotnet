@@ -49,7 +49,7 @@ public static class SearchCommand
             if (all) limit = 100000;
 
             await using var store = await CliHelper.CreateStoreAsync();
-            await HandleSearchAsync(store, query, collections, limit, minScore, outputFormat, full, lineNumbers);
+            await HandleSearchAsync(store, query, collections, limit, minScore, outputFormat, full, lineNumbers, token);
         });
 
         return cmd;
@@ -57,14 +57,15 @@ public static class SearchCommand
 
     internal static async Task HandleSearchAsync(
         IQmdStore store, string query, string[] collections, int limit,
-        double minScore, OutputFormat outputFormat, bool full, bool lineNumbers)
+        double minScore, OutputFormat outputFormat, bool full, bool lineNumbers,
+        CancellationToken ct = default)
     {
         var collList = await CliHelper.ResolveCollectionsAsync(store, collections);
         var results = await store.SearchLexAsync(query, new LexSearchOptions
         {
             Limit = limit,
             Collections = collList,
-        });
+        }, ct);
 
         if (minScore > 0)
             results = results.Where(r => r.Score >= minScore).ToList();

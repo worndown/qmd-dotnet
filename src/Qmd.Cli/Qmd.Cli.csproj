@@ -23,4 +23,13 @@
 		<InternalsVisibleTo Include="Qmd.Cli.Tests" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="Claude\qmd_skill.md">
+			<LogicalName>Qmd.Cli.Claude.qmd_skill.md</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Claude\mcp_setup.md">
+			<LogicalName>Qmd.Cli.Claude.mcp_setup.md</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
 </Project>

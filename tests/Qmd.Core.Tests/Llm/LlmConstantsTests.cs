@@ -7,6 +7,7 @@ namespace Qmd.Core.Tests.Llm;
 /// Verifies that LlmConstants defaults match the hardcoded values.
 /// </summary>
 [Trait("Category", "Unit")]
+[Collection("LlmEnvironment")]
 public class LlmConstantsTests
 {
 
@@ -14,21 +15,21 @@ public class LlmConstantsTests
     public void DefaultEmbedModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultEmbedModel.Should().Be(
-            "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf");
+            "hf:worndown/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-f16.gguf");
     }
 
     [Fact]
     public void DefaultRerankModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultRerankModel.Should().Be(
-            "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf");
+            "hf:worndown/Qwen3-Reranker-0.6B-GGUF/Qwen3-Reranker-0.6B-f16.gguf");
     }
 
     [Fact]
     public void DefaultGenerateModel_MatchesTypeScriptHardcoded()
     {
         LlmConstants.DefaultGenerateModel.Should().Be(
-            "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf");
+            "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-f16.gguf");
     }
 
     [Fact]
@@ -93,6 +94,82 @@ public class LlmConstantsTests
         finally
         {
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveEmbedModel_ReturnsDefault_WhenNoOverride()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
+            LlmServiceFactory.ResolveEmbedModel().Should().Be(LlmConstants.DefaultEmbedModel);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveEmbedModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:custom/embed/model.gguf");
+            LlmServiceFactory.ResolveEmbedModel().Should().Be("hf:custom/embed/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveEmbedModel_ConfigOverridesEnvVar()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:env/embed/model.gguf");
+            LlmServiceFactory.ResolveEmbedModel("hf:config/embed/model.gguf")
+                .Should().Be("hf:config/embed/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveRerankModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_RERANK_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_RERANK_MODEL", "hf:custom/rerank/model.gguf");
+            LlmServiceFactory.ResolveRerankModel().Should().Be("hf:custom/rerank/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_RERANK_MODEL", original);
+        }
+    }
+
+    [Fact]
+    public void ResolveGenerateModel_EnvVarOverridesDefault()
+    {
+        var original = Environment.GetEnvironmentVariable("QMD_GENERATE_MODEL");
+        try
+        {
+            Environment.SetEnvironmentVariable("QMD_GENERATE_MODEL", "hf:custom/gen/model.gguf");
+            LlmServiceFactory.ResolveGenerateModel().Should().Be("hf:custom/gen/model.gguf");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("QMD_GENERATE_MODEL", original);
         }
     }
 
@@ -174,10 +251,15 @@ public class LlmConstantsTests
             var formatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
             formatted.Should().Contain("Instruct:");
 
-            // Set to default (non-Qwen3) — should use task prefix format
+            // Default model is now Qwen3 — should still use instruct format
             Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
             var defaultFormatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
-            defaultFormatted.Should().Contain("task: search result");
+            defaultFormatted.Should().Contain("Instruct:");
+
+            // Explicitly set to a non-Qwen3 model — should use task prefix format
+            Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", "hf:org/embeddinggemma-300M-GGUF/model.gguf");
+            var gemmaFormatted = EmbeddingFormatter.FormatQueryForEmbedding("test query");
+            gemmaFormatted.Should().Contain("task: search result");
         }
         finally
         {
