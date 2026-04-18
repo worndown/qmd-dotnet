@@ -30,39 +30,46 @@ public static class SkillCommand
 
         installCmd.SetAction(parseResult =>
         {
-            var global = parseResult.GetValue(globalOpt);
-            var yes = parseResult.GetValue(yesOpt);
-            var force = parseResult.GetValue(forceOpt);
+            var options = new SkillInstallOptions(
+                parseResult.GetValue(globalOpt),
+                parseResult.GetValue(yesOpt),
+                parseResult.GetValue(forceOpt));
 
-            var installDir = SkillInstaller.GetSkillInstallDir(global);
-            SkillInstaller.WriteEmbeddedSkill(installDir, force);
-            CliContext.Console.WriteLine($"Installed QMD skill to {installDir}");
-
-            var claudeLinkPath = SkillInstaller.GetClaudeSkillLinkPath(global);
-            if (!SkillInstaller.ShouldCreateClaudeSymlink(yes, _ =>
-            {
-                if (CliContext.Console.IsInputRedirected)
+            var result = SkillInstaller.Install(
+                options,
+                promptUser: linkPath =>
                 {
-                    CliContext.Console.WriteLine($"Tip: create a Claude symlink manually at {claudeLinkPath}");
-                    return false;
-                }
-                CliContext.Console.Write($"Create a symlink in {claudeLinkPath}? [y/N] ");
-                var answer = CliContext.Console.ReadLine()?.Trim().ToLowerInvariant();
-                return answer is "y" or "yes";
-            }))
-                return;
+                    if (CliContext.Console.IsInputRedirected)
+                    {
+                        CliContext.Console.WriteLine($"Tip: create a Claude symlink manually at {linkPath}");
+                        return false;
+                    }
+                    CliContext.Console.Write($"Create a symlink in {linkPath}? [y/N] ");
+                    var answer = CliContext.Console.ReadLine()?.Trim().ToLowerInvariant();
+                    return answer is "y" or "yes";
+                },
+                onInstalled: installDir =>
+                    CliContext.Console.WriteLine($"Installed QMD skill to {installDir}"));
 
-            try
+            switch (result.Symlink)
             {
-                var linked = SkillInstaller.EnsureClaudeSymlink(claudeLinkPath, installDir, force);
-                if (linked)
-                    CliContext.Console.WriteLine($"Linked Claude skill at {claudeLinkPath}");
-                else
-                    CliContext.Console.WriteLine($"Claude already sees the skill via {Path.GetDirectoryName(claudeLinkPath)}");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                CliContext.Console.WriteErrorLine(ex.Message);
+                case SymlinkOutcome.Created:
+                    CliContext.Console.WriteLine($"Linked Claude skill at {result.ClaudeLinkPath}");
+                    break;
+                case SymlinkOutcome.AlreadyLinked:
+                    CliContext.Console.WriteLine(
+                        $"Claude already sees the skill via {Path.GetDirectoryName(result.ClaudeLinkPath)}");
+                    break;
+                case SymlinkOutcome.Failed:
+                    CliContext.Console.WriteErrorLine(result.SymlinkError!);
+                    break;
+                case SymlinkOutcome.NotRequested:
+                    break;
+                case SymlinkOutcome.ClaudeNotDetected:
+                    CliContext.Console.WriteLine(
+                        $"Tip: Claude Code not detected. Install Claude Code, then run " +
+                        $"`qmd skill install --yes` to create the symlink at {result.ClaudeLinkPath}");
+                    break;
             }
         });
 

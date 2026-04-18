@@ -1,7 +1,56 @@
 namespace Qmd.Cli.Skills;
 
+internal record SkillInstallOptions(bool Global, bool AutoYes, bool Force);
+
+internal enum SymlinkOutcome
+{
+    NotRequested,
+    ClaudeNotDetected,
+    Created,
+    AlreadyLinked,
+    Failed,
+}
+
+internal record SkillInstallResult(
+    string InstallDir,
+    string ClaudeLinkPath,
+    SymlinkOutcome Symlink,
+    string? SymlinkError);
+
 internal static class SkillInstaller
 {
+    public static SkillInstallResult Install(
+        SkillInstallOptions options,
+        Func<string, bool>? promptUser = null,
+        Action<string>? onInstalled = null)
+    {
+        var installDir = GetSkillInstallDir(options.Global);
+        WriteEmbeddedSkill(installDir, options.Force);
+        onInstalled?.Invoke(installDir);
+
+        var claudeLinkPath = GetClaudeSkillLinkPath(options.Global);
+
+        if (!options.AutoYes && !IsClaudeCodeInstalled(options.Global))
+            return new SkillInstallResult(installDir, claudeLinkPath, SymlinkOutcome.ClaudeNotDetected, null);
+
+        if (!ShouldCreateClaudeSymlink(options.AutoYes, claudeLinkPath, promptUser))
+            return new SkillInstallResult(installDir, claudeLinkPath, SymlinkOutcome.NotRequested, null);
+
+        try
+        {
+            var linked = EnsureClaudeSymlink(claudeLinkPath, installDir, options.Force);
+            return new SkillInstallResult(
+                installDir,
+                claudeLinkPath,
+                linked ? SymlinkOutcome.Created : SymlinkOutcome.AlreadyLinked,
+                null);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return new SkillInstallResult(installDir, claudeLinkPath, SymlinkOutcome.Failed, ex.Message);
+        }
+    }
+
     public static string GetSkillInstallDir(bool global)
     {
         var root = global
@@ -16,6 +65,14 @@ internal static class SkillInstaller
             ? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
             : Directory.GetCurrentDirectory();
         return Path.Combine(root, ".claude", "skills", "qmd");
+    }
+
+    public static bool IsClaudeCodeInstalled(bool global)
+    {
+        var root = global
+            ? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+            : Directory.GetCurrentDirectory();
+        return Directory.Exists(Path.Combine(root, ".claude"));
     }
 
     public static void WriteEmbeddedSkill(string targetDir, bool force)
@@ -99,12 +156,12 @@ internal static class SkillInstaller
         return true;
     }
 
-    public static bool ShouldCreateClaudeSymlink(bool autoYes, Func<string, bool>? promptUser = null)
+    public static bool ShouldCreateClaudeSymlink(bool autoYes, string linkPath, Func<string, bool>? promptUser = null)
     {
         if (autoYes)
             return true;
 
-        return promptUser?.Invoke("Create a Claude symlink") ?? false;
+        return promptUser?.Invoke(linkPath) ?? false;
     }
 
     private static string NormalizeLinkTarget(string target)
