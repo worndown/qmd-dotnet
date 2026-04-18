@@ -260,9 +260,7 @@ content ::= [^\n]+
                 MaxTokens = 600,
                 SamplingPipeline = new DefaultSamplingPipeline
                 {
-                    Temperature = 0.7f,
-                    TopK = 20,
-                    TopP = 0.8f,
+                    Temperature = 0.0f,
                     PresencePenalty = 0.5f,
                     PenaltyCount = 64,
                     Grammar = grammar,
