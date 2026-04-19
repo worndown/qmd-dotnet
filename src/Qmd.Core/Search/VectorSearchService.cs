@@ -114,7 +114,7 @@ internal class VectorSearchService : IVectorSearchService
                     DisplayPath = row.DisplayPath,
                     Title = row.Title,
                     Hash = row.Hash,
-                    DocId = DocidUtils.GetDocid(row.Hash),
+                    DocId = DocIdUtils.GetDocId(row.Hash),
                     CollectionName = row.Collection,
                     ModifiedAt = "",
                     BodyLength = body.Length,

@@ -673,7 +673,7 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SearchOutput_Json_IncludesDocidAndQmdPath()
+    public async Task SearchOutput_Json_IncludesDocIdAndQmdPath()
     {
         // search --json output includes qmd:// path, docid, and context fields
         var results = await this.store.SearchLexAsync("test");
@@ -704,7 +704,7 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SearchOutput_Md_IncludesDocid()
+    public async Task SearchOutput_Md_IncludesDocId()
     {
         // search --md includes docid and context
         var results = await this.store.SearchLexAsync("test");
@@ -715,7 +715,7 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SearchOutput_Xml_IncludesQmdPathAndDocid()
+    public async Task SearchOutput_Xml_IncludesQmdPathAndDocId()
     {
         // search --xml includes qmd:// path, docid, and context
         var results = await this.store.SearchLexAsync("test");
@@ -726,7 +726,7 @@ public class CliIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SearchOutput_Files_IncludesDocidAndScore()
+    public async Task SearchOutput_Files_IncludesDocIdAndScore()
     {
         // search --files includes qmd:// path, docid, and context
         var results = await this.store.SearchLexAsync("meeting");

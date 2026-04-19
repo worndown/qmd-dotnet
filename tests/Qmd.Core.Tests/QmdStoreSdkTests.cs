@@ -781,16 +781,16 @@ public class QmdStoreSdkTests
     }
 
     [Fact]
-    public async Task Get_ByDocid()
+    public async Task Get_ByDocId()
     {
         await using var store = CreateSeededStore();
         // First get a document to find its docid
         var doc = await store.GetAsync("qmd://docs/readme.md");
         doc.IsFound.Should().BeTrue();
 
-        var byDocid = await store.GetAsync($"#{doc.Document!.DocId}");
-        byDocid.IsFound.Should().BeTrue();
-        byDocid.Document!.DocId.Should().Be(doc.Document!.DocId);
+        var byDocId = await store.GetAsync($"#{doc.Document!.DocId}");
+        byDocId.IsFound.Should().BeTrue();
+        byDocId.Document!.DocId.Should().Be(doc.Document!.DocId);
     }
 
     [Fact]

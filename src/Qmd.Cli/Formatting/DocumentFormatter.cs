@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Qmd.Core.Models;
 
 namespace Qmd.Cli.Formatting;
 

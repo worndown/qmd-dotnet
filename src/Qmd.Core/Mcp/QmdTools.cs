@@ -113,7 +113,7 @@ internal class QmdTools
                 r.BestChunk ?? r.Body, primaryQuery, 300, r.BestChunkPos, intent: intent);
             return new
             {
-                docid = $"#{r.Docid}",
+                docid = $"#{r.DocId}",
                 file = r.DisplayPath,
                 title = r.Title,
                 score = Math.Round(r.Score * 100) / 100,

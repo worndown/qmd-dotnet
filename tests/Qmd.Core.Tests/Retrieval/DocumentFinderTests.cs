@@ -48,7 +48,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     [Fact]
-    public void FindDocument_ByDocid()
+    public void FindDocument_ByDocId()
     {
         var result = DocumentFinder.FindDocument(this.db, "#aabbcc");
         result.IsFound.Should().BeTrue();
@@ -56,7 +56,7 @@ public class DocumentFinderTests : IDisposable
     }
 
     [Fact]
-    public void FindDocument_ByDocidWithoutHash()
+    public void FindDocument_ByDocIdWithoutHash()
     {
         var result = DocumentFinder.FindDocument(this.db, "aabbcc");
         result.IsFound.Should().BeTrue();

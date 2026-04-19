@@ -14,7 +14,7 @@ internal class DocumentRow
     public string? Body { get; set; }
 }
 
-internal class DocidRow
+internal class DocIdRow
 {
     public string Filepath { get; set; } = "";
     public string Hash { get; set; } = "";

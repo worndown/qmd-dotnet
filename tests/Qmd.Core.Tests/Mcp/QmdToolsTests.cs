@@ -103,7 +103,7 @@ public class QmdToolsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Get_ByDocid_ReturnsDocument()
+    public async Task Get_ByDocId_ReturnsDocument()
     {
         var result = await this.seededTools.Get("qmd://docs/api/guide.md");
         var text = GetText(result);

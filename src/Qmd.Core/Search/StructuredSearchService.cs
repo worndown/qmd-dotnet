@@ -216,7 +216,7 @@ internal class StructuredSearchService : IStructuredSearchService
                 BestChunkPos = bestChunkPos,
                 Score = finalScore,
                 Context = ContextResolver.GetContextForFile(this.db, cand.File),
-                Docid = DocidUtils.GetDocid(cand.Hash),
+                DocId = DocIdUtils.GetDocId(cand.Hash),
                 Explain = options.Explain ? BuildExplain(cand.File, rrfTraces, rerankScore, finalScore) : null,
             });
         }

@@ -86,7 +86,7 @@ public class FtsSearcherTests : IDisposable
     }
 
     [Fact]
-    public void SearchFTS_SetsDocid()
+    public void SearchFTS_SetsDocId()
     {
         var results = this.fts.Search("API");
         results[0].DocId.Should().HaveLength(6);

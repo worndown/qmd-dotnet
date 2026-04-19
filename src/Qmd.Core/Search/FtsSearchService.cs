@@ -70,7 +70,7 @@ internal class FtsSearchService : IFtsSearchService
                 DisplayPath = row.DisplayPath,
                 Title = row.Title,
                 Hash = hash,
-                DocId = DocidUtils.GetDocid(hash),
+                DocId = DocIdUtils.GetDocId(hash),
                 CollectionName = row.Collection,
                 ModifiedAt = "",
                 BodyLength = body.Length,

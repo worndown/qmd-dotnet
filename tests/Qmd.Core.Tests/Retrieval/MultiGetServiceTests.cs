@@ -123,7 +123,7 @@ public class MultiGetServiceTests : IDisposable
     }
 
     [Fact]
-    public void FindDocuments_FindsByDocidInCommaList()
+    public void FindDocuments_FindsByDocIdInCommaList()
     {
         var body1 = "# Document One\n\nFirst document content.";
         var body2 = "# Document Two\n\nSecond document content.";
