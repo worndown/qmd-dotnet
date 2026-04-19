@@ -24,11 +24,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Claude\qmd_skill.md">
-			<LogicalName>Qmd.Cli.Claude.qmd_skill.md</LogicalName>
+		<EmbeddedResource Include="Skills\qmd_skill.md">
+			<LogicalName>Qmd.Cli.Skills.qmd_skill.md</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="Claude\mcp_setup.md">
-			<LogicalName>Qmd.Cli.Claude.mcp_setup.md</LogicalName>
+		<EmbeddedResource Include="Skills\mcp_setup.md">
+			<LogicalName>Qmd.Cli.Skills.mcp_setup.md</LogicalName>
 		</EmbeddedResource>
 	</ItemGroup>
 

@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace Qmd.Cli.Skills;
 
 internal record EmbeddedSkillFile(string RelativePath, string Content);
@@ -8,8 +6,8 @@ internal static class EmbeddedSkills
 {
     private static readonly (string ResourceName, string RelativePath)[] Mapping =
     [
-        ("Qmd.Cli.Claude.qmd_skill.md", "SKILL.md"),
-        ("Qmd.Cli.Claude.mcp_setup.md", "references/mcp-setup.md"),
+        ("Qmd.Cli.Skills.qmd_skill.md", "SKILL.md"),
+        ("Qmd.Cli.Skills.mcp_setup.md", "references/mcp-setup.md"),
     ];
 
     private static readonly Lazy<Dictionary<string, string>> Cache = new(() =>
