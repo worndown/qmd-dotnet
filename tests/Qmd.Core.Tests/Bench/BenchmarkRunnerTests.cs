@@ -12,14 +12,14 @@ namespace Qmd.Core.Tests.Bench;
 [Trait("Category", "Unit")]
 public class BenchmarkRunnerTests : IAsyncDisposable
 {
-    private readonly IQmdStore _store;
+    private readonly IQmdStore store;
 
     public BenchmarkRunnerTests()
     {
-        _store = new StubQmdStore();
+        this.store = new StubQmdStore();
     }
 
-    public ValueTask DisposeAsync() => _store.DisposeAsync();
+    public ValueTask DisposeAsync() => this.store.DisposeAsync();
 
     [Fact]
     public async Task RunBenchmark_RunsAllBackends_And_ProducesSummary()
@@ -43,7 +43,7 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             ],
         };
 
-        var result = await BenchmarkRunner.RunBenchmarkAsync(_store, fixture, new BenchmarkRunOptions
+        var result = await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture, new BenchmarkRunOptions
         {
             Json = true, // suppress stderr output
             Backends = ["bm25"], // only test bm25 since our stub only supports SearchLexAsync
@@ -85,7 +85,7 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             ],
         };
 
-        var result = await BenchmarkRunner.RunBenchmarkAsync(_store, fixture, new BenchmarkRunOptions
+        var result = await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture, new BenchmarkRunOptions
         {
             Json = true,
             Backends = ["bm25"],
@@ -169,7 +169,7 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             Queries = [],
         };
 
-        var act = async () => await BenchmarkRunner.RunBenchmarkAsync(_store, fixture);
+        var act = async () => await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture);
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*missing*queries*");
     }

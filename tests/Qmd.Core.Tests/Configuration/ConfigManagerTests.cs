@@ -15,7 +15,7 @@ public class ConfigManagerTests
     [Fact]
     public void AddCollection_CreatesNew()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("docs", "/home/docs", "**/*.md");
 
         var coll = mgr.GetCollection("docs");
@@ -28,7 +28,7 @@ public class ConfigManagerTests
     [Fact]
     public void AddCollection_UpdatesExisting()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("docs", "/old/path");
         mgr.AddCollection("docs", "/new/path", "**/*.txt");
 
@@ -40,7 +40,7 @@ public class ConfigManagerTests
     [Fact]
     public void RemoveCollection_ReturnsTrue()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("docs", "/path");
         mgr.RemoveCollection("docs").Should().BeTrue();
         mgr.GetCollection("docs").Should().BeNull();
@@ -49,14 +49,14 @@ public class ConfigManagerTests
     [Fact]
     public void RemoveCollection_ReturnsFalse_WhenNotFound()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.RemoveCollection("nonexistent").Should().BeFalse();
     }
 
     [Fact]
     public void RenameCollection_Success()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("old", "/path");
         mgr.RenameCollection("old", "new").Should().BeTrue();
         mgr.GetCollection("old").Should().BeNull();
@@ -67,7 +67,7 @@ public class ConfigManagerTests
     [Fact]
     public void RenameCollection_ThrowsIfNewExists()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("a", "/path1");
         mgr.AddCollection("b", "/path2");
         var act = () => mgr.RenameCollection("a", "b");
@@ -77,7 +77,7 @@ public class ConfigManagerTests
     [Fact]
     public void ListCollections_ReturnsAll()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("a", "/a");
         mgr.AddCollection("b", "/b");
         mgr.ListCollections().Should().HaveCount(2);
@@ -94,7 +94,7 @@ public class ConfigManagerTests
                 ["b"] = new Collection { Path = "/b", IncludeByDefault = false },
             }
         };
-        var mgr = CreateInlineManager(config);
+        var mgr = this.CreateInlineManager(config);
         var defaults = mgr.GetDefaultCollectionNames();
         defaults.Should().Contain("a");
         defaults.Should().NotContain("b");
@@ -103,7 +103,7 @@ public class ConfigManagerTests
     [Fact]
     public void GlobalContext_SetAndGet()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.SetGlobalContext("global info");
         mgr.GetGlobalContext().Should().Be("global info");
     }
@@ -111,7 +111,7 @@ public class ConfigManagerTests
     [Fact]
     public void GlobalContext_SetNull_Clears()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.SetGlobalContext("info");
         mgr.SetGlobalContext(null);
         mgr.GetGlobalContext().Should().BeNull();
@@ -120,7 +120,7 @@ public class ConfigManagerTests
     [Fact]
     public void AddContext_Success()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("docs", "/docs");
         mgr.AddContext("docs", "/guides", "Guide section").Should().BeTrue();
 
@@ -132,14 +132,14 @@ public class ConfigManagerTests
     [Fact]
     public void AddContext_ReturnsFalse_WhenCollectionMissing()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddContext("nonexistent", "/", "text").Should().BeFalse();
     }
 
     [Fact]
     public void RemoveContext_Success()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.AddCollection("docs", "/docs");
         mgr.AddContext("docs", "/guides", "Guide section");
         mgr.RemoveContext("docs", "/guides").Should().BeTrue();
@@ -149,7 +149,7 @@ public class ConfigManagerTests
     [Fact]
     public void ListAllContexts_IncludesGlobalAndCollection()
     {
-        var mgr = CreateInlineManager();
+        var mgr = this.CreateInlineManager();
         mgr.SetGlobalContext("global");
         mgr.AddCollection("docs", "/docs");
         mgr.AddContext("docs", "/api", "API docs");
@@ -180,7 +180,7 @@ public class ConfigManagerTests
                 }
             }
         };
-        var mgr = CreateInlineManager(config);
+        var mgr = this.CreateInlineManager(config);
 
         mgr.FindContextForPath("docs", "/api/v2/endpoint.md").Should().Be("API v2 context");
         mgr.FindContextForPath("docs", "/api/v1/endpoint.md").Should().Be("API context");
@@ -198,7 +198,7 @@ public class ConfigManagerTests
                 ["docs"] = new Collection { Path = "/docs" }
             }
         };
-        var mgr = CreateInlineManager(config);
+        var mgr = this.CreateInlineManager(config);
         mgr.FindContextForPath("docs", "/any/path").Should().Be("global fallback");
     }
 

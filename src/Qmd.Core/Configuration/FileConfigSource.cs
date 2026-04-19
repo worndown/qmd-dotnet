@@ -34,20 +34,20 @@ public class FileConfigSource : IConfigSource
             useUtf16SurrogatePairs: false));
 
     public string FilePath { get; }
-    public string DisplayPath => FilePath;
-    public bool Exists => File.Exists(FilePath);
+    public string DisplayPath => this.FilePath;
+    public bool Exists => File.Exists(this.FilePath);
 
     public FileConfigSource(string filePath)
     {
-        FilePath = filePath;
+        this.FilePath = filePath;
     }
 
     public CollectionConfig Load()
     {
-        if (!File.Exists(FilePath))
+        if (!File.Exists(this.FilePath))
             return new CollectionConfig();
 
-        var yaml = File.ReadAllText(FilePath);
+        var yaml = File.ReadAllText(this.FilePath);
         if (string.IsNullOrWhiteSpace(yaml))
             return new CollectionConfig();
 
@@ -59,11 +59,11 @@ public class FileConfigSource : IConfigSource
 
     public void Save(CollectionConfig config)
     {
-        var dir = Path.GetDirectoryName(FilePath);
+        var dir = Path.GetDirectoryName(this.FilePath);
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
         var yaml = Serializer.Serialize(config);
-        File.WriteAllText(FilePath, yaml);
+        File.WriteAllText(this.FilePath, yaml);
     }
 }

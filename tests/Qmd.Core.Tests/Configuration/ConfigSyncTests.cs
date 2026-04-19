@@ -8,16 +8,16 @@ namespace Qmd.Core.Tests.Configuration;
 [Trait("Category", "Database")]
 public class ConfigSyncTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly ConfigSyncService _configSync;
+    private readonly IQmdDatabase db;
+    private readonly ConfigSyncService configSync;
 
     public ConfigSyncTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _configSync = new ConfigSyncService(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.configSync = new ConfigSyncService(this.db);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void SyncToDb_InsertsCollections()
@@ -31,9 +31,9 @@ public class ConfigSyncTests : IDisposable
             }
         };
 
-        _configSync.SyncToDb(config);
+        this.configSync.SyncToDb(config);
 
-        var rows = _db.Prepare("SELECT name, path FROM store_collections ORDER BY name")
+        var rows = this.db.Prepare("SELECT name, path FROM store_collections ORDER BY name")
             .All<StoreCollectionRow>();
         rows.Should().HaveCount(2);
         rows[0].Name.Should().Be("docs");
@@ -52,7 +52,7 @@ public class ConfigSyncTests : IDisposable
                 ["b"] = new Collection { Path = "/b" },
             }
         };
-        _configSync.SyncToDb(config1);
+        this.configSync.SyncToDb(config1);
 
         var config2 = new CollectionConfig
         {
@@ -61,9 +61,9 @@ public class ConfigSyncTests : IDisposable
                 ["a"] = new Collection { Path = "/a" },
             }
         };
-        _configSync.SyncToDb(config2);
+        this.configSync.SyncToDb(config2);
 
-        var rows = _db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
+        var rows = this.db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         rows.Should().HaveCount(1);
         rows[0].Name.Should().Be("a");
     }
@@ -72,9 +72,9 @@ public class ConfigSyncTests : IDisposable
     public void SyncToDb_SyncsGlobalContext()
     {
         var config = new CollectionConfig { GlobalContext = "test context" };
-        _configSync.SyncToDb(config);
+        this.configSync.SyncToDb(config);
 
-        var row = _db.Prepare("SELECT value FROM store_config WHERE key = $1")
+        var row = this.db.Prepare("SELECT value FROM store_config WHERE key = $1")
             .Get<SingleValueRow>("global_context");
         row.Should().NotBeNull();
         row!.Value.Should().Be("test context");
@@ -88,12 +88,12 @@ public class ConfigSyncTests : IDisposable
             Collections = new() { ["a"] = new Collection { Path = "/a" } }
         };
 
-        _configSync.SyncToDb(config);
+        this.configSync.SyncToDb(config);
 
         // Second sync should be a no-op (same hash)
-        _configSync.SyncToDb(config);
+        this.configSync.SyncToDb(config);
 
-        var rows = _db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
+        var rows = this.db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         rows.Should().HaveCount(1);
     }
 
@@ -104,15 +104,15 @@ public class ConfigSyncTests : IDisposable
         {
             Collections = new() { ["a"] = new Collection { Path = "/old" } }
         };
-        _configSync.SyncToDb(config1);
+        this.configSync.SyncToDb(config1);
 
         var config2 = new CollectionConfig
         {
             Collections = new() { ["a"] = new Collection { Path = "/new" } }
         };
-        _configSync.SyncToDb(config2);
+        this.configSync.SyncToDb(config2);
 
-        var row = _db.Prepare("SELECT path FROM store_collections WHERE name = $1")
+        var row = this.db.Prepare("SELECT path FROM store_collections WHERE name = $1")
             .Get<SinglePathRow>("a");
         row!.Path.Should().Be("/new");
     }

@@ -5,9 +5,9 @@ namespace Qmd.Core.Database;
 /// </summary>
 internal static class VecExtension
 {
-    private static bool? _isAvailable;
+    private static bool? isAvailable;
 
-    public static bool IsAvailable => _isAvailable == true;
+    public static bool IsAvailable => isAvailable == true;
 
     /// <summary>
     /// Attempt to load sqlite-vec and verify it. Sets IsAvailable flag.
@@ -19,12 +19,12 @@ internal static class VecExtension
         {
             Load(db);
             Verify(db);
-            _isAvailable = true;
+            isAvailable = true;
         }
         catch
         {
             // sqlite-vec not available — vector search disabled, FTS still works
-            _isAvailable = false;
+            isAvailable = false;
         }
     }
 
@@ -122,5 +122,5 @@ internal static class VecExtension
     }
 
     /// <summary>Reset availability flag — for testing only.</summary>
-    public static void ResetForTesting() => _isAvailable = null;
+    public static void ResetForTesting() => isAvailable = null;
 }

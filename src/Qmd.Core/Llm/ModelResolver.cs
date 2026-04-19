@@ -6,15 +6,15 @@ namespace Qmd.Core.Llm;
 /// </summary>
 internal class ModelResolver
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _cacheDir;
+    private readonly HttpClient httpClient;
+    private readonly string cacheDir;
 
     public record HfRef(string Repo, string File);
 
     public ModelResolver(HttpClient? httpClient = null, string? cacheDir = null)
     {
-        _httpClient = httpClient ?? new HttpClient();
-        _cacheDir = cacheDir ?? LlmConstants.GetModelCacheDir();
+        this.httpClient = httpClient ?? new HttpClient();
+        this.cacheDir = cacheDir ?? LlmConstants.GetModelCacheDir();
     }
 
     /// <summary>
@@ -47,9 +47,9 @@ internal class ModelResolver
             throw new FileNotFoundException($"Model file not found: {modelUri}");
         }
 
-        Directory.CreateDirectory(_cacheDir);
+        Directory.CreateDirectory(this.cacheDir);
 
-        var localPath = Path.Combine(_cacheDir, hfRef.File);
+        var localPath = Path.Combine(this.cacheDir, hfRef.File);
         var etagPath = localPath + ".etag";
 
         // Check cache (skip if refresh requested)
@@ -63,7 +63,7 @@ internal class ModelResolver
                     var storedEtag = await File.ReadAllTextAsync(etagPath, ct);
                     var headReq = new HttpRequestMessage(HttpMethod.Head,
                         $"https://huggingface.co/{hfRef.Repo}/resolve/main/{hfRef.File}");
-                    var headResp = await _httpClient.SendAsync(headReq, ct);
+                    var headResp = await this.httpClient.SendAsync(headReq, ct);
                     if (!headResp.IsSuccessStatusCode)
                         return localPath; // Server error — use cached
                     if (headResp.Headers.ETag?.Tag == storedEtag)
@@ -85,7 +85,7 @@ internal class ModelResolver
         var url = $"https://huggingface.co/{hfRef.Repo}/resolve/main/{hfRef.File}";
         progress?.Report($"Downloading model: {modelUri}...");
 
-        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        using var response = await this.httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
         // Save etag if provided

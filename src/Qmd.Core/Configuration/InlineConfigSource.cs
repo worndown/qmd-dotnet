@@ -5,22 +5,22 @@ namespace Qmd.Core.Configuration;
 /// </summary>
 public class InlineConfigSource : IConfigSource
 {
-    private CollectionConfig _config;
+    private CollectionConfig config;
 
     public string DisplayPath => "<inline>";
     public bool Exists => true;
 
     public InlineConfigSource(CollectionConfig? config = null)
     {
-        _config = config ?? new CollectionConfig();
-        _config.Collections ??= new Dictionary<string, Collection>();
+        this.config = config ?? new CollectionConfig();
+        this.config.Collections ??= new Dictionary<string, Collection>();
     }
 
-    public CollectionConfig Load() => _config;
+    public CollectionConfig Load() => this.config;
 
     public void Save(CollectionConfig config)
     {
-        _config = config;
-        _config.Collections ??= new Dictionary<string, Collection>();
+        this.config = config;
+        this.config.Collections ??= new Dictionary<string, Collection>();
     }
 }

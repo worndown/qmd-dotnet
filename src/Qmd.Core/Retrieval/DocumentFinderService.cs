@@ -12,15 +12,15 @@ internal class DocumentFinderService : IDocumentFinderService
 {
     private static readonly Regex ColonLineRegex = new(@":(\d+)$", RegexOptions.Compiled);
 
-    private readonly IQmdDatabase _db;
-    private readonly IFuzzyMatcherService _fuzzyMatcher;
-    private readonly IContextResolverService _contextResolver;
+    private readonly IQmdDatabase db;
+    private readonly IFuzzyMatcherService fuzzyMatcher;
+    private readonly IContextResolverService contextResolver;
 
     public DocumentFinderService(IQmdDatabase db, IFuzzyMatcherService fuzzyMatcher, IContextResolverService contextResolver)
     {
-        _db = db;
-        _fuzzyMatcher = fuzzyMatcher;
-        _contextResolver = contextResolver;
+        this.db = db;
+        this.fuzzyMatcher = fuzzyMatcher;
+        this.contextResolver = contextResolver;
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ internal class DocumentFinderService : IDocumentFinderService
         // DocId lookup (#abc123, abc123, etc.)
         if (DocidUtils.IsDocid(filepath))
         {
-            var docidMatch = FindDocumentByDocid(filepath);
+            var docidMatch = this.FindDocumentByDocid(filepath);
             if (docidMatch != null)
                 filepath = docidMatch.Value.Filepath;
             else
@@ -53,7 +53,7 @@ internal class DocumentFinderService : IDocumentFinderService
         var bodyCol = includeBody ? ", content.doc as body" : "";
 
         // Try virtual path exact match
-        var doc = _db.Prepare($@"
+        var doc = this.db.Prepare($@"
             SELECT 'qmd://' || d.collection || '/' || d.path as virtual_path,
                    d.collection || '/' || d.path as display_path,
                    d.title, d.hash, d.collection, d.modified_at,
@@ -66,7 +66,7 @@ internal class DocumentFinderService : IDocumentFinderService
         // Try fuzzy match by virtual path
         if (doc == null)
         {
-            doc = _db.Prepare($@"
+            doc = this.db.Prepare($@"
                 SELECT 'qmd://' || d.collection || '/' || d.path as virtual_path,
                        d.collection || '/' || d.path as display_path,
                        d.title, d.hash, d.collection, d.modified_at,
@@ -81,7 +81,7 @@ internal class DocumentFinderService : IDocumentFinderService
         // Try absolute/relative path via collections
         if (doc == null && !filepath.StartsWith("qmd://"))
         {
-            var collections = _db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
+            var collections = this.db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
             foreach (var coll in collections)
             {
                 var collName = coll.Name;
@@ -95,7 +95,7 @@ internal class DocumentFinderService : IDocumentFinderService
 
                 if (relativePath != null)
                 {
-                    doc = _db.Prepare($@"
+                    doc = this.db.Prepare($@"
                         SELECT 'qmd://' || d.collection || '/' || d.path as virtual_path,
                                d.collection || '/' || d.path as display_path,
                                d.title, d.hash, d.collection, d.modified_at,
@@ -111,7 +111,7 @@ internal class DocumentFinderService : IDocumentFinderService
 
         if (doc == null)
         {
-            var similar = _fuzzyMatcher.FindSimilarFiles(filepath, 5, similarFilesLimit);
+            var similar = this.fuzzyMatcher.FindSimilarFiles(filepath, 5, similarFilesLimit);
             return FindDocumentResult.Missing(filename, similar);
         }
 
@@ -128,7 +128,7 @@ internal class DocumentFinderService : IDocumentFinderService
             ModifiedAt = doc.ModifiedAt,
             BodyLength = doc.BodyLength,
             Body = includeBody ? doc.Body : null,
-            Context = _contextResolver.GetContextForFile(virtualPath),
+            Context = this.contextResolver.GetContextForFile(virtualPath),
         };
 
         return FindDocumentResult.Found(result);
@@ -144,7 +144,7 @@ internal class DocumentFinderService : IDocumentFinderService
         // Try virtual path
         if (filepath.StartsWith("qmd://"))
         {
-            row = _db.Prepare(@"
+            row = this.db.Prepare(@"
                 SELECT content.doc as body
                 FROM documents d
                 JOIN content ON content.hash = d.hash
@@ -155,14 +155,14 @@ internal class DocumentFinderService : IDocumentFinderService
         // Try absolute path via collections
         if (row == null)
         {
-            var collections = _db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
+            var collections = this.db.Prepare("SELECT name, path FROM store_collections").All<StoreCollectionRow>();
             foreach (var coll in collections)
             {
                 var collPath = coll.Path ?? "";
                 if (filepath.StartsWith(collPath + "/"))
                 {
                     var relativePath = filepath[(collPath.Length + 1)..];
-                    row = _db.Prepare(@"
+                    row = this.db.Prepare(@"
                         SELECT content.doc as body
                         FROM documents d
                         JOIN content ON content.hash = d.hash
@@ -192,7 +192,7 @@ internal class DocumentFinderService : IDocumentFinderService
         var normalized = DocidUtils.Normalize(docid);
         if (normalized.Length < 1) return null;
 
-        var row = _db.Prepare(@"
+        var row = this.db.Prepare(@"
             SELECT 'qmd://' || d.collection || '/' || d.path as filepath, d.hash
             FROM documents d
             WHERE d.hash LIKE $1 AND d.active = 1

@@ -7,14 +7,14 @@ namespace Qmd.Core.Tests.Database;
 [Trait("Category", "Database")]
 public class SchemaInitializerTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public SchemaInitializerTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
+        this.db = TestDbHelper.CreateInMemoryDb();
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Theory]
     [InlineData("content")]
@@ -26,7 +26,7 @@ public class SchemaInitializerTests : IDisposable
     [InlineData("documents_fts")]
     public void Initialize_CreatesAllTables(string tableName)
     {
-        var row = _db.Prepare(
+        var row = this.db.Prepare(
             "SELECT name FROM sqlite_master WHERE type IN ('table', 'virtual table') AND name = $1")
             .Get<SqliteMasterRow>(tableName);
         row.Should().NotBeNull($"table '{tableName}' should exist");
@@ -38,7 +38,7 @@ public class SchemaInitializerTests : IDisposable
     [InlineData("idx_documents_path")]
     public void Initialize_CreatesAllIndexes(string indexName)
     {
-        var row = _db.Prepare(
+        var row = this.db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='index' AND name = $1")
             .Get<SqliteMasterRow>(indexName);
         row.Should().NotBeNull($"index '{indexName}' should exist");
@@ -50,7 +50,7 @@ public class SchemaInitializerTests : IDisposable
     [InlineData("documents_au")]
     public void Initialize_CreatesAllTriggers(string triggerName)
     {
-        var row = _db.Prepare(
+        var row = this.db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='trigger' AND name = $1")
             .Get<SqliteMasterRow>(triggerName);
         row.Should().NotBeNull($"trigger '{triggerName}' should exist");
@@ -59,7 +59,7 @@ public class SchemaInitializerTests : IDisposable
     [Fact]
     public void Initialize_WalModeEnabled()
     {
-        var row = _db.Prepare("PRAGMA journal_mode").Get<JournalModeRow>();
+        var row = this.db.Prepare("PRAGMA journal_mode").Get<JournalModeRow>();
         row.Should().NotBeNull();
         // In-memory databases use "memory" mode, not WAL
         // WAL is set but SQLite may report "memory" for in-memory DBs
@@ -68,10 +68,10 @@ public class SchemaInitializerTests : IDisposable
     [Fact]
     public void Initialize_CanInsertAndRetrieveContent()
     {
-        _db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
+        this.db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
             .Run("abc123", "Hello world", "2025-01-01");
 
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
+        var row = this.db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
         row.Should().NotBeNull();
         row!.Doc.Should().Be("Hello world");
     }
@@ -79,14 +79,14 @@ public class SchemaInitializerTests : IDisposable
     [Fact]
     public void Initialize_CanInsertDocumentWithForeignKey()
     {
-        _db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
+        this.db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
             .Run("hash1", "Content", "2025-01-01");
 
-        _db.Prepare(@"INSERT INTO documents (collection, path, title, hash, created_at, modified_at)
+        this.db.Prepare(@"INSERT INTO documents (collection, path, title, hash, created_at, modified_at)
             VALUES ($1, $2, $3, $4, $5, $6)")
             .Run("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
 
-        var row = _db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
+        var row = this.db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
             .Get<TitleRow>("docs", "readme.md");
         row.Should().NotBeNull();
         row!.Title.Should().Be("README");
@@ -95,15 +95,15 @@ public class SchemaInitializerTests : IDisposable
     [Fact]
     public void Initialize_FtsTriggerSyncsOnInsert()
     {
-        _db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
+        this.db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
             .Run("hash1", "This is searchable content", "2025-01-01");
 
-        _db.Prepare(@"INSERT INTO documents (collection, path, title, hash, created_at, modified_at, active)
+        this.db.Prepare(@"INSERT INTO documents (collection, path, title, hash, created_at, modified_at, active)
             VALUES ($1, $2, $3, $4, $5, $6, $7)")
             .Run("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01", 1L);
 
         // FTS should have the document
-        var ftsRow = _db.Prepare("SELECT filepath, title FROM documents_fts WHERE documents_fts MATCH $1")
+        var ftsRow = this.db.Prepare("SELECT filepath, title FROM documents_fts WHERE documents_fts MATCH $1")
             .Get<FtsFilepathTitleRow>("searchable");
         ftsRow.Should().NotBeNull();
         ftsRow!.Filepath.Should().Be("docs/readme.md");
@@ -114,9 +114,9 @@ public class SchemaInitializerTests : IDisposable
     public void Initialize_IsIdempotent()
     {
         // Running Initialize twice should not throw
-        SchemaInitializer.Initialize(_db);
+        SchemaInitializer.Initialize(this.db);
 
-        var tables = _db.Prepare(
+        var tables = this.db.Prepare(
             "SELECT count(*) as cnt FROM sqlite_master WHERE type IN ('table', 'virtual table')")
             .Get<CountRow>();
         tables.Should().NotBeNull();

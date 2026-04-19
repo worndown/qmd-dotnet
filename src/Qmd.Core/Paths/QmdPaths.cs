@@ -9,7 +9,7 @@ namespace Qmd.Core.Paths;
 /// </summary>
 public static class QmdPaths
 {
-    private static bool _productionMode;
+    private static bool productionMode;
 
     public static string HomeDir()
     {
@@ -246,7 +246,7 @@ public static class QmdPaths
         if (!string.IsNullOrEmpty(envPath))
             return envPath;
 
-        if (!_productionMode)
+        if (!productionMode)
         {
             throw new InvalidOperationException(
                 "Database path not set. Tests must set INDEX_PATH env var or use createStore() with explicit path. " +
@@ -256,8 +256,8 @@ public static class QmdPaths
         return GetCacheDir() + $"/{indexName}.sqlite";
     }
 
-    public static void EnableProductionMode() => _productionMode = true;
+    public static void EnableProductionMode() => productionMode = true;
 
     /// <summary>Reset production mode — only for testing.</summary>
-    public static void ResetProductionModeForTesting() => _productionMode = false;
+    public static void ResetProductionModeForTesting() => productionMode = false;
 }

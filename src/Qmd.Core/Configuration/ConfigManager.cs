@@ -9,12 +9,12 @@ public class ConfigManager
 {
     private static readonly Regex ValidNameRegex = new(@"^[a-zA-Z0-9_-]+$", RegexOptions.Compiled);
 
-    private IConfigSource _source;
-    private string _indexName = "index";
+    private IConfigSource source;
+    private string indexName = "index";
 
     public ConfigManager(IConfigSource? source = null)
     {
-        _source = source ?? new FileConfigSource(GetDefaultConfigFilePath());
+        this.source = source ?? new FileConfigSource(GetDefaultConfigFilePath());
     }
 
     // =========================================================================
@@ -27,20 +27,20 @@ public class ConfigManager
         {
             // Resolve relative paths to absolute, replace separators with _, strip leading _ 
             var resolved = Path.GetFullPath(name);
-            _indexName = resolved
+            this.indexName = resolved
                 .Replace("/", "_")
                 .Replace("\\", "_")
                 .TrimStart('_');
         }
         else
         {
-            _indexName = name;
+            this.indexName = name;
         }
 
-        if (_source is FileConfigSource)
+        if (this.source is FileConfigSource)
         {
-            var newPath = Path.Combine(GetConfigDir(), $"{_indexName}.yml");
-            _source = new FileConfigSource(newPath);
+            var newPath = Path.Combine(GetConfigDir(), $"{this.indexName}.yml");
+            this.source = new FileConfigSource(newPath);
         }
     }
 
@@ -63,22 +63,22 @@ public class ConfigManager
 
     public string GetConfigFilePath()
     {
-        if (_source is FileConfigSource fcs) return fcs.FilePath;
-        return Path.Combine(GetConfigDir(), $"{_indexName}.yml");
+        if (this.source is FileConfigSource fcs) return fcs.FilePath;
+        return Path.Combine(GetConfigDir(), $"{this.indexName}.yml");
     }
 
-    public string GetConfigPath() => _source.DisplayPath;
-    public bool ConfigExists() => _source.Exists;
+    public string GetConfigPath() => this.source.DisplayPath;
+    public bool ConfigExists() => this.source.Exists;
 
-    public void SetConfigSource(IConfigSource source) => _source = source;
+    public void SetConfigSource(IConfigSource source) => this.source = source;
 
     // =========================================================================
     // Core I/O
     // =========================================================================
 
-    public CollectionConfig LoadConfig() => _source.Load();
+    public CollectionConfig LoadConfig() => this.source.Load();
 
-    public void SaveConfig(CollectionConfig config) => _source.Save(config);
+    public void SaveConfig(CollectionConfig config) => this.source.Save(config);
 
     // =========================================================================
     // Collection operations
@@ -86,30 +86,30 @@ public class ConfigManager
 
     public NamedCollection? GetCollection(string name)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(name, out var coll)) return null;
         return ToNamed(name, coll);
     }
 
     public List<NamedCollection> ListCollections()
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         return config.Collections.Select(kv => ToNamed(kv.Key, kv.Value)).ToList();
     }
 
     public List<NamedCollection> GetDefaultCollections()
     {
-        return ListCollections().Where(c => c.IncludeByDefault != false).ToList();
+        return this.ListCollections().Where(c => c.IncludeByDefault != false).ToList();
     }
 
     public List<string> GetDefaultCollectionNames()
     {
-        return GetDefaultCollections().Select(c => c.Name).ToList();
+        return this.GetDefaultCollections().Select(c => c.Name).ToList();
     }
 
     public void AddCollection(string name, string path, string pattern = "**/*.md")
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (config.Collections.TryGetValue(name, out var existing))
         {
             existing.Path = path;
@@ -119,27 +119,28 @@ public class ConfigManager
         {
             config.Collections[name] = new Collection { Path = path, Pattern = pattern };
         }
-        SaveConfig(config);
+
+        this.SaveConfig(config);
     }
 
     public bool RemoveCollection(string name)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.Remove(name)) return false;
-        SaveConfig(config);
+        this.SaveConfig(config);
         return true;
     }
 
     public bool RenameCollection(string oldName, string newName)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(oldName, out var coll)) return false;
         if (config.Collections.ContainsKey(newName))
             throw new QmdException($"Collection '{newName}' already exists");
 
         config.Collections[newName] = coll;
         config.Collections.Remove(oldName);
-        SaveConfig(config);
+        this.SaveConfig(config);
         return true;
     }
 
@@ -149,7 +150,7 @@ public class ConfigManager
     /// </summary>
     public bool UpdateCollectionSettings(string name, string? update = null, bool? includeByDefault = null, bool clearUpdate = false)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(name, out var coll)) return false;
 
         if (clearUpdate)
@@ -160,7 +161,7 @@ public class ConfigManager
         if (includeByDefault.HasValue)
             coll.IncludeByDefault = includeByDefault.Value;
 
-        SaveConfig(config);
+        this.SaveConfig(config);
         return true;
     }
 
@@ -170,46 +171,46 @@ public class ConfigManager
 
     public string? GetGlobalContext()
     {
-        return LoadConfig().GlobalContext;
+        return this.LoadConfig().GlobalContext;
     }
 
     public void SetGlobalContext(string? context)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         config.GlobalContext = context;
-        SaveConfig(config);
+        this.SaveConfig(config);
     }
 
     public Dictionary<string, string>? GetContexts(string collectionName)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(collectionName, out var coll)) return null;
         return coll.Context;
     }
 
     public bool AddContext(string collectionName, string pathPrefix, string contextText)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(collectionName, out var coll)) return false;
         coll.Context ??= new Dictionary<string, string>();
         coll.Context[pathPrefix] = contextText;
-        SaveConfig(config);
+        this.SaveConfig(config);
         return true;
     }
 
     public bool RemoveContext(string collectionName, string pathPrefix)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(collectionName, out var coll)) return false;
         if (coll.Context == null || !coll.Context.Remove(pathPrefix)) return false;
         if (coll.Context.Count == 0) coll.Context = null;
-        SaveConfig(config);
+        this.SaveConfig(config);
         return true;
     }
 
     public List<(string Collection, string Path, string Context)> ListAllContexts()
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         var results = new List<(string, string, string)>();
 
         if (!string.IsNullOrEmpty(config.GlobalContext))
@@ -227,7 +228,7 @@ public class ConfigManager
 
     public string? FindContextForPath(string collectionName, string filePath)
     {
-        var config = LoadConfig();
+        var config = this.LoadConfig();
         if (!config.Collections.TryGetValue(collectionName, out var coll))
             return config.GlobalContext;
 

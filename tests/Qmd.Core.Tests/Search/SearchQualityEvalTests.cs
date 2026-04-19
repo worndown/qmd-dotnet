@@ -14,44 +14,44 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class SearchQualityEvalTests : IDisposable
 {
-    private readonly QmdStore _store;
+    private readonly QmdStore store;
 
     public SearchQualityEvalTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
-        SeedEvalDocuments();
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.SeedEvalDocuments();
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     private void SeedDoc(string collection, string path, string title, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        _store.DocumentRepo.InsertContent(hash, content, "2025-01-01");
-        _store.DocumentRepo.InsertDocument(collection, path, title, hash, "2025-01-01", "2025-01-01");
+        this.store.DocumentRepo.InsertContent(hash, content, "2025-01-01");
+        this.store.DocumentRepo.InsertDocument(collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 
     private void SeedEvalDocuments()
     {
-        SeedDoc("docs", "api-design.md", "API Design Principles",
+        this.SeedDoc("docs", "api-design.md", "API Design Principles",
             "REST API design best practices including resource naming, HTTP methods, status codes, pagination, and error handling. " +
             "Use nouns for resources, not verbs. Prefer plural names. Use HTTP status codes correctly: 200 OK, 201 Created, 404 Not Found.");
 
-        SeedDoc("docs", "distributed-systems.md", "Distributed Systems Architecture",
+        this.SeedDoc("docs", "distributed-systems.md", "Distributed Systems Architecture",
             "Consensus algorithms including Raft and Paxos for distributed state machines. " +
             "CAP theorem: choose between consistency, availability, and partition tolerance. " +
             "Event sourcing and CQRS patterns for microservices.");
 
-        SeedDoc("docs", "fundraising.md", "Fundraising Strategy",
+        this.SeedDoc("docs", "fundraising.md", "Fundraising Strategy",
             "Series A fundraising checklist: pitch deck, financial model, cap table, due diligence documents. " +
             "Investor outreach strategies and term sheet negotiation. Valuation methods including DCF and comparable analysis.");
 
-        SeedDoc("docs", "ml-deployment.md", "Machine Learning Deployment",
+        this.SeedDoc("docs", "ml-deployment.md", "Machine Learning Deployment",
             "MLOps pipeline: model training, evaluation, versioning, deployment. " +
             "Feature stores, model registries, A/B testing for ML models. " +
             "GPU inference optimization and model compression techniques.");
 
-        SeedDoc("docs", "security-auth.md", "Authentication & Authorization",
+        this.SeedDoc("docs", "security-auth.md", "Authentication & Authorization",
             "OAuth2 authorization code flow with PKCE. JWT token structure: header, payload, signature. " +
             "Role-based access control (RBAC) and attribute-based access control (ABAC). " +
             "Multi-factor authentication (MFA) implementation.");
@@ -60,7 +60,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_ApiDesign()
     {
-        var results = _store.FtsSearch.Search( "REST API design");
+        var results = this.store.FtsSearch.Search( "REST API design");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("api-design");
     }
@@ -68,7 +68,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_OAuth()
     {
-        var results = _store.FtsSearch.Search( "OAuth2 JWT authentication");
+        var results = this.store.FtsSearch.Search( "OAuth2 JWT authentication");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("security-auth");
     }
@@ -76,7 +76,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_ExactKeyword_Fundraising()
     {
-        var results = _store.FtsSearch.Search( "Series A fundraising pitch deck");
+        var results = this.store.FtsSearch.Search( "Series A fundraising pitch deck");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("fundraising");
     }
@@ -84,7 +84,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Medium_ConsensusAlgorithms()
     {
-        var results = _store.FtsSearch.Search( "Raft Paxos consensus");
+        var results = this.store.FtsSearch.Search( "Raft Paxos consensus");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("distributed");
     }
@@ -92,7 +92,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Medium_ModelDeployment()
     {
-        var results = _store.FtsSearch.Search( "MLOps model deployment GPU");
+        var results = this.store.FtsSearch.Search( "MLOps model deployment GPU");
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("ml-deployment");
     }
@@ -100,7 +100,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Scores_Normalized_0_to_1()
     {
-        var results = _store.FtsSearch.Search( "API");
+        var results = this.store.FtsSearch.Search( "API");
         results.Should().NotBeEmpty();
         foreach (var r in results)
         {
@@ -112,7 +112,7 @@ public class SearchQualityEvalTests : IDisposable
     [Fact]
     public void BM25_Scores_OrderedDescending()
     {
-        var results = _store.FtsSearch.Search( "deployment");
+        var results = this.store.FtsSearch.Search( "deployment");
         if (results.Count > 1)
         {
             for (int i = 1; i < results.Count; i++)
@@ -129,7 +129,7 @@ public class SearchQualityEvalTests : IDisposable
 [Trait("Category", "Database")]
 public class Bm25HitRateEvalTests : IDisposable
 {
-    private readonly QmdStore _store;
+    private readonly QmdStore store;
 
     private record EvalQuery(string Query, string ExpectedDoc, string Difficulty);
 
@@ -170,7 +170,7 @@ public class Bm25HitRateEvalTests : IDisposable
 
     public Bm25HitRateEvalTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
 
         // Locate eval-docs directory relative to the test assembly output
         var assemblyDir = Path.GetDirectoryName(typeof(Bm25HitRateEvalTests).Assembly.Location)!;
@@ -189,12 +189,12 @@ public class Bm25HitRateEvalTests : IDisposable
                 SHA256.HashData(Encoding.UTF8.GetBytes(content)))[..12].ToLowerInvariant();
             var now = DateTime.UtcNow.ToString("o");
 
-            _store.DocumentRepo.InsertContent(hash, content, now);
-            _store.DocumentRepo.InsertDocument("eval-docs", fileName, title, hash, now, now);
+            this.store.DocumentRepo.InsertContent(hash, content, now);
+            this.store.DocumentRepo.InsertDocument("eval-docs", fileName, title, hash, now, now);
         }
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     private static bool MatchesExpected(string filepath, string expectedDoc)
         => filepath.ToLowerInvariant().Contains(expectedDoc);
@@ -205,7 +205,7 @@ public class Bm25HitRateEvalTests : IDisposable
         int hits = 0;
         foreach (var eq in queryList)
         {
-            var results = _store.FtsSearch.Search( eq.Query, 5);
+            var results = this.store.FtsSearch.Search( eq.Query, 5);
             if (results.Take(topK).Any(r => MatchesExpected(r.Filepath, eq.ExpectedDoc)))
                 hits++;
         }
@@ -217,7 +217,7 @@ public class Bm25HitRateEvalTests : IDisposable
     {
         // Easy queries should achieve ≥80% Hit@3
         var easyQueries = EvalQueries.Where(q => q.Difficulty == "easy");
-        var hitRate = CalcHitRate(easyQueries, 3);
+        var hitRate = this.CalcHitRate(easyQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.8,
             $"easy queries should have ≥80% hit rate @3, got {hitRate:P0}");
     }
@@ -227,7 +227,7 @@ public class Bm25HitRateEvalTests : IDisposable
     {
         // Medium queries should achieve ≥15% Hit@3 (BM25 struggles with semantic queries)
         var mediumQueries = EvalQueries.Where(q => q.Difficulty == "medium");
-        var hitRate = CalcHitRate(mediumQueries, 3);
+        var hitRate = this.CalcHitRate(mediumQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
             $"medium queries should have ≥15% hit rate @3, got {hitRate:P0}");
     }
@@ -237,7 +237,7 @@ public class Bm25HitRateEvalTests : IDisposable
     {
         // Hard queries should achieve ≥15% Hit@5 (BM25 baseline)
         var hardQueries = EvalQueries.Where(q => q.Difficulty == "hard");
-        var hitRate = CalcHitRate(hardQueries, 5);
+        var hitRate = this.CalcHitRate(hardQueries, 5);
         hitRate.Should().BeGreaterThanOrEqualTo(0.15,
             $"hard queries should have ≥15% hit rate @5, got {hitRate:P0}");
     }
@@ -246,7 +246,7 @@ public class Bm25HitRateEvalTests : IDisposable
     public void OverallHitRate_AtLeast40Percent_At3()
     {
         // Overall Hit@3 should be ≥40% (BM25 baseline)
-        var hitRate = CalcHitRate(EvalQueries, 3);
+        var hitRate = this.CalcHitRate(EvalQueries, 3);
         hitRate.Should().BeGreaterThanOrEqualTo(0.4,
             $"overall hit rate should be ≥40% @3, got {hitRate:P0}");
     }

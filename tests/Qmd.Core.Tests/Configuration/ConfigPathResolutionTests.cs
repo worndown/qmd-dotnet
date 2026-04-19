@@ -6,19 +6,19 @@ namespace Qmd.Core.Tests.Configuration;
 [Trait("Category", "Unit")]
 public class ConfigPathResolutionTests : IDisposable
 {
-    private readonly string? _originalConfigDir;
-    private readonly string? _originalXdgConfigHome;
+    private readonly string? originalConfigDir;
+    private readonly string? originalXdgConfigHome;
 
     public ConfigPathResolutionTests()
     {
-        _originalConfigDir = Environment.GetEnvironmentVariable("QMD_CONFIG_DIR");
-        _originalXdgConfigHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+        this.originalConfigDir = Environment.GetEnvironmentVariable("QMD_CONFIG_DIR");
+        this.originalXdgConfigHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
     }
 
     public void Dispose()
     {
-        Environment.SetEnvironmentVariable("QMD_CONFIG_DIR", _originalConfigDir);
-        Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", _originalXdgConfigHome);
+        Environment.SetEnvironmentVariable("QMD_CONFIG_DIR", this.originalConfigDir);
+        Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", this.originalXdgConfigHome);
     }
 
     [Fact]

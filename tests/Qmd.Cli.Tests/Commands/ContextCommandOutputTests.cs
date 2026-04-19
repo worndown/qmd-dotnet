@@ -9,16 +9,16 @@ namespace Qmd.Cli.Tests.Commands;
 [Trait("Category", "Unit")]
 public class ContextCommandOutputTests : IDisposable
 {
-    private readonly TestConsoleOutput _console = new();
-    private readonly IConsoleOutput _original;
+    private readonly TestConsoleOutput console = new();
+    private readonly IConsoleOutput original;
 
     public ContextCommandOutputTests()
     {
-        _original = CliContext.Console;
-        CliContext.Console = _console;
+        this.original = CliContext.Console;
+        CliContext.Console = this.console;
     }
 
-    public void Dispose() => CliContext.Console = _original;
+    public void Dispose() => CliContext.Console = this.original;
 
     private static async Task<IQmdStore> CreateStoreWithCollection()
     {
@@ -39,8 +39,8 @@ public class ContextCommandOutputTests : IDisposable
 
         await ContextCommand.HandleAddAsync(store, "/", "Global system context");
 
-        _console.GetOutput().Should().Contain("Global context set: Global system context");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Global context set: Global system context");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class ContextCommandOutputTests : IDisposable
 
         await ContextCommand.HandleAddAsync(store, "qmd://docs/notes", "Meeting notes folder");
 
-        _console.GetOutput().Should().Contain("Context added to docs:notes");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Context added to docs:notes");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class ContextCommandOutputTests : IDisposable
         await ContextCommand.HandleAddAsync(store, "/", "Some context");
 
         // Global "/" still hits collections check first
-        _console.GetError().Should().Contain("No collections found.");
+        this.console.GetError().Should().Contain("No collections found.");
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public class ContextCommandOutputTests : IDisposable
     {
         await using var store = await CreateStoreWithCollection();
         await store.SetGlobalContextAsync("to be removed");
-        _console.Clear();
+        this.console.Clear();
 
         await ContextCommand.HandleRemoveAsync(store, "/");
 
-        _console.GetOutput().Should().Contain("Global context removed.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Global context removed.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -84,12 +84,12 @@ public class ContextCommandOutputTests : IDisposable
         await using var store = await CreateStoreWithCollection();
         // VirtualPaths.Parse("qmd://docs/notes") yields path "notes" (no leading slash)
         await store.AddContextAsync("docs", "notes", "Context to remove");
-        _console.Clear();
+        this.console.Clear();
 
         await ContextCommand.HandleRemoveAsync(store, "qmd://docs/notes");
 
-        _console.GetOutput().Should().Contain("Context removed.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Context removed.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class ContextCommandOutputTests : IDisposable
 
         await ContextCommand.HandleRemoveAsync(store, "qmd://docs/nonexistent");
 
-        _console.GetOutput().Should().Contain("Context not found.");
+        this.console.GetOutput().Should().Contain("Context not found.");
     }
 
     [Fact]
@@ -109,6 +109,6 @@ public class ContextCommandOutputTests : IDisposable
 
         await ContextCommand.HandleRemoveAsync(store, "qmd://docs/path");
 
-        _console.GetError().Should().Contain("No collections found.");
+        this.console.GetError().Should().Contain("No collections found.");
     }
 }

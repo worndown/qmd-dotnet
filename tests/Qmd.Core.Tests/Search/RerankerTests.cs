@@ -11,18 +11,18 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class RerankerTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly MockLlmService _llm;
-    private readonly RerankerService _reranker;
+    private readonly IQmdDatabase db;
+    private readonly MockLlmService llm;
+    private readonly RerankerService reranker;
 
     public RerankerTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _llm = new MockLlmService();
-        _reranker = new RerankerService(_db, _llm);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.llm = new MockLlmService();
+        this.reranker = new RerankerService(this.db, this.llm);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public async Task Rerank_ReturnsScores()
@@ -32,14 +32,14 @@ public class RerankerTests : IDisposable
             new("file1.md", "Content about APIs"),
             new("file2.md", "Content about databases"),
         };
-        var results = await _reranker.RerankAsync("API", docs);
+        var results = await this.reranker.RerankAsync("API", docs);
         results.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Rerank_EmptyDocs_ReturnsEmpty()
     {
-        var results = await _reranker.RerankAsync("query", []);
+        var results = await this.reranker.RerankAsync("query", []);
         results.Should().BeEmpty();
     }
 
@@ -51,7 +51,7 @@ public class RerankerTests : IDisposable
             new("a.md", "Content A"),
             new("b.md", "Content B"),
         };
-        var results = await _reranker.RerankAsync("query", docs);
+        var results = await this.reranker.RerankAsync("query", docs);
         results.Should().HaveCount(2);
         results.Should().AllSatisfy(r => r.File.Should().NotBeNullOrEmpty());
     }
@@ -60,7 +60,7 @@ public class RerankerTests : IDisposable
     public async Task Rerank_CachesResults()
     {
         var scoringLlm = new ScoringMockLlmService();
-        var reranker = new RerankerService(_db, scoringLlm);
+        var reranker = new RerankerService(this.db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("doc1.md", "Content for caching test"),
@@ -79,7 +79,7 @@ public class RerankerTests : IDisposable
     public async Task Rerank_DeduplicatesIdenticalChunksAcrossFiles()
     {
         var scoringLlm = new ScoringMockLlmService();
-        var reranker = new RerankerService(_db, scoringLlm);
+        var reranker = new RerankerService(this.db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("doc1.md", "Shared chunk text"),
@@ -97,7 +97,7 @@ public class RerankerTests : IDisposable
     public async Task Rerank_DedupMapsScoreBackToAllDuplicateFiles()
     {
         var scoringLlm = new ScoringMockLlmService();
-        var reranker = new RerankerService(_db, scoringLlm);
+        var reranker = new RerankerService(this.db, scoringLlm);
         var docs = new List<RerankDocument>
         {
             new("a.md", "shared chunk"),
@@ -123,8 +123,8 @@ public class RerankerTests : IDisposable
         public Task<RerankResult> RerankAsync(string query, List<RerankDocument> documents,
             RerankOptions? options = null, CancellationToken ct = default)
         {
-            RerankCallCount++;
-            LastRerankDocCount = documents.Count;
+            this.RerankCallCount++;
+            this.LastRerankDocCount = documents.Count;
             var results = documents.Select((doc, index) => new RerankDocumentResult(
                 doc.File, 1.0 - index * 0.1, index)).ToList();
             return Task.FromResult(new RerankResult(results, "mock-scorer"));

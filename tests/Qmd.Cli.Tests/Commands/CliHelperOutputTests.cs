@@ -8,24 +8,24 @@ namespace Qmd.Cli.Tests.Commands;
 [Trait("Category", "Unit")]
 public class CliHelperOutputTests : IDisposable
 {
-    private readonly TestConsoleOutput _console = new();
-    private readonly IConsoleOutput _original;
+    private readonly TestConsoleOutput console = new();
+    private readonly IConsoleOutput original;
 
     public CliHelperOutputTests()
     {
-        _original = CliContext.Console;
-        CliContext.Console = _console;
+        this.original = CliContext.Console;
+        CliContext.Console = this.console;
     }
 
-    public void Dispose() => CliContext.Console = _original;
+    public void Dispose() => CliContext.Console = this.original;
 
     [Fact]
     public void PrintEmpty_Json_WritesEmptyArray()
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Json);
 
-        _console.GetOutput().Should().Be("[]");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Be("[]");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -33,8 +33,8 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Csv);
 
-        _console.GetOutput().Should().Be("docid,score,file,title,context,line,snippet");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Be("docid,score,file,title,context,line,snippet");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -42,8 +42,8 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Xml);
 
-        _console.GetOutput().Should().Be("<results></results>");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Be("<results></results>");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -51,8 +51,8 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Cli);
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("No results found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("No results found.");
     }
 
     [Fact]
@@ -60,8 +60,8 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Cli, "No results above --min-score 0.5.");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("No results above --min-score 0.5.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("No results above --min-score 0.5.");
     }
 
     [Fact]
@@ -69,8 +69,8 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Md);
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class CliHelperOutputTests : IDisposable
     {
         CliHelper.PrintEmptySearchResults(OutputFormat.Files);
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().BeEmpty();
     }
 }

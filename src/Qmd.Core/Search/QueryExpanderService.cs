@@ -13,13 +13,13 @@ namespace Qmd.Core.Search;
 /// </summary>
 internal class QueryExpanderService : IQueryExpanderService
 {
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService _llmService;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService llmService;
 
     public QueryExpanderService(IQmdDatabase db, ILlmService llmService)
     {
-        _db = db;
-        _llmService = llmService;
+        this.db = db;
+        this.llmService = llmService;
     }
 
     public async Task<List<ExpandedQuery>> ExpandQueryAsync(
@@ -32,7 +32,7 @@ internal class QueryExpanderService : IQueryExpanderService
 
         // Check cache
         var cacheKey = ComputeCacheKey(query, model, intent);
-        var cached = _db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+        var cached = this.db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
         if (cached?.Value is string cachedJson)
         {
             var parsed = ParseCachedResult(cachedJson, query);
@@ -45,7 +45,7 @@ internal class QueryExpanderService : IQueryExpanderService
             Context = intent,
             IncludeLexical = true,
         };
-        var results = await _llmService.ExpandQueryAsync(query, expandOptions, ct);
+        var results = await this.llmService.ExpandQueryAsync(query, expandOptions, ct);
 
         // Filter duplicates of original query
         var filtered = results
@@ -58,7 +58,7 @@ internal class QueryExpanderService : IQueryExpanderService
         {
             var json = JsonSerializer.Serialize(filtered.Select(r => new { type = r.Type, query = r.Query }));
             var now = DateTime.UtcNow.ToString("o");
-            _db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
+            this.db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
                 .Run(cacheKey, json, now);
         }
 

@@ -15,13 +15,13 @@ internal class CollectionReindexerService : ICollectionReindexerService
 {
     private static readonly string[] ExcludeDirs = ["node_modules", ".git", ".cache", "vendor", "dist", "build"];
 
-    private readonly IDocumentRepository _documentRepo;
-    private readonly IMaintenanceRepository _maintenanceRepo;
+    private readonly IDocumentRepository documentRepo;
+    private readonly IMaintenanceRepository maintenanceRepo;
 
     public CollectionReindexerService(IDocumentRepository documentRepo, IMaintenanceRepository maintenanceRepo)
     {
-        _documentRepo = documentRepo;
-        _maintenanceRepo = maintenanceRepo;
+        this.documentRepo = documentRepo;
+        this.maintenanceRepo = maintenanceRepo;
     }
 
     public async Task<ReindexResult> ReindexCollectionAsync(
@@ -90,7 +90,7 @@ internal class CollectionReindexerService : ICollectionReindexerService
 
             var hash = ContentHasher.HashContent(content);
             var title = TitleExtractor.ExtractTitle(content, relativeFile);
-            var existing = _documentRepo.FindActiveDocument(collectionName, handelized);
+            var existing = this.documentRepo.FindActiveDocument(collectionName, handelized);
 
             if (existing != null)
             {
@@ -98,7 +98,7 @@ internal class CollectionReindexerService : ICollectionReindexerService
                 {
                     if (existing.Title != title)
                     {
-                        _documentRepo.UpdateDocumentTitle(existing.Id, title, now);
+                        this.documentRepo.UpdateDocumentTitle(existing.Id, title, now);
                         updated++;
                     }
                     else
@@ -108,17 +108,17 @@ internal class CollectionReindexerService : ICollectionReindexerService
                 }
                 else
                 {
-                    _documentRepo.InsertContent(hash, content, now);
+                    this.documentRepo.InsertContent(hash, content, now);
                     var modTime = File.GetLastWriteTimeUtc(filepath).ToString("o");
-                    _documentRepo.UpdateDocument(existing.Id, title, hash, modTime);
+                    this.documentRepo.UpdateDocument(existing.Id, title, hash, modTime);
                     updated++;
                 }
             }
             else
             {
-                _documentRepo.InsertContent(hash, content, now);
+                this.documentRepo.InsertContent(hash, content, now);
                 var fileInfo = new FileInfo(filepath);
-                _documentRepo.InsertDocument(collectionName, handelized, title, hash,
+                this.documentRepo.InsertDocument(collectionName, handelized, title, hash,
                     fileInfo.CreationTimeUtc.ToString("o"),
                     fileInfo.LastWriteTimeUtc.ToString("o"));
                 indexed++;
@@ -129,17 +129,17 @@ internal class CollectionReindexerService : ICollectionReindexerService
         }
 
         // Deactivate documents no longer on disk
-        var allActive = _documentRepo.GetActiveDocumentPaths(collectionName);
+        var allActive = this.documentRepo.GetActiveDocumentPaths(collectionName);
         foreach (var path in allActive)
         {
             if (!seenPaths.Contains(path))
             {
-                _documentRepo.DeactivateDocument(collectionName, path);
+                this.documentRepo.DeactivateDocument(collectionName, path);
                 removed++;
             }
         }
 
-        var orphanedCleaned = _maintenanceRepo.CleanupOrphanedContent();
+        var orphanedCleaned = this.maintenanceRepo.CleanupOrphanedContent();
 
         return new ReindexResult(indexed, updated, unchanged, removed, orphanedCleaned);
     }

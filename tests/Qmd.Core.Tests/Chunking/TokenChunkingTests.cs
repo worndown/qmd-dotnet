@@ -7,13 +7,13 @@ namespace Qmd.Core.Tests.Chunking;
 [Trait("Category", "Unit")]
 public class TokenChunkingTests
 {
-    private readonly ITokenizer _charTokenizer = new CharBasedTokenizer();
+    private readonly ITokenizer charTokenizer = new CharBasedTokenizer();
 
     [Fact]
     public void ChunkDocumentByTokens_SingleChunkForSmallDocs()
     {
         var content = "This is a small document.";
-        var chunks = DocumentChunker.ChunkDocumentByTokens(_charTokenizer, content, 900, 135);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135);
 
         chunks.Should().HaveCount(1);
         chunks[0].Text.Should().Be(content);
@@ -26,7 +26,7 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_SplitsLargeDocuments()
     {
         var content = string.Concat(Enumerable.Repeat("The quick brown fox jumps over the lazy dog. ", 250));
-        var chunks = DocumentChunker.ChunkDocumentByTokens(_charTokenizer, content, 900, 135);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135);
 
         chunks.Count.Should().BeGreaterThan(1);
 
@@ -45,7 +45,7 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_CreatesOverlappingChunks()
     {
         var content = string.Concat(Enumerable.Repeat("Word ", 500));
-        var chunks = DocumentChunker.ChunkDocumentByTokens(_charTokenizer, content, 200, 30);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 200, 30);
 
         chunks.Count.Should().BeGreaterThan(1);
 
@@ -61,7 +61,7 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_ReturnsActualTokenCounts()
     {
         var content = "Hello world, this is a test.";
-        var chunks = DocumentChunker.ChunkDocumentByTokens(_charTokenizer, content);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content);
 
         chunks.Should().HaveCount(1);
         chunks[0].Tokens.Should().BeGreaterThan(0);

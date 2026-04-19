@@ -21,11 +21,11 @@ internal class QmdTools
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
     };
 
-    private readonly IQmdStore _store;
+    private readonly IQmdStore store;
 
     public QmdTools(IQmdStore store)
     {
-        _store = store;
+        this.store = store;
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ internal class QmdTools
         // Use default collections when none specified
         var collList = collections is { Count: > 0 }
             ? collections
-            : await _store.GetDefaultCollectionNamesAsync();
+            : await this.store.GetDefaultCollectionNamesAsync();
 
         List<HybridQueryResult> results;
         string primaryQuery;
@@ -74,7 +74,7 @@ internal class QmdTools
                 ?? parsed.FirstOrDefault(s => s.Type == "vec")?.Query
                 ?? parsed[0].Query ?? "";
 
-            results = await _store.SearchStructuredAsync(expandedQueries,
+            results = await this.store.SearchStructuredAsync(expandedQueries,
                 new StructuredSearchOptions
                 {
                     Collections = collList,
@@ -88,7 +88,7 @@ internal class QmdTools
         else if (query != null)
         {
             primaryQuery = query;
-            results = await _store.SearchAsync(new SearchOptions
+            results = await this.store.SearchAsync(new SearchOptions
             {
                 Query = query,
                 Limit = limit,
@@ -172,7 +172,7 @@ internal class QmdTools
             lookup = lookup[..^colonMatch.Length];
         }
 
-        var result = await _store.GetAsync(lookup, new GetOptions { IncludeBody = false });
+        var result = await this.store.GetAsync(lookup, new GetOptions { IncludeBody = false });
 
         if (!result.IsFound)
         {
@@ -188,7 +188,7 @@ internal class QmdTools
         }
 
         var doc = result.Document!;
-        var body = await _store.GetDocumentBodyAsync(doc.Filepath,
+        var body = await this.store.GetDocumentBodyAsync(doc.Filepath,
             new BodyOptions { FromLine = parsedFromLine, MaxLines = maxLines }) ?? "";
 
         if (lineNumbers)
@@ -225,7 +225,7 @@ internal class QmdTools
         [Description("Skip files larger than this (bytes, default: 10240)")] int maxBytes = 10240,
         [Description("Add line numbers to output")] bool lineNumbers = false)
     {
-        var (docs, errors) = await _store.MultiGetAsync(pattern, new MultiGetOptions
+        var (docs, errors) = await this.store.MultiGetAsync(pattern, new MultiGetOptions
         {
             MaxBytes = maxBytes,
             IncludeBody = true,
@@ -293,7 +293,7 @@ internal class QmdTools
     [Description("Show QMD index status including document counts, collections, and embedding state")]
     public async Task<CallToolResult> Status()
     {
-        var status = await _store.GetStatusAsync();
+        var status = await this.store.GetStatusAsync();
 
         var sb = new StringBuilder();
         sb.AppendLine("QMD Index Status:");

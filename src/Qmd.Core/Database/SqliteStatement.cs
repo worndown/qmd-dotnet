@@ -9,22 +9,22 @@ namespace Qmd.Core.Database;
 /// </summary>
 internal class SqliteStatement : IStatement
 {
-    private readonly SqliteConnection _connection;
-    private readonly string _sql;
+    private readonly SqliteConnection connection;
+    private readonly string sql;
 
     public SqliteStatement(SqliteConnection connection, string sql)
     {
-        _connection = connection;
-        _sql = sql;
+        this.connection = connection;
+        this.sql = sql;
     }
 
     public StatementResult Run(params object?[] parameters)
     {
-        using var cmd = CreateCommand(parameters);
+        using var cmd = this.CreateCommand(parameters);
         var changes = cmd.ExecuteNonQuery();
 
         // Get last insert rowid
-        using var rowidCmd = _connection.CreateCommand();
+        using var rowidCmd = this.connection.CreateCommand();
         rowidCmd.CommandText = "SELECT last_insert_rowid()";
         var rowid = (long)(rowidCmd.ExecuteScalar() ?? 0L);
 
@@ -33,7 +33,7 @@ internal class SqliteStatement : IStatement
 
     public T? Get<T>(params object?[] parameters) where T : class, new()
     {
-        using var cmd = CreateCommand(parameters);
+        using var cmd = this.CreateCommand(parameters);
         using var reader = cmd.ExecuteReader();
         if (!reader.Read()) return null;
         return MapRow<T>(reader);
@@ -41,7 +41,7 @@ internal class SqliteStatement : IStatement
 
     public List<T> All<T>(params object?[] parameters) where T : class, new()
     {
-        using var cmd = CreateCommand(parameters);
+        using var cmd = this.CreateCommand(parameters);
         using var reader = cmd.ExecuteReader();
         var results = new List<T>();
         while (reader.Read())
@@ -53,8 +53,8 @@ internal class SqliteStatement : IStatement
 
     private SqliteCommand CreateCommand(object?[] parameters)
     {
-        var cmd = _connection.CreateCommand();
-        cmd.CommandText = _sql;
+        var cmd = this.connection.CreateCommand();
+        cmd.CommandText = this.sql;
         for (int i = 0; i < parameters.Length; i++)
         {
             cmd.Parameters.AddWithValue($"${i + 1}", parameters[i] ?? DBNull.Value);

@@ -10,19 +10,19 @@ namespace Qmd.Core.Tests.Store;
 [Trait("Category", "Database")]
 public class QmdStoreTests : IDisposable
 {
-    private readonly QmdStore _store;
+    private readonly QmdStore store;
 
     public QmdStoreTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     [Fact]
     public void CreateStore_InitializesSchema()
     {
-        var row = _store.Db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='documents'")
+        var row = this.store.Db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='documents'")
             .Get<SqliteMasterRow>();
         row.Should().NotBeNull();
     }
@@ -31,11 +31,11 @@ public class QmdStoreTests : IDisposable
     public void Store_InsertAndSearch()
     {
         var content = "This document covers authentication patterns and OAuth2 implementation.";
-        var hash = _store.HashContent(content);
-        _store.InsertContent(hash, content, "2025-01-01");
-        _store.InsertDocument("docs", "auth.md", "Authentication", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent(content);
+        this.store.InsertContent(hash, content, "2025-01-01");
+        this.store.InsertDocument("docs", "auth.md", "Authentication", hash, "2025-01-01", "2025-01-01");
 
-        var results = _store.SearchFTS("authentication");
+        var results = this.store.SearchFTS("authentication");
         results.Should().NotBeEmpty();
         results[0].Title.Should().Be("Authentication");
     }
@@ -43,11 +43,11 @@ public class QmdStoreTests : IDisposable
     [Fact]
     public void Store_IndexAndRetrieve()
     {
-        var hash = _store.HashContent("Hello world");
-        _store.InsertContent(hash, "Hello world", "2025-01-01");
-        _store.InsertDocument("docs", "hello.md", "Hello", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent("Hello world");
+        this.store.InsertContent(hash, "Hello world", "2025-01-01");
+        this.store.InsertDocument("docs", "hello.md", "Hello", hash, "2025-01-01", "2025-01-01");
 
-        var active = _store.FindActiveDocument("docs", "hello.md");
+        var active = this.store.FindActiveDocument("docs", "hello.md");
         active.Should().NotBeNull();
         active!.Hash.Should().Be(hash);
     }
@@ -59,13 +59,13 @@ public class QmdStoreTests : IDisposable
         {
             Collections = new() { ["docs"] = new Collection { Path = "/docs" } }
         };
-        _store.SyncConfig(config);
+        this.store.SyncConfig(config);
 
-        var hash = _store.HashContent("Content");
-        _store.InsertContent(hash, "Content", "2025-01-01");
-        _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent("Content");
+        this.store.InsertContent(hash, "Content", "2025-01-01");
+        this.store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
 
-        var status = _store.GetStatus();
+        var status = this.store.GetStatus();
         status.TotalDocuments.Should().Be(1);
         status.Collections.Should().HaveCount(1);
     }
@@ -81,21 +81,21 @@ public class QmdStoreTests : IDisposable
     [Fact]
     public void Store_Cache()
     {
-        _store.SetCachedResult("key1", "value1");
-        _store.GetCachedResult("key1").Should().Be("value1");
-        _store.ClearCache();
-        _store.GetCachedResult("key1").Should().BeNull();
+        this.store.SetCachedResult("key1", "value1");
+        this.store.GetCachedResult("key1").Should().Be("value1");
+        this.store.ClearCache();
+        this.store.GetCachedResult("key1").Should().BeNull();
     }
 
     [Fact]
     public async Task Store_Maintenance()
     {
-        var hash = _store.HashContent("Content");
-        _store.InsertContent(hash, "Content", "2025-01-01");
-        _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
-        _store.DeactivateDocument("docs", "a.md");
+        var hash = this.store.HashContent("Content");
+        this.store.InsertContent(hash, "Content", "2025-01-01");
+        this.store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
+        this.store.DeactivateDocument("docs", "a.md");
 
-        var result = await _store.CleanupAsync();
+        var result = await this.store.CleanupAsync();
         result.OrphanedCollectionDocsDeleted.Should().Be(1);
     }
 

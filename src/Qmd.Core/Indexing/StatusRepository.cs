@@ -5,22 +5,22 @@ namespace Qmd.Core.Indexing;
 
 internal class StatusRepository : IStatusRepository
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public StatusRepository(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public IndexStatus GetStatus()
     {
-        var totalRow = _db.Prepare("SELECT COUNT(*) as cnt FROM documents WHERE active = 1").Get<CountRow>();
+        var totalRow = this.db.Prepare("SELECT COUNT(*) as cnt FROM documents WHERE active = 1").Get<CountRow>();
         var total = totalRow?.Cnt ?? 0;
 
-        var needsEmbed = GetHashesNeedingEmbedding();
+        var needsEmbed = this.GetHashesNeedingEmbedding();
         var hasVec = VecExtension.IsAvailable;
 
-        var collections = _db.Prepare(@"
+        var collections = this.db.Prepare(@"
             SELECT sc.name, sc.path, sc.pattern,
                    (SELECT COUNT(*) FROM documents d WHERE d.collection = sc.name AND d.active = 1) as doc_count,
                    COALESCE((SELECT MAX(d.modified_at) FROM documents d WHERE d.collection = sc.name AND d.active = 1), '') as last_updated
@@ -41,7 +41,7 @@ internal class StatusRepository : IStatusRepository
 
     public int GetHashesNeedingEmbedding()
     {
-        var row = _db.Prepare(@"
+        var row = this.db.Prepare(@"
             SELECT COUNT(DISTINCT c.hash) as cnt
             FROM content c
             JOIN documents d ON d.hash = c.hash AND d.active = 1
@@ -53,12 +53,12 @@ internal class StatusRepository : IStatusRepository
 
     public IndexHealthInfo GetIndexHealth()
     {
-        var needsEmbed = GetHashesNeedingEmbedding();
-        var totalRow = _db.Prepare("SELECT COUNT(*) as cnt FROM documents WHERE active = 1").Get<CountRow>();
+        var needsEmbed = this.GetHashesNeedingEmbedding();
+        var totalRow = this.db.Prepare("SELECT COUNT(*) as cnt FROM documents WHERE active = 1").Get<CountRow>();
         var total = totalRow?.Cnt ?? 0;
 
         int? daysStale = null;
-        var latestRow = _db.Prepare("SELECT MAX(modified_at) as value FROM documents WHERE active = 1").Get<SingleValueRow>();
+        var latestRow = this.db.Prepare("SELECT MAX(modified_at) as value FROM documents WHERE active = 1").Get<SingleValueRow>();
         if (latestRow?.Value is string latest && DateTime.TryParse(latest, out var latestDate))
         {
             daysStale = (int)(DateTime.UtcNow - latestDate).TotalDays;

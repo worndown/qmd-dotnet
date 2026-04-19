@@ -9,16 +9,16 @@ namespace Qmd.Core.Tests.Content;
 [Trait("Category", "Database")]
 public class ContentHasherTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly DocumentRepository _docRepo;
+    private readonly IQmdDatabase db;
+    private readonly DocumentRepository docRepo;
 
     public ContentHasherTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _docRepo = new DocumentRepository(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.docRepo = new DocumentRepository(this.db);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void HashContent_ProducesSha256Hex()
@@ -47,8 +47,8 @@ public class ContentHasherTests : IDisposable
     [Fact]
     public void InsertContent_InsertsRow()
     {
-        _docRepo.InsertContent("abc123", "Hello", "2025-01-01");
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
+        this.docRepo.InsertContent("abc123", "Hello", "2025-01-01");
+        var row = this.db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
         row.Should().NotBeNull();
         row!.Doc.Should().Be("Hello");
     }
@@ -56,9 +56,9 @@ public class ContentHasherTests : IDisposable
     [Fact]
     public void InsertContent_IgnoresDuplicate()
     {
-        _docRepo.InsertContent("abc123", "First", "2025-01-01");
-        _docRepo.InsertContent("abc123", "Second", "2025-01-02");
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
+        this.docRepo.InsertContent("abc123", "First", "2025-01-01");
+        this.docRepo.InsertContent("abc123", "Second", "2025-01-02");
+        var row = this.db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
         row!.Doc.Should().Be("First"); // First insert wins
     }
 

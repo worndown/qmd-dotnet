@@ -61,7 +61,7 @@ function hello() {
 
 const arrow = () => 42;
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.ts");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "test.ts");
 
         breakPoints.Should().NotBeEmpty();
 
@@ -91,7 +91,7 @@ class MyClass:
 def standalone():
     return 42
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.py");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "test.py");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");
@@ -118,7 +118,7 @@ func main() {
     fmt.Println(""hi"")
 }
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.go");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "main.go");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");
@@ -146,7 +146,7 @@ fn main() {
     let p = Point::new(1.0, 2.0);
 }
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.rs");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "main.rs");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");
@@ -159,7 +159,7 @@ fn main() {
     public void GetASTBreakPoints_MarkdownFile_ReturnsEmpty()
     {
         var content = "# Hello\n\nSome text.";
-        AstBreakPointScanner.GetASTBreakPoints(content, "readme.md").Should().BeEmpty();
+        AstBreakPointScanner.GetAstBreakPoints(content, "readme.md").Should().BeEmpty();
     }
 
     [Fact]
@@ -167,7 +167,7 @@ fn main() {
     {
         // Badly malformed TypeScript — should not throw
         var content = "}{}{}{export ;;;; class @@@ {{{";
-        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.ts");
+        var result = AstBreakPointScanner.GetAstBreakPoints(content, "broken.ts");
         // May return some partial results or empty — just should not throw
         result.Should().NotBeNull();
     }
@@ -180,7 +180,7 @@ function first() {}
 class Second {}
 function third() {}
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.ts");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "test.ts");
         breakPoints.Should().BeInAscendingOrder(bp => bp.Pos);
     }
 
@@ -356,7 +356,7 @@ export function handler{i}(req: Request, res: Response): void {{
     public void TypeScriptExportClass_Scores90()
     {
         var code = "export class Foo {}\nexport function bar() {}";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.ts");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.ts");
         var exportPoint = points.FirstOrDefault(p => p.Type == "ast:export");
         exportPoint.Should().NotBeNull();
         exportPoint!.Score.Should().Be(90);
@@ -366,7 +366,7 @@ export function handler{i}(req: Request, res: Response): void {{
     public void PythonClass_Scores100()
     {
         var code = "class Foo:\n    pass\n\ndef bar():\n    pass";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.py");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.py");
         var classPoint = points.FirstOrDefault(p => p.Type == "ast:class");
         classPoint.Should().NotBeNull();
         classPoint!.Score.Should().Be(100);
@@ -376,7 +376,7 @@ export function handler{i}(req: Request, res: Response): void {{
     public void GoType_Scores80()
     {
         var code = "package main\n\ntype Server struct {\n    port int\n}\n\nfunc main() {}";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.go");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.go");
         var typePoint = points.FirstOrDefault(p => p.Type == "ast:type");
         typePoint.Should().NotBeNull();
         typePoint!.Score.Should().Be(80);
@@ -386,7 +386,7 @@ export function handler{i}(req: Request, res: Response): void {{
     public void RustEnum_Scores80()
     {
         var code = "enum State {\n    On,\n    Off,\n}\n\nfn main() {}";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.rs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.rs");
         var enumPoint = points.FirstOrDefault(p => p.Type == "ast:enum");
         enumPoint.Should().NotBeNull();
         enumPoint!.Score.Should().Be(80);
@@ -463,7 +463,7 @@ export class AuthService {
 
 export function hashPassword() { return ''; }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "src/auth.ts");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "src/auth.ts");
         var firstImport = points.FirstOrDefault(p => p.Type == "ast:import");
 
         firstImport.Should().NotBeNull();
@@ -492,7 +492,7 @@ class AuthService:
 def hash_password(password):
     return 'hash'
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "auth.py");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "auth.py");
         var funcPoints = points.Where(p => p.Type == "ast:func").ToList();
 
         // __init__, authenticate, validate_token (inside class) + hash_password (standalone)
@@ -519,7 +519,7 @@ func HashPassword(password string) string {
     return ""hash""
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "auth.go");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "auth.go");
         var funcPoint = points.FirstOrDefault(p => p.Type == "ast:func");
         var methodPoint = points.FirstOrDefault(p => p.Type == "ast:method");
 
@@ -558,7 +558,7 @@ fn hash_password(password: &str) -> String {
     String::new()
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "auth.rs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "auth.rs");
         var structPoint = points.FirstOrDefault(p => p.Type == "ast:struct");
         var implPoint = points.FirstOrDefault(p => p.Type == "ast:impl");
         var traitPoint = points.FirstOrDefault(p => p.Type == "ast:trait");
@@ -575,14 +575,14 @@ fn hash_password(password: &str) -> String {
     public void GetASTBreakPoints_UnknownExtension_ReturnsEmpty()
     {
         // Returns empty array for unknown extensions
-        AstBreakPointScanner.GetASTBreakPoints("data,here", "file.csv").Should().BeEmpty();
+        AstBreakPointScanner.GetAstBreakPoints("data,here", "file.csv").Should().BeEmpty();
     }
 
     [Fact]
     public void GetASTBreakPoints_EmptyContent_ReturnsEmpty()
     {
         // Handles empty content gracefully
-        AstBreakPointScanner.GetASTBreakPoints("", "empty.ts").Should().BeEmpty();
+        AstBreakPointScanner.GetAstBreakPoints("", "empty.ts").Should().BeEmpty();
     }
 
     // =========================================================================
@@ -632,7 +632,7 @@ namespace MyApp.Services
     public record UserRecord(string Name, int Age);
 }
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "AuthService.cs");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "AuthService.cs");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");    // using directives
@@ -652,7 +652,7 @@ namespace MyApp.Services
     class Bar {
     }
 }";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cs");
         var classPoint = points.FirstOrDefault(p => p.Type == "ast:class");
         classPoint.Should().NotBeNull();
         classPoint!.Score.Should().Be(100);
@@ -664,7 +664,7 @@ namespace MyApp.Services
         var code = @"namespace Foo {
     class Bar {}
 }";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cs");
         var nsPoint = points.FirstOrDefault(p => p.Type == "ast:namespace");
         nsPoint.Should().NotBeNull();
         nsPoint!.Score.Should().Be(100);
@@ -676,7 +676,7 @@ namespace MyApp.Services
         var code = @"class Foo {
     void Bar() {}
 }";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cs");
         var methodPoint = points.FirstOrDefault(p => p.Type == "ast:method");
         methodPoint.Should().NotBeNull();
         methodPoint!.Score.Should().Be(90);
@@ -688,7 +688,7 @@ namespace MyApp.Services
         var code = @"class Foo {
     public int Bar { get; set; }
 }";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cs");
         var propPoint = points.FirstOrDefault(p => p.Type == "ast:prop");
         propPoint.Should().NotBeNull();
         propPoint!.Score.Should().Be(70);
@@ -707,7 +707,7 @@ namespace MyApp
     }
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "Program.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "Program.cs");
         var usingPoint = points.FirstOrDefault(p => p.Type == "ast:import");
 
         usingPoint.Should().NotBeNull();
@@ -722,7 +722,7 @@ class First {}
 class Second {}
 class Third {}
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "test.cs");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "test.cs");
         breakPoints.Should().BeInAscendingOrder(bp => bp.Pos);
     }
 
@@ -740,7 +740,7 @@ class AuthService
     public void Logout() {}
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "auth.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "auth.cs");
         var methodPoints = points.Where(p => p.Type == "ast:method").ToList();
 
         // constructor + Authenticate + Logout
@@ -758,7 +758,7 @@ class Program
     static void Main() {}
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(content, "Program.cs");
+        var points = AstBreakPointScanner.GetAstBreakPoints(content, "Program.cs");
 
         points.Should().NotBeEmpty();
         points.Should().Contain(bp => bp.Type == "ast:namespace"); // file-scoped namespace
@@ -770,7 +770,7 @@ class Program
     public void GetASTBreakPoints_MalformedCSharp_ReturnsEmptyNoThrow()
     {
         var content = "}{}{}{class @@@ {{{;;; namespace";
-        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.cs");
+        var result = AstBreakPointScanner.GetAstBreakPoints(content, "broken.cs");
         result.Should().NotBeNull();
     }
 
@@ -812,7 +812,7 @@ int main() {
     return 0;
 }
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.c");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "main.c");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");  // #include
@@ -835,7 +835,7 @@ int main() {
     return 0;
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.c");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.c");
         var funcPoint = points.FirstOrDefault(p => p.Type == "ast:func");
         funcPoint.Should().NotBeNull();
         funcPoint!.Score.Should().Be(90);
@@ -845,7 +845,7 @@ int main() {
     public void GetASTBreakPoints_MalformedC_ReturnsEmptyNoThrow()
     {
         var content = "}{}{}{void @@@ (((;;; #include";
-        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.c");
+        var result = AstBreakPointScanner.GetAstBreakPoints(content, "broken.c");
         result.Should().NotBeNull();
     }
 
@@ -897,7 +897,7 @@ int main() {
     return 0;
 }
 ";
-        var breakPoints = AstBreakPointScanner.GetASTBreakPoints(content, "main.cpp");
+        var breakPoints = AstBreakPointScanner.GetAstBreakPoints(content, "main.cpp");
 
         breakPoints.Should().NotBeEmpty();
         breakPoints.Should().Contain(bp => bp.Type == "ast:import");    // #include
@@ -919,7 +919,7 @@ public:
 
 int main() { return 0; }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cpp");
         var classPoint = points.FirstOrDefault(p => p.Type == "ast:class");
         classPoint.Should().NotBeNull();
         classPoint!.Score.Should().Be(100);
@@ -933,7 +933,7 @@ T identity(T val) { return val; }
 
 int main() { return 0; }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cpp");
         var templatePoint = points.FirstOrDefault(p => p.Type == "ast:template");
         templatePoint.Should().NotBeNull();
         templatePoint!.Score.Should().Be(90);
@@ -946,7 +946,7 @@ int main() { return 0; }
     void bar() {}
 }
 ";
-        var points = AstBreakPointScanner.GetASTBreakPoints(code, "a.cpp");
+        var points = AstBreakPointScanner.GetAstBreakPoints(code, "a.cpp");
         var nsPoint = points.FirstOrDefault(p => p.Type == "ast:namespace");
         nsPoint.Should().NotBeNull();
         nsPoint!.Score.Should().Be(100);
@@ -956,7 +956,7 @@ int main() { return 0; }
     public void GetASTBreakPoints_MalformedCpp_ReturnsEmptyNoThrow()
     {
         var content = "}{}{}{class @@@ {{{;;; template<<<";
-        var result = AstBreakPointScanner.GetASTBreakPoints(content, "broken.cpp");
+        var result = AstBreakPointScanner.GetAstBreakPoints(content, "broken.cpp");
         result.Should().NotBeNull();
     }
 }

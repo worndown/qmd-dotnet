@@ -13,51 +13,51 @@ namespace Qmd.Core.Llm;
 /// </summary>
 internal class LlamaSharpService : ILlmService
 {
-    private readonly string _embedModelUri;
-    private readonly string _generateModelUri;
-    private readonly string _rerankModelUri;
-    private readonly ModelResolver _modelResolver;
-    private readonly int _expandContextSize;
+    private readonly string embedModelUri;
+    private readonly string generateModelUri;
+    private readonly string rerankModelUri;
+    private readonly ModelResolver modelResolver;
+    private readonly int expandContextSize;
 
     // Embedding state
-    private LLamaWeights? _embedWeights;
-    private string? _embedModelPath;
-    private Task<LLamaWeights>? _embedWeightsLoadTask;
-    private List<LLamaEmbedder> _embedContexts = [];
-    private Task<List<LLamaEmbedder>>? _embedContextsCreateTask;
+    private LLamaWeights? embedWeights;
+    private string? embedModelPath;
+    private Task<LLamaWeights>? embedWeightsLoadTask;
+    private List<LLamaEmbedder> embedContexts = [];
+    private Task<List<LLamaEmbedder>>? embedContextsCreateTask;
 
     // Generation state
-    private LLamaWeights? _generateWeights;
-    private string? _generateModelPath;
-    private Task<LLamaWeights>? _generateWeightsLoadTask;
+    private LLamaWeights? generateWeights;
+    private string? generateModelPath;
+    private Task<LLamaWeights>? generateWeightsLoadTask;
 
     // Reranking state
-    private LLamaWeights? _rerankWeights;
-    private string? _rerankModelPath;
-    private Task<LLamaWeights>? _rerankWeightsLoadTask;
-    private List<LLamaReranker> _rerankContexts = [];
-    private Task<List<LLamaReranker>>? _rerankContextsCreateTask;
+    private LLamaWeights? rerankWeights;
+    private string? rerankModelPath;
+    private Task<LLamaWeights>? rerankWeightsLoadTask;
+    private List<LLamaReranker> rerankContexts = [];
+    private Task<List<LLamaReranker>>? rerankContextsCreateTask;
 
-    private bool _disposed;
+    private bool disposed;
 
     private const int RerankTargetDocsPerContext = 10;
 
-    public string EmbedModelName => _embedModelUri;
+    public string EmbedModelName => this.embedModelUri;
 
     /// <summary>Resolved expand context size (config > env > default 2048).</summary>
-    public int ExpandContextSize => _expandContextSize;
+    public int ExpandContextSize => this.expandContextSize;
 
     /// <summary>Create a new LlamaSharp LLM service.</summary>
     /// <param name="options">Model URIs, cache directory, and context size overrides.</param>
     public LlamaSharpService(LlamaSharpOptions? options = null)
     {
         options ??= new LlamaSharpOptions();
-        _embedModelUri = LlmServiceFactory.ResolveEmbedModel(options.EmbedModel);
-        _generateModelUri = LlmServiceFactory.ResolveGenerateModel(options.GenerateModel);
-        _rerankModelUri = LlmServiceFactory.ResolveRerankModel(options.RerankModel);
-        _modelResolver = new ModelResolver(cacheDir: options.ModelCacheDir);
+        this.embedModelUri = LlmServiceFactory.ResolveEmbedModel(options.EmbedModel);
+        this.generateModelUri = LlmServiceFactory.ResolveGenerateModel(options.GenerateModel);
+        this.rerankModelUri = LlmServiceFactory.ResolveRerankModel(options.RerankModel);
+        this.modelResolver = new ModelResolver(cacheDir: options.ModelCacheDir);
 
-        _expandContextSize = ResolveExpandContextSize(options.ExpandContextSize);
+        this.expandContextSize = ResolveExpandContextSize(options.ExpandContextSize);
     }
 
     private const int DefaultExpandContextSize = 2048;
@@ -92,10 +92,10 @@ internal class LlamaSharpService : ILlmService
     /// <param name="ct">Cancellation token.</param>
     public async Task<EmbeddingResult?> EmbedAsync(string text, EmbedOptions? options = null, CancellationToken ct = default)
     {
-        var embedder = await EnsureEmbedContextAsync(ct);
-        text = TruncateToEmbedContextSize(text);
+        var embedder = await this.EnsureEmbedContextAsync(ct);
+        text = this.TruncateToEmbedContextSize(text);
         var embeddings = await embedder.GetEmbeddings(text, ct);
-        return new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri);
+        return new EmbeddingResult(embeddings[0], options?.Model ?? this.embedModelUri);
     }
 
     /// <summary>Generate vector embeddings for multiple texts, parallelized across available contexts.</summary>
@@ -107,9 +107,9 @@ internal class LlamaSharpService : ILlmService
         if (texts.Count == 0) return [];
 
         // Truncate all texts to fit within embedding context size
-        texts = texts.Select(TruncateToEmbedContextSize).ToList();
+        texts = texts.Select(this.TruncateToEmbedContextSize).ToList();
 
-        var contexts = await EnsureEmbedContextsAsync(ct);
+        var contexts = await this.EnsureEmbedContextsAsync(ct);
         var n = contexts.Count;
 
         if (n == 1)
@@ -121,7 +121,7 @@ internal class LlamaSharpService : ILlmService
                 try
                 {
                     var embeddings = await contexts[0].GetEmbeddings(text, ct);
-                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
+                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? this.embedModelUri));
                 }
                 catch
                 {
@@ -144,7 +144,7 @@ internal class LlamaSharpService : ILlmService
                 try
                 {
                     var embeddings = await embedder.GetEmbeddings(text, ct);
-                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? _embedModelUri));
+                    results.Add(new EmbeddingResult(embeddings[0], options?.Model ?? this.embedModelUri));
                 }
                 catch
                 {
@@ -164,10 +164,10 @@ internal class LlamaSharpService : ILlmService
     /// <returns>Token count, or a character-based estimate if the model is not loaded.</returns>
     public int CountTokens(string text)
     {
-        if (_embedWeights == null)
+        if (this.embedWeights == null)
             return (int)Math.Ceiling(text.Length / 4.0); // Fallback
 
-        var tokens = _embedWeights.NativeHandle.Tokenize(text, false, false, System.Text.Encoding.UTF8);
+        var tokens = this.embedWeights.NativeHandle.Tokenize(text, false, false, System.Text.Encoding.UTF8);
         return tokens.Length;
     }
 
@@ -181,16 +181,16 @@ internal class LlamaSharpService : ILlmService
     /// <param name="ct">Cancellation token.</param>
     public async Task<GenerateResult?> GenerateAsync(string prompt, GenerateOptions? options = null, CancellationToken ct = default)
     {
-        var weights = await EnsureGenerateWeightsAsync(ct);
+        var weights = await this.EnsureGenerateWeightsAsync(ct);
 
         var maxTokens = options?.MaxTokens ?? 150;
         // Qwen3 recommended: temp=0.7, topP=0.8, topK=20 for non-thinking mode
         // DO NOT use greedy decoding (temp=0) - causes repetition loops
         var temperature = options?.Temperature ?? 0.7;
 
-        var modelParams = new ModelParams(_generateModelPath!)
+        var modelParams = new ModelParams(this.generateModelPath!)
         {
-            ContextSize = (uint)_expandContextSize,
+            ContextSize = (uint)this.expandContextSize,
         };
 
         var executor = new StatelessExecutor(weights, modelParams)
@@ -215,7 +215,7 @@ internal class LlamaSharpService : ILlmService
             result += text;
         }
 
-        return new GenerateResult(result, _generateModelUri, null, true);
+        return new GenerateResult(result, this.generateModelUri, null, true);
     }
 
     #endregion
@@ -230,7 +230,7 @@ internal class LlamaSharpService : ILlmService
     {
         try
         {
-            var weights = await EnsureGenerateWeightsAsync(ct);
+            var weights = await this.EnsureGenerateWeightsAsync(ct);
             var includeLexical = options?.IncludeLexical ?? true;
 
             // GBNF grammar constraining output to typed query lines
@@ -245,9 +245,9 @@ content ::= [^\n]+
                 ? $"/no_think Expand this search query: {query}\nQuery intent: {options.Context}"
                 : $"/no_think Expand this search query: {query}";
 
-            var modelParams = new ModelParams(_generateModelPath!)
+            var modelParams = new ModelParams(this.generateModelPath!)
             {
-                ContextSize = (uint)_expandContextSize,
+                ContextSize = (uint)this.expandContextSize,
             };
 
             var executor = new StatelessExecutor(weights, modelParams)
@@ -340,10 +340,10 @@ content ::= [^\n]+
     /// <param name="ct">Cancellation token.</param>
     public async Task<RerankResult> RerankAsync(string query, List<RerankDocument> documents, RerankOptions? options = null, CancellationToken ct = default)
     {
-        if (documents.Count == 0) return new RerankResult([], _rerankModelUri);
+        if (documents.Count == 0) return new RerankResult([], this.rerankModelUri);
 
-        var rerankers = await EnsureRerankContextsAsync(ct);
-        var model = await EnsureRerankWeightsAsync(ct);
+        var rerankers = await this.EnsureRerankContextsAsync(ct);
+        var model = await this.EnsureRerankWeightsAsync(ct);
 
         // Truncate documents that would exceed rerank context size
         // Budget = contextSize - template overhead - query tokens
@@ -411,7 +411,7 @@ content ::= [^\n]+
             }
         }
 
-        return new RerankResult(results, _rerankModelUri);
+        return new RerankResult(results, this.rerankModelUri);
     }
 
     #endregion
@@ -421,71 +421,73 @@ content ::= [^\n]+
     /// <summary>Return cached embedding weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureEmbedWeightsAsync(CancellationToken ct = default)
     {
-        if (_embedWeights != null) return _embedWeights;
-        if (_embedWeightsLoadTask != null) return await _embedWeightsLoadTask;
+        if (this.embedWeights != null) return this.embedWeights;
+        if (this.embedWeightsLoadTask != null) return await this.embedWeightsLoadTask;
 
-        _embedWeightsLoadTask = LoadEmbedWeightsAsync(ct);
-        try { return await _embedWeightsLoadTask; }
-        finally { _embedWeightsLoadTask = null; }
+        this.embedWeightsLoadTask = this.LoadEmbedWeightsAsync(ct);
+        try { return await this.embedWeightsLoadTask; }
+        finally {
+            this.embedWeightsLoadTask = null; }
     }
 
     /// <summary>Resolve the model URI and load embedding weights from disk.</summary>
     private async Task<LLamaWeights> LoadEmbedWeightsAsync(CancellationToken ct)
     {
-        _embedModelPath = await _modelResolver.ResolveModelFileAsync(_embedModelUri, ct: ct);
-        var modelParams = new ModelParams(_embedModelPath)
+        this.embedModelPath = await this.modelResolver.ResolveModelFileAsync(this.embedModelUri, ct: ct);
+        var modelParams = new ModelParams(this.embedModelPath)
         {
             Embeddings = true,
             ContextSize = (uint)LlmConstants.EmbedContextSize,
         };
-        _embedWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
-        return _embedWeights;
+        this.embedWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
+        return this.embedWeights;
     }
 
     /// <summary>Return the first available embedding context (convenience for single-text operations).</summary>
     private async Task<LLamaEmbedder> EnsureEmbedContextAsync(CancellationToken ct = default)
     {
-        var contexts = await EnsureEmbedContextsAsync(ct);
+        var contexts = await this.EnsureEmbedContextsAsync(ct);
         return contexts[0];
     }
 
     /// <summary>Return cached embedding contexts, or create the pool on first call. Coalesces concurrent callers.</summary>
     private async Task<List<LLamaEmbedder>> EnsureEmbedContextsAsync(CancellationToken ct = default)
     {
-        if (_embedContexts.Count > 0) return _embedContexts;
-        if (_embedContextsCreateTask != null) return await _embedContextsCreateTask;
+        if (this.embedContexts.Count > 0) return this.embedContexts;
+        if (this.embedContextsCreateTask != null) return await this.embedContextsCreateTask;
 
-        _embedContextsCreateTask = CreateEmbedContextsAsync(ct);
-        try { return await _embedContextsCreateTask; }
-        finally { _embedContextsCreateTask = null; }
+        this.embedContextsCreateTask = this.CreateEmbedContextsAsync(ct);
+        try { return await this.embedContextsCreateTask; }
+        finally {
+            this.embedContextsCreateTask = null; }
     }
 
     /// <summary>Create a pool of embedding contexts sized by CPU parallelism. Stops gracefully if a context fails to allocate.</summary>
     private async Task<List<LLamaEmbedder>> CreateEmbedContextsAsync(CancellationToken ct)
     {
-        var weights = await EnsureEmbedWeightsAsync(ct);
+        var weights = await this.EnsureEmbedWeightsAsync(ct);
         var parallelism = ComputeParallelism();
 
         for (int i = 0; i < parallelism; i++)
         {
             try
             {
-                var embedder = new LLamaEmbedder(weights, new ModelParams(_embedModelPath!)
+                var embedder = new LLamaEmbedder(weights, new ModelParams(this.embedModelPath!)
                 {
                     Embeddings = true,
                     ContextSize = (uint)LlmConstants.EmbedContextSize,
                 });
-                _embedContexts.Add(embedder);
+                this.embedContexts.Add(embedder);
             }
             catch
             {
-                if (_embedContexts.Count == 0)
+                if (this.embedContexts.Count == 0)
                     throw new InvalidOperationException("Failed to create any embedding context");
                 break;
             }
         }
 
-        return _embedContexts;
+        return this.embedContexts;
     }
 
     #endregion
@@ -495,24 +497,25 @@ content ::= [^\n]+
     /// <summary>Return cached generation weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureGenerateWeightsAsync(CancellationToken ct = default)
     {
-        if (_generateWeights != null) return _generateWeights;
-        if (_generateWeightsLoadTask != null) return await _generateWeightsLoadTask;
+        if (this.generateWeights != null) return this.generateWeights;
+        if (this.generateWeightsLoadTask != null) return await this.generateWeightsLoadTask;
 
-        _generateWeightsLoadTask = LoadGenerateWeightsAsync(ct);
-        try { return await _generateWeightsLoadTask; }
-        finally { _generateWeightsLoadTask = null; }
+        this.generateWeightsLoadTask = this.LoadGenerateWeightsAsync(ct);
+        try { return await this.generateWeightsLoadTask; }
+        finally {
+            this.generateWeightsLoadTask = null; }
     }
 
     /// <summary>Resolve the model URI and load generation weights from disk.</summary>
     private async Task<LLamaWeights> LoadGenerateWeightsAsync(CancellationToken ct)
     {
-        _generateModelPath = await _modelResolver.ResolveModelFileAsync(_generateModelUri, ct: ct);
-        var modelParams = new ModelParams(_generateModelPath)
+        this.generateModelPath = await this.modelResolver.ResolveModelFileAsync(this.generateModelUri, ct: ct);
+        var modelParams = new ModelParams(this.generateModelPath)
         {
-            ContextSize = (uint)_expandContextSize,
+            ContextSize = (uint)this.expandContextSize,
         };
-        _generateWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
-        return _generateWeights;
+        this.generateWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
+        return this.generateWeights;
     }
 
     #endregion
@@ -522,48 +525,50 @@ content ::= [^\n]+
     /// <summary>Return cached rerank weights, or load them on first call. Coalesces concurrent callers.</summary>
     private async Task<LLamaWeights> EnsureRerankWeightsAsync(CancellationToken ct = default)
     {
-        if (_rerankWeights != null) return _rerankWeights;
-        if (_rerankWeightsLoadTask != null) return await _rerankWeightsLoadTask;
+        if (this.rerankWeights != null) return this.rerankWeights;
+        if (this.rerankWeightsLoadTask != null) return await this.rerankWeightsLoadTask;
 
-        _rerankWeightsLoadTask = LoadRerankWeightsAsync(ct);
-        try { return await _rerankWeightsLoadTask; }
-        finally { _rerankWeightsLoadTask = null; }
+        this.rerankWeightsLoadTask = this.LoadRerankWeightsAsync(ct);
+        try { return await this.rerankWeightsLoadTask; }
+        finally {
+            this.rerankWeightsLoadTask = null; }
     }
 
     /// <summary>Resolve the model URI and load rerank weights from disk.</summary>
     private async Task<LLamaWeights> LoadRerankWeightsAsync(CancellationToken ct)
     {
-        _rerankModelPath = await _modelResolver.ResolveModelFileAsync(_rerankModelUri, ct: ct);
-        var modelParams = new ModelParams(_rerankModelPath)
+        this.rerankModelPath = await this.modelResolver.ResolveModelFileAsync(this.rerankModelUri, ct: ct);
+        var modelParams = new ModelParams(this.rerankModelPath)
         {
             ContextSize = (uint)LlmConstants.RerankContextSize,
         };
-        _rerankWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
-        return _rerankWeights;
+        this.rerankWeights = await LLamaWeights.LoadFromFileAsync(modelParams, ct, new Progress<float>(_ => { }));
+        return this.rerankWeights;
     }
 
     /// <summary>Return cached reranker contexts, or create the pool on first call. Coalesces concurrent callers.</summary>
     private async Task<List<LLamaReranker>> EnsureRerankContextsAsync(CancellationToken ct = default)
     {
-        if (_rerankContexts.Count > 0) return _rerankContexts;
-        if (_rerankContextsCreateTask != null) return await _rerankContextsCreateTask;
+        if (this.rerankContexts.Count > 0) return this.rerankContexts;
+        if (this.rerankContextsCreateTask != null) return await this.rerankContextsCreateTask;
 
-        _rerankContextsCreateTask = CreateRerankContextsAsync(ct);
-        try { return await _rerankContextsCreateTask; }
-        finally { _rerankContextsCreateTask = null; }
+        this.rerankContextsCreateTask = this.CreateRerankContextsAsync(ct);
+        try { return await this.rerankContextsCreateTask; }
+        finally {
+            this.rerankContextsCreateTask = null; }
     }
 
     /// <summary>Create a pool of reranker contexts (up to 4). Falls back to non-FlashAttention if first context fails.</summary>
     private async Task<List<LLamaReranker>> CreateRerankContextsAsync(CancellationToken ct)
     {
-        var weights = await EnsureRerankWeightsAsync(ct);
+        var weights = await this.EnsureRerankWeightsAsync(ct);
         var n = Math.Min(ComputeParallelism(), 4);
 
         for (int i = 0; i < n; i++)
         {
             try
             {
-                var contextParams = new ModelParams(_rerankModelPath!)
+                var contextParams = new ModelParams(this.rerankModelPath!)
                 {
                     ContextSize = (uint)LlmConstants.RerankContextSize,
                     BatchSize = (uint)LlmConstants.RerankContextSize,
@@ -572,23 +577,23 @@ content ::= [^\n]+
                     FlashAttention = true,
                 };
                 var reranker = new LLamaReranker(weights, contextParams);
-                _rerankContexts.Add(reranker);
+                this.rerankContexts.Add(reranker);
             }
             catch
             {
-                if (_rerankContexts.Count == 0)
+                if (this.rerankContexts.Count == 0)
                 {
                     // FlashAttention not supported — retry without it
                     try
                     {
-                        var fallbackParams = new ModelParams(_rerankModelPath!)
+                        var fallbackParams = new ModelParams(this.rerankModelPath!)
                         {
                             ContextSize = (uint)LlmConstants.RerankContextSize,
                             BatchSize = (uint)LlmConstants.RerankContextSize,
                             UBatchSize = (uint)LlmConstants.RerankContextSize,
                             PoolingType = LLama.Native.LLamaPoolingType.Rank,
                         };
-                        _rerankContexts.Add(new LLamaReranker(weights, fallbackParams));
+                        this.rerankContexts.Add(new LLamaReranker(weights, fallbackParams));
                     }
                     catch (Exception ex2)
                     {
@@ -599,7 +604,7 @@ content ::= [^\n]+
             }
         }
 
-        return _rerankContexts;
+        return this.rerankContexts;
     }
 
     #endregion
@@ -623,9 +628,9 @@ content ::= [^\n]+
 
         var maxTokens = LlmConstants.EmbedContextSize - 4; // safety margin
 
-        if (_embedWeights != null)
+        if (this.embedWeights != null)
         {
-            var tokens = _embedWeights.NativeHandle.Tokenize(text, false, false, Encoding.UTF8);
+            var tokens = this.embedWeights.NativeHandle.Tokenize(text, false, false, Encoding.UTF8);
             if (tokens.Length <= maxTokens) return text;
 
             // Binary search for the right character cutoff
@@ -637,7 +642,7 @@ content ::= [^\n]+
             while (estimatedChars > 0)
             {
                 var candidate = text[..estimatedChars];
-                var count = _embedWeights.NativeHandle.Tokenize(candidate, false, false, Encoding.UTF8).Length;
+                var count = this.embedWeights.NativeHandle.Tokenize(candidate, false, false, Encoding.UTF8).Length;
                 if (count <= maxTokens) return candidate;
                 estimatedChars = (int)(estimatedChars * 0.9);
             }
@@ -656,25 +661,25 @@ content ::= [^\n]+
     /// <summary>Dispose all loaded models, embedders, and reranker contexts.</summary>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
-        _disposed = true;
+        if (this.disposed) return;
+        this.disposed = true;
 
-        foreach (var ctx in _embedContexts)
+        foreach (var ctx in this.embedContexts)
             ctx.Dispose();
-        _embedContexts.Clear();
+        this.embedContexts.Clear();
 
-        foreach (var ctx in _rerankContexts)
+        foreach (var ctx in this.rerankContexts)
             ctx.Dispose();
-        _rerankContexts.Clear();
+        this.rerankContexts.Clear();
 
-        _embedWeights?.Dispose();
-        _embedWeights = null;
+        this.embedWeights?.Dispose();
+        this.embedWeights = null;
 
-        _generateWeights?.Dispose();
-        _generateWeights = null;
+        this.generateWeights?.Dispose();
+        this.generateWeights = null;
 
-        _rerankWeights?.Dispose();
-        _rerankWeights = null;
+        this.rerankWeights?.Dispose();
+        this.rerankWeights = null;
 
         GC.SuppressFinalize(this);
     }

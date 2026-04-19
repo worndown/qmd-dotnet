@@ -11,18 +11,18 @@ namespace Qmd.Core.Tests.Retrieval;
 [Trait("Category", "Database")]
 public class ContextResolverTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly ConfigSyncService _configSync;
-    private readonly DocumentRepository _docRepo;
+    private readonly IQmdDatabase db;
+    private readonly ConfigSyncService configSync;
+    private readonly DocumentRepository docRepo;
 
     public ContextResolverTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _configSync = new ConfigSyncService(_db);
-        _docRepo = new DocumentRepository(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.configSync = new ConfigSyncService(this.db);
+        this.docRepo = new DocumentRepository(this.db);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     private void SeedCollection(string name, string path, Dictionary<string, string>? context = null)
     {
@@ -38,8 +38,8 @@ public class ContextResolverTests : IDisposable
             }
         };
         // Clear config hash to force re-sync
-        _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        _configSync.SyncToDb(config);
+        this.db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
+        this.configSync.SyncToDb(config);
     }
 
     private void SeedCollectionWithGlobalContext(string name, string path,
@@ -57,42 +57,42 @@ public class ContextResolverTests : IDisposable
                 }
             }
         };
-        _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        _configSync.SyncToDb(config);
+        this.db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
+        this.configSync.SyncToDb(config);
     }
 
     private void InsertDoc(string collection, string displayPath, string title = "Test")
     {
         var body = $"# {title}\n\nTest content for {displayPath}.";
         var hash = ContentHasher.HashContent(body);
-        _docRepo.InsertContent(hash, body, "2025-01-01");
-        _docRepo.InsertDocument(collection, displayPath, title, hash, "2025-01-01", "2025-01-01");
+        this.docRepo.InsertContent(hash, body, "2025-01-01");
+        this.docRepo.InsertDocument(collection, displayPath, title, hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]
     public void GetContextForFile_ReturnsNull_WhenNoContextSet()
     {
         // No collections, no context — any file path should return null
-        var context = ContextResolver.GetContextForFile(_db, "/some/random/path.md");
+        var context = ContextResolver.GetContextForFile(this.db, "/some/random/path.md");
         context.Should().BeNull();
     }
 
     [Fact]
     public void GetContextForFile_ReturnsMatchingContext()
     {
-        SeedCollection("collection", "/test/collection",
+        this.SeedCollection("collection", "/test/collection",
             context: new Dictionary<string, string> { ["/docs"] = "Documentation files" });
 
-        InsertDoc("collection", "docs/readme.md", "readme");
+        this.InsertDoc("collection", "docs/readme.md", "readme");
 
-        var context = ContextResolver.GetContextForFile(_db, "/test/collection/docs/readme.md");
+        var context = ContextResolver.GetContextForFile(this.db, "/test/collection/docs/readme.md");
         context.Should().Be("Documentation files");
     }
 
     [Fact]
     public void GetContextForFile_ReturnsAllMatchingContexts()
     {
-        SeedCollectionWithGlobalContext("collection", "/test/collection",
+        this.SeedCollectionWithGlobalContext("collection", "/test/collection",
             context: new Dictionary<string, string>
             {
                 ["/"] = "General test files",
@@ -101,20 +101,20 @@ public class ContextResolverTests : IDisposable
             },
             globalContext: null);
 
-        InsertDoc("collection", "readme.md", "readme");
-        InsertDoc("collection", "docs/guide.md", "guide");
-        InsertDoc("collection", "docs/api/reference.md", "reference");
+        this.InsertDoc("collection", "readme.md", "readme");
+        this.InsertDoc("collection", "docs/guide.md", "guide");
+        this.InsertDoc("collection", "docs/api/reference.md", "reference");
 
         // readme.md is at root — only root context matches
-        ContextResolver.GetContextForFile(_db, "/test/collection/readme.md")
+        ContextResolver.GetContextForFile(this.db, "/test/collection/readme.md")
             .Should().Be("General test files");
 
         // docs/guide.md matches root + /docs
-        ContextResolver.GetContextForFile(_db, "/test/collection/docs/guide.md")
+        ContextResolver.GetContextForFile(this.db, "/test/collection/docs/guide.md")
             .Should().Be("General test files\n\nDocumentation files");
 
         // docs/api/reference.md matches root + /docs + /docs/api
-        ContextResolver.GetContextForFile(_db, "/test/collection/docs/api/reference.md")
+        ContextResolver.GetContextForFile(this.db, "/test/collection/docs/api/reference.md")
             .Should().Be("General test files\n\nDocumentation files\n\nAPI documentation");
     }
 }

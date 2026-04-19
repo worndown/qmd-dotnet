@@ -18,8 +18,8 @@ namespace Qmd.Cli.Tests;
 public class CliIntegrationTests : IAsyncLifetime
 {
 
-    private IQmdStore _store = null!;
-    private QmdStore _coreStore = null!;
+    private IQmdStore store = null!;
+    private QmdStore coreStore = null!;
 
     /// <summary>
     /// Seed helper — mirrors the pattern from QmdStoreSdkTests.
@@ -30,9 +30,9 @@ public class CliIntegrationTests : IAsyncLifetime
     private void Seed(string collection, string path, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        _coreStore.DocumentRepo.InsertContent(hash, content, "2025-01-01");
-        var title = _coreStore.ExtractTitle(content, path);
-        _coreStore.DocumentRepo.InsertDocument(
+        this.coreStore.DocumentRepo.InsertContent(hash, content, "2025-01-01");
+        var title = this.coreStore.ExtractTitle(content, path);
+        this.coreStore.DocumentRepo.InsertDocument(
             collection, path, title, hash, "2025-01-01", "2025-01-01");
     }
 
@@ -48,34 +48,34 @@ public class CliIntegrationTests : IAsyncLifetime
 
         var db = new SqliteDatabase(":memory:");
         var configManager = new ConfigManager(new InlineConfigSource(config));
-        _coreStore = new QmdStore(db, configManager);
+        this.coreStore = new QmdStore(db, configManager);
 
         // Seed data matching the TS test fixtures
-        Seed("fixtures", "readme.md",
+        this.Seed("fixtures", "readme.md",
             "# Test Project\n\nThis is a test project for QMD CLI testing.\n\n## Features\n\n- Full-text search with BM25\n- Vector similarity search\n- Hybrid search with reranking\n");
 
-        Seed("fixtures", "notes/meeting.md",
+        this.Seed("fixtures", "notes/meeting.md",
             "# Team Meeting Notes\n\nDate: 2024-01-15\n\n## Attendees\n- Alice\n- Bob\n- Charlie\n\n## Discussion Topics\n- Project timeline review\n- Resource allocation\n- Technical debt prioritization\n\n## Action Items\n1. Alice to update documentation\n2. Bob to fix authentication bug\n3. Charlie to review pull requests\n");
 
-        Seed("fixtures", "notes/ideas.md",
+        this.Seed("fixtures", "notes/ideas.md",
             "# Product Ideas\n\n## Feature Requests\n- Dark mode support\n- Keyboard shortcuts\n- Export to PDF\n\n## Technical Improvements\n- Improve search performance\n- Add caching layer\n- Optimize database queries\n");
 
-        Seed("fixtures", "docs/api.md",
+        this.Seed("fixtures", "docs/api.md",
             "# API Documentation\n\n## Endpoints\n\n### GET /search\nSearch for documents.\n\nParameters:\n- q: Search query (required)\n- limit: Max results (default: 10)\n\n### GET /document/:id\nRetrieve a specific document.\n\n### POST /index\nIndex new documents.\n");
 
-        Seed("fixtures", "test1.md",
+        this.Seed("fixtures", "test1.md",
             "# Test Document 1\n\nThis is the first test document.\n\nIt has multiple lines for testing line numbers.\nLine 6 is here.\nLine 7 is here.\n");
 
-        Seed("fixtures", "test2.md",
+        this.Seed("fixtures", "test2.md",
             "# Test Document 2\n\nThis is the second test document.\n");
 
-        _store = _coreStore;
+        this.store = this.coreStore;
         return Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
-        await _store.DisposeAsync();
+        await this.store.DisposeAsync();
     }
 
     private static (IQmdStore Store, QmdStore CoreStore) CreateFreshStore(CollectionConfig? config = null)
@@ -99,7 +99,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_BM25_FindsMeetingDocument()
     {
-        var results = await _store.SearchLexAsync("meeting");
+        var results = await this.store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
         results.Should().Contain(r => r.Title.ToLower().Contains("meeting")
                                   || r.Body!.ToLower().Contains("meeting"));
@@ -108,7 +108,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Search_WithLimit_RespectsLimit()
     {
-        var results = await _store.SearchLexAsync("test", new LexSearchOptions { Limit = 1 });
+        var results = await this.store.SearchLexAsync("test", new LexSearchOptions { Limit = 1 });
         results.Should().HaveCountLessThanOrEqualTo(1);
     }
 
@@ -116,7 +116,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_WithLargeLimit_ReturnsAll()
     {
         // --all passes a large limit
-        var results = await _store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
+        var results = await this.store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
         results.Should().NotBeEmpty();
     }
 
@@ -124,7 +124,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_NonMatching_ReturnsEmpty()
     {
         // returns no results message for non-matching query
-        var results = await _store.SearchLexAsync("xyznonexistent123");
+        var results = await this.store.SearchLexAsync("xyznonexistent123");
         results.Should().BeEmpty();
     }
 
@@ -159,7 +159,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_JsonFormat_ReturnsValidJson()
     {
         // search with --json flag outputs JSON
-        var results = await _store.SearchLexAsync("test");
+        var results = await this.store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
         var json = SearchResultFormatter.ToJson(results);
@@ -174,7 +174,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_FilesFormat_ContainsFilePaths()
     {
         // search with --files flag outputs file paths
-        var results = await _store.SearchLexAsync("meeting");
+        var results = await this.store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
 
         var output = SearchResultFormatter.ToFiles(results);
@@ -194,7 +194,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_RetrievesDocumentByPath()
     {
         // retrieves document content by path
-        var result = await _store.GetAsync("readme.md");
+        var result = await this.store.GetAsync("readme.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Project");
     }
@@ -203,7 +203,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_RetrievesFromSubdirectory()
     {
         // retrieves document from subdirectory
-        var result = await _store.GetAsync("notes/meeting.md");
+        var result = await this.store.GetAsync("notes/meeting.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Team Meeting");
     }
@@ -212,7 +212,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_HandlesNonExistentFile()
     {
         // handles non-existent file
-        var result = await _store.GetAsync("nonexistent.md");
+        var result = await this.store.GetAsync("nonexistent.md");
         result.IsFound.Should().BeFalse();
         result.NotFound.Should().NotBeNull();
     }
@@ -221,7 +221,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_WithVirtualPathFormat()
     {
         // get with qmd://collection/path format
-        var result = await _store.GetAsync("qmd://fixtures/test1.md");
+        var result = await this.store.GetAsync("qmd://fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
     }
@@ -231,7 +231,7 @@ public class CliIntegrationTests : IAsyncLifetime
     {
         // get with path:line format
         // The GetDocumentBodyAsync supports line slicing
-        var body = await _store.GetDocumentBodyAsync("fixtures/test1.md",
+        var body = await this.store.GetDocumentBodyAsync("fixtures/test1.md",
             new BodyOptions { FromLine = 3, MaxLines = 2 });
         body.Should().NotBeNull();
         // Should start from line 3, not line 1 — so should NOT contain the title "# Test Document 1"
@@ -242,7 +242,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Collection_ListsCollections()
     {
         // lists collections
-        var collections = await _store.ListCollectionsAsync();
+        var collections = await this.store.ListCollectionsAsync();
         collections.Should().NotBeEmpty();
         collections.Should().Contain(c => c.Name == "fixtures");
     }
@@ -272,7 +272,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Collection_HandlesRemovingNonExistent()
     {
         // handles removing non-existent collection
-        var removed = await _store.RemoveCollectionAsync("nonexistent");
+        var removed = await this.store.RemoveCollectionAsync("nonexistent");
         removed.Should().BeFalse();
     }
 
@@ -302,7 +302,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Collection_HandlesRenamingNonExistent()
     {
         // handles renaming non-existent collection
-        var renamed = await _store.RenameCollectionAsync("nonexistent", "newname");
+        var renamed = await this.store.RenameCollectionAsync("nonexistent", "newname");
         renamed.Should().BeFalse();
     }
 
@@ -528,7 +528,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Ls_ListsAllCollections()
     {
         // lists all collections
-        var collections = await _store.ListCollectionsAsync();
+        var collections = await this.store.ListCollectionsAsync();
         collections.Should().NotBeEmpty();
         collections.Select(c => c.Name).Should().Contain("fixtures");
     }
@@ -538,7 +538,7 @@ public class CliIntegrationTests : IAsyncLifetime
     {
         // lists files in a collection
         // MultiGetAsync with a glob pattern lists files in a collection
-        var (docs, errors) = await _store.MultiGetAsync("qmd://fixtures/*.md");
+        var (docs, errors) = await this.store.MultiGetAsync("qmd://fixtures/*.md");
         docs.Should().NotBeEmpty();
         docs.Should().Contain(d => d.Doc.DisplayPath.Contains("readme.md"));
     }
@@ -547,7 +547,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Ls_HandlesNonExistentCollection()
     {
         // handles non-existent collection
-        var (docs, errors) = await _store.MultiGetAsync("qmd://nonexistent/*.md");
+        var (docs, errors) = await this.store.MultiGetAsync("qmd://nonexistent/*.md");
         docs.Should().BeEmpty();
         errors.Should().NotBeEmpty();
     }
@@ -605,11 +605,11 @@ public class CliIntegrationTests : IAsyncLifetime
     public void Cleanup_OrphanedEntries()
     {
         // Deactivate a document, then clean up
-        _coreStore.DocumentRepo.DeactivateDocument("fixtures", "test2.md");
-        var deleted = _coreStore.MaintenanceRepo.DeleteInactiveDocuments();
+        this.coreStore.DocumentRepo.DeactivateDocument("fixtures", "test2.md");
+        var deleted = this.coreStore.MaintenanceRepo.DeleteInactiveDocuments();
         deleted.Should().BeGreaterThanOrEqualTo(1);
 
-        var orphaned = _coreStore.MaintenanceRepo.CleanupOrphanedContent();
+        var orphaned = this.coreStore.MaintenanceRepo.CleanupOrphanedContent();
         orphaned.Should().BeGreaterThanOrEqualTo(0);
     }
 
@@ -617,16 +617,16 @@ public class CliIntegrationTests : IAsyncLifetime
     public void Cleanup_RemovesDocsFromDeletedCollections()
     {
         // Insert docs for a collection that doesn't exist in store_collections
-        Seed("ghost-collection", "orphan.md", "# Orphan\nThis should be cleaned up.");
+        this.Seed("ghost-collection", "orphan.md", "# Orphan\nThis should be cleaned up.");
 
         // Verify it exists
-        var before = _coreStore.Db.Prepare(
+        var before = this.coreStore.Db.Prepare(
             "SELECT COUNT(*) as cnt FROM documents WHERE collection = $1")
             .Get<CountRow>("ghost-collection");
         before!.Cnt.Should().Be(1);
 
         // Run the same cleanup SQL as CleanupCommand
-        var removed = _coreStore.Db.Prepare(@"
+        var removed = this.coreStore.Db.Prepare(@"
             DELETE FROM documents WHERE collection NOT IN (
                 SELECT name FROM store_collections
             )
@@ -634,7 +634,7 @@ public class CliIntegrationTests : IAsyncLifetime
         removed.Should().BeGreaterThanOrEqualTo(1);
 
         // Verify it's gone
-        var after = _coreStore.Db.Prepare(
+        var after = this.coreStore.Db.Prepare(
             "SELECT COUNT(*) as cnt FROM documents WHERE collection = $1")
             .Get<CountRow>("ghost-collection");
         after!.Cnt.Should().Be(0);
@@ -643,7 +643,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Ls_ListsFilesViaListFilesAsync()
     {
-        var files = await _store.ListFilesAsync("fixtures");
+        var files = await this.store.ListFilesAsync("fixtures");
         files.Should().HaveCount(6); // readme, meeting, ideas, api, test1, test2
         files.Select(f => f.Path).Should().Contain("readme.md");
         files.Select(f => f.Path).Should().Contain("docs/api.md");
@@ -652,7 +652,7 @@ public class CliIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Ls_ListsFilesWithPathPrefix()
     {
-        var files = await _store.ListFilesAsync("fixtures", "notes/");
+        var files = await this.store.ListFilesAsync("fixtures", "notes/");
         files.Should().HaveCount(2); // meeting.md and ideas.md
         files.Should().AllSatisfy(f => f.Path.Should().StartWith("notes/"));
     }
@@ -661,14 +661,14 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Ls_ListsFilesWithPathPrefix_NoTrailingSlash()
     {
         // SQL LIKE "notes%" matches "notes/" prefix paths
-        var files = await _store.ListFilesAsync("fixtures", "notes");
+        var files = await this.store.ListFilesAsync("fixtures", "notes");
         files.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Ls_NonExistentPrefix_ReturnsEmpty()
     {
-        var files = await _store.ListFilesAsync("fixtures", "nonexistent/");
+        var files = await this.store.ListFilesAsync("fixtures", "nonexistent/");
         files.Should().BeEmpty();
     }
 
@@ -676,7 +676,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task SearchOutput_Json_IncludesDocidAndQmdPath()
     {
         // search --json output includes qmd:// path, docid, and context fields
-        var results = await _store.SearchLexAsync("test");
+        var results = await this.store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
         var json = SearchResultFormatter.ToJson(results);
@@ -694,7 +694,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task SearchOutput_Csv_HasCorrectHeaderAndData()
     {
         // search --csv includes qmd:// path, docid, and context
-        var results = await _store.SearchLexAsync("test");
+        var results = await this.store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
         var csv = SearchResultFormatter.ToCsv(results);
@@ -707,7 +707,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task SearchOutput_Md_IncludesDocid()
     {
         // search --md includes docid and context
-        var results = await _store.SearchLexAsync("test");
+        var results = await this.store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
         var md = SearchResultFormatter.ToMarkdown(results, new FormatOptions { Query = "test" });
@@ -718,7 +718,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task SearchOutput_Xml_IncludesQmdPathAndDocid()
     {
         // search --xml includes qmd:// path, docid, and context
-        var results = await _store.SearchLexAsync("test");
+        var results = await this.store.SearchLexAsync("test");
         results.Should().NotBeEmpty();
 
         var xml = SearchResultFormatter.ToXml(results, new FormatOptions { Query = "test" });
@@ -729,7 +729,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task SearchOutput_Files_IncludesDocidAndScore()
     {
         // search --files includes qmd:// path, docid, and context
-        var results = await _store.SearchLexAsync("meeting");
+        var results = await this.store.SearchLexAsync("meeting");
         results.Should().NotBeEmpty();
 
         var files = SearchResultFormatter.ToFiles(results);
@@ -740,7 +740,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Status_ShowsIndexInfo()
     {
         // shows index status — call GetStatusAsync, verify output shape
-        var status = await _store.GetStatusAsync();
+        var status = await this.store.GetStatusAsync();
         status.Should().NotBeNull();
         status.TotalDocuments.Should().BeGreaterThan(0);
         status.Collections.Should().NotBeEmpty();
@@ -751,7 +751,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_WithCollectionSlashPathFormat()
     {
         // get with collection/path format (no scheme)
-        var result = await _store.GetAsync("fixtures/test1.md");
+        var result = await this.store.GetAsync("fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
     }
@@ -760,7 +760,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Get_WithDoubleSlashFormat()
     {
         // get with //collection/path format
-        var result = await _store.GetAsync("//fixtures/test1.md");
+        var result = await this.store.GetAsync("//fixtures/test1.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Contain("Test Document 1");
     }
@@ -948,7 +948,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_WithAllOption_ReturnsAllResults()
     {
         // searches with all results option — search with large limit
-        var results = await _store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
+        var results = await this.store.SearchLexAsync("the", new LexSearchOptions { Limit = 1000 });
         results.Should().NotBeEmpty();
     }
 
@@ -956,7 +956,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_EmptyResults_JsonReturnsEmptyArray()
     {
         // returns empty JSON array for non-matching query with --json
-        var results = await _store.SearchLexAsync("xyznonexistent");
+        var results = await this.store.SearchLexAsync("xyznonexistent");
         results.Should().BeEmpty();
         var json = SearchResultFormatter.ToJson(results);
         json.Should().Be("[]");
@@ -966,7 +966,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_EmptyResults_CsvReturnsHeaderOnly()
     {
         // returns CSV header only for non-matching query with --csv
-        var results = await _store.SearchLexAsync("xyznonexistent");
+        var results = await this.store.SearchLexAsync("xyznonexistent");
         var csv = SearchResultFormatter.ToCsv(results);
         // .NET CSV formatter returns header row even for empty results
         csv.Trim().Should().StartWith("docid,");
@@ -977,7 +977,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Search_EmptyResults_XmlReturnsEmpty()
     {
         // returns empty XML container for non-matching query with --xml
-        var results = await _store.SearchLexAsync("xyznonexistent");
+        var results = await this.store.SearchLexAsync("xyznonexistent");
         var xml = SearchResultFormatter.ToXml(results);
         // .NET XML formatter returns empty string for empty results (no wrapper element)
         xml.Should().BeEmpty();
@@ -987,7 +987,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task MultiGet_ByGlobPattern_ReturnsResults()
     {
         // retrieves multiple documents by pattern
-        var (docs, errors) = await _store.MultiGetAsync("qmd://fixtures/notes/*.md",
+        var (docs, errors) = await this.store.MultiGetAsync("qmd://fixtures/notes/*.md",
             new MultiGetOptions { IncludeBody = true });
         docs.Count.Should().BeGreaterThanOrEqualTo(2);
     }
@@ -996,8 +996,8 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task MultiGet_ByCommaSeparatedPaths_ReturnsResults()
     {
         // retrieves documents by comma-separated paths
-        var (docs1, _) = await _store.MultiGetAsync("qmd://fixtures/readme.md");
-        var (docs2, _) = await _store.MultiGetAsync("qmd://fixtures/notes/meeting.md");
+        var (docs1, _) = await this.store.MultiGetAsync("qmd://fixtures/readme.md");
+        var (docs2, _) = await this.store.MultiGetAsync("qmd://fixtures/notes/meeting.md");
         docs1.Count.Should().BeGreaterThanOrEqualTo(1);
         docs2.Count.Should().BeGreaterThanOrEqualTo(1);
     }
@@ -1067,7 +1067,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Embed_InvalidMaxDocsPerBatch_Fails()
     {
         // rejects invalid --max-docs-per-batch
-        var act = async () => await _store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 });
+        var act = async () => await this.store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 });
         await act.Should().ThrowAsync<Exception>();
     }
 
@@ -1075,7 +1075,7 @@ public class CliIntegrationTests : IAsyncLifetime
     public async Task Embed_InvalidMaxBatchMb_Fails()
     {
         // rejects invalid --max-batch-mb
-        var act = async () => await _store.EmbedAsync(new EmbedPipelineOptions { MaxBatchBytes = 0 });
+        var act = async () => await this.store.EmbedAsync(new EmbedPipelineOptions { MaxBatchBytes = 0 });
         await act.Should().ThrowAsync<Exception>();
     }
 }

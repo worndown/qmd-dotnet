@@ -9,16 +9,16 @@ namespace Qmd.Cli.Tests.Commands;
 [Trait("Category", "Unit")]
 public class CollectionCommandOutputTests : IDisposable
 {
-    private readonly TestConsoleOutput _console = new();
-    private readonly IConsoleOutput _original;
+    private readonly TestConsoleOutput console = new();
+    private readonly IConsoleOutput original;
 
     public CollectionCommandOutputTests()
     {
-        _original = CliContext.Console;
-        CliContext.Console = _console;
+        this.original = CliContext.Console;
+        CliContext.Console = this.console;
     }
 
-    public void Dispose() => CliContext.Console = _original;
+    public void Dispose() => CliContext.Console = this.original;
 
     private static async Task<IQmdStore> CreateStoreWithCollection(string name = "fixtures", string path = "/test/fixtures")
     {
@@ -39,8 +39,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleRemoveAsync(store, "fixtures");
 
-        _console.GetOutput().Should().Contain("Collection 'fixtures' removed.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Collection 'fixtures' removed.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleRemoveAsync(store, "nonexistent");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 
     [Fact]
@@ -61,8 +61,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleRenameAsync(store, "fixtures", "renamed");
 
-        _console.GetOutput().Should().Contain("Collection 'fixtures' renamed to 'renamed'.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Collection 'fixtures' renamed to 'renamed'.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -72,8 +72,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleRenameAsync(store, "nonexistent", "renamed");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 
     [Fact]
@@ -83,12 +83,12 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleShowAsync(store, "fixtures");
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().Contain("Name:    fixtures");
         output.Should().Contain("Path:    /test/fixtures");
         output.Should().Contain("Pattern: **/*.md");
         output.Should().Contain("Include: yes");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleShowAsync(store, "archive");
 
-        _console.GetOutput().Should().Contain("Include: no");
+        this.console.GetOutput().Should().Contain("Include: no");
     }
 
     [Fact]
@@ -115,8 +115,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleShowAsync(store, "nonexistent");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 
     [Fact]
@@ -126,8 +126,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleUpdateCmdAsync(store, "fixtures", "git pull");
 
-        _console.GetOutput().Should().Contain("Update command set for 'fixtures': git pull");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Update command set for 'fixtures': git pull");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -136,12 +136,12 @@ public class CollectionCommandOutputTests : IDisposable
         await using var store = await CreateStoreWithCollection();
         // First set a command
         await store.UpdateCollectionSettingsAsync("fixtures", update: "git pull");
-        _console.Clear();
+        this.console.Clear();
 
         await CollectionCommand.HandleUpdateCmdAsync(store, "fixtures", null);
 
-        _console.GetOutput().Should().Contain("Update command cleared for 'fixtures'.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Update command cleared for 'fixtures'.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -151,8 +151,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleUpdateCmdAsync(store, "nonexistent", "git pull");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 
     [Fact]
@@ -162,8 +162,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleIncludeAsync(store, "fixtures");
 
-        _console.GetOutput().Should().Contain("Collection 'fixtures' included in default searches.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Collection 'fixtures' included in default searches.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -173,8 +173,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleIncludeAsync(store, "nonexistent");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 
     [Fact]
@@ -184,8 +184,8 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleExcludeAsync(store, "fixtures");
 
-        _console.GetOutput().Should().Contain("Collection 'fixtures' excluded from default searches.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetOutput().Should().Contain("Collection 'fixtures' excluded from default searches.");
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public class CollectionCommandOutputTests : IDisposable
 
         await CollectionCommand.HandleExcludeAsync(store, "nonexistent");
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Collection 'nonexistent' not found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Collection 'nonexistent' not found.");
     }
 }

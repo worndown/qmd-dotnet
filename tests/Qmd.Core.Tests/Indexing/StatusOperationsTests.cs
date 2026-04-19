@@ -11,20 +11,20 @@ namespace Qmd.Core.Tests.Indexing;
 [Trait("Category", "Database")]
 public class StatusOperationsTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly StatusRepository _statusRepo;
-    private readonly DocumentRepository _docRepo;
-    private readonly ConfigSyncService _configSync;
+    private readonly IQmdDatabase db;
+    private readonly StatusRepository statusRepo;
+    private readonly DocumentRepository docRepo;
+    private readonly ConfigSyncService configSync;
 
     public StatusOperationsTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _statusRepo = new StatusRepository(_db);
-        _docRepo = new DocumentRepository(_db);
-        _configSync = new ConfigSyncService(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.statusRepo = new StatusRepository(this.db);
+        this.docRepo = new DocumentRepository(this.db);
+        this.configSync = new ConfigSyncService(this.db);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     private void SeedCollection(string name, string path)
     {
@@ -32,24 +32,24 @@ public class StatusOperationsTests : IDisposable
         {
             Collections = new() { [name] = new Collection { Path = path } }
         };
-        _configSync.SyncToDb(config);
+        this.configSync.SyncToDb(config);
     }
 
     private void SeedDoc(string collection, string docPath, string content)
     {
         var hash = ContentHasher.HashContent(content);
-        _docRepo.InsertContent(hash, content, "2025-01-01");
-        _docRepo.InsertDocument(collection, docPath, "Title", hash, "2025-01-01", "2025-01-01");
+        this.docRepo.InsertContent(hash, content, "2025-01-01");
+        this.docRepo.InsertDocument(collection, docPath, "Title", hash, "2025-01-01", "2025-01-01");
     }
 
     [Fact]
     public void GetStatus_ReturnsCorrectCounts()
     {
-        SeedCollection("docs", "/docs");
-        SeedDoc("docs", "a.md", "Content A");
-        SeedDoc("docs", "b.md", "Content B");
+        this.SeedCollection("docs", "/docs");
+        this.SeedDoc("docs", "a.md", "Content A");
+        this.SeedDoc("docs", "b.md", "Content B");
 
-        var status = _statusRepo.GetStatus();
+        var status = this.statusRepo.GetStatus();
         status.TotalDocuments.Should().Be(2);
         status.Collections.Should().HaveCount(1);
         status.Collections[0].Name.Should().Be("docs");
@@ -59,20 +59,20 @@ public class StatusOperationsTests : IDisposable
     [Fact]
     public void GetHashesNeedingEmbedding_CountsCorrectly()
     {
-        SeedCollection("docs", "/docs");
-        SeedDoc("docs", "a.md", "Content A");
+        this.SeedCollection("docs", "/docs");
+        this.SeedDoc("docs", "a.md", "Content A");
 
         // No embeddings yet, all should need embedding
-        _statusRepo.GetHashesNeedingEmbedding().Should().Be(1);
+        this.statusRepo.GetHashesNeedingEmbedding().Should().Be(1);
     }
 
     [Fact]
     public void GetIndexHealth_ReturnsInfo()
     {
-        SeedCollection("docs", "/docs");
-        SeedDoc("docs", "a.md", "Content A");
+        this.SeedCollection("docs", "/docs");
+        this.SeedDoc("docs", "a.md", "Content A");
 
-        var health = _statusRepo.GetIndexHealth();
+        var health = this.statusRepo.GetIndexHealth();
         health.TotalDocs.Should().Be(1);
         health.NeedsEmbedding.Should().Be(1);
     }
@@ -81,7 +81,7 @@ public class StatusOperationsTests : IDisposable
     public void GetStatus_ReportsCollectionInfo()
     {
         // Verify collections list includes name, path, doc_count
-        SeedCollection("testcol", "/test/path");
+        this.SeedCollection("testcol", "/test/path");
 
         // Seed with explicit pattern
         var config = new CollectionConfig
@@ -91,12 +91,12 @@ public class StatusOperationsTests : IDisposable
                 ["testcol"] = new Collection { Path = "/test/path", Pattern = "**/*.md" }
             }
         };
-        _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
-        _configSync.SyncToDb(config);
+        this.db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
+        this.configSync.SyncToDb(config);
 
-        SeedDoc("testcol", "doc1.md", "First doc content");
+        this.SeedDoc("testcol", "doc1.md", "First doc content");
 
-        var status = _statusRepo.GetStatus();
+        var status = this.statusRepo.GetStatus();
         status.Collections.Should().HaveCountGreaterThanOrEqualTo(1);
         var col = status.Collections.FirstOrDefault(c => c.Name == "testcol");
         col.Should().NotBeNull();

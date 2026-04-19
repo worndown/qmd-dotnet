@@ -10,11 +10,11 @@ namespace Qmd.Core.Configuration;
 /// </summary>
 internal class ConfigSyncService : IConfigSyncService
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public ConfigSyncService(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public void SyncToDb(CollectionConfig config)
@@ -24,7 +24,7 @@ internal class ConfigSyncService : IConfigSyncService
         var hash = ComputeHash(configJson);
 
         // Check if hash matches stored hash
-        var storedHash = _db.Prepare("SELECT value FROM store_config WHERE key = $1")
+        var storedHash = this.db.Prepare("SELECT value FROM store_config WHERE key = $1")
             .Get<SingleValueRow>("config_hash");
         if (storedHash != null && storedHash.Value == hash)
             return; // Config unchanged
@@ -37,7 +37,7 @@ internal class ConfigSyncService : IConfigSyncService
             var ignoreJson = coll.Ignore != null ? JsonSerializer.Serialize(coll.Ignore) : null;
             var contextJson = coll.Context != null ? JsonSerializer.Serialize(coll.Context) : null;
 
-            _db.Prepare(@"
+            this.db.Prepare(@"
                 INSERT INTO store_collections (name, path, pattern, ignore_patterns, include_by_default, update_command, context)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ON CONFLICT(name) DO UPDATE SET
@@ -59,31 +59,31 @@ internal class ConfigSyncService : IConfigSyncService
         }
 
         // Delete collections not in config
-        var dbCollections = _db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
+        var dbCollections = this.db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         foreach (var row in dbCollections)
         {
             var rowName = row.Name;
             if (rowName != null && !configNames.Contains(rowName))
             {
-                _db.Prepare("DELETE FROM store_collections WHERE name = $1").Run(rowName);
+                this.db.Prepare("DELETE FROM store_collections WHERE name = $1").Run(rowName);
             }
         }
 
         // Sync global context (delete row when null)
         if (config.GlobalContext != null)
         {
-            _db.Prepare(@"
+            this.db.Prepare(@"
                 INSERT INTO store_config (key, value) VALUES ($1, $2)
                 ON CONFLICT(key) DO UPDATE SET value = excluded.value
             ").Run("global_context", config.GlobalContext);
         }
         else
         {
-            _db.Prepare("DELETE FROM store_config WHERE key = $1").Run("global_context");
+            this.db.Prepare("DELETE FROM store_config WHERE key = $1").Run("global_context");
         }
 
         // Store hash
-        _db.Prepare(@"
+        this.db.Prepare(@"
             INSERT INTO store_config (key, value) VALUES ($1, $2)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value
         ").Run("config_hash", hash);

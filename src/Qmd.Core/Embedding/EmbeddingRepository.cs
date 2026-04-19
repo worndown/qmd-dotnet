@@ -8,11 +8,11 @@ namespace Qmd.Core.Embedding;
 /// </summary>
 internal class EmbeddingRepository : IEmbeddingRepository
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public EmbeddingRepository(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     /// <summary>
@@ -20,7 +20,7 @@ internal class EmbeddingRepository : IEmbeddingRepository
     /// </summary>
     public List<PendingEmbeddingDoc> GetPendingEmbeddingDocs()
     {
-        var rows = _db.Prepare(@"
+        var rows = this.db.Prepare(@"
             SELECT d.hash, MIN(d.path) as path, length(CAST(c.doc AS BLOB)) as bytes
             FROM documents d
             JOIN content c ON d.hash = c.hash
@@ -45,7 +45,7 @@ internal class EmbeddingRepository : IEmbeddingRepository
         if (batch.Count == 0) return [];
 
         var placeholders = string.Join(",", batch.Select((_, i) => $"${i + 1}"));
-        var rows = _db.Prepare($"SELECT hash, doc as body FROM content WHERE hash IN ({placeholders})")
+        var rows = this.db.Prepare($"SELECT hash, doc as body FROM content WHERE hash IN ({placeholders})")
             .All<HashBodyRow>(batch.Select(d => (object?)d.Hash).ToArray());
 
         var bodyByHash = new Dictionary<string, string>();
@@ -62,7 +62,7 @@ internal class EmbeddingRepository : IEmbeddingRepository
     /// Insert a single embedding. Crash-safe ordering: content_vectors first, then vectors_vec.
     /// </summary>
     // Cache whether vectors_vec table exists to avoid per-insert schema query
-    private bool? _vecTableExists;
+    private bool? vecTableExists;
 
     public void InsertEmbedding(string hash, int seq, int pos,
         float[] embedding, string model, string embeddedAt)
@@ -70,30 +70,30 @@ internal class EmbeddingRepository : IEmbeddingRepository
         var hashSeq = $"{hash}_{seq}";
 
         // 1. Insert metadata first (crash-safe)
-        _db.Prepare("INSERT OR REPLACE INTO content_vectors (hash, seq, pos, model, embedded_at) VALUES ($1, $2, $3, $4, $5)")
+        this.db.Prepare("INSERT OR REPLACE INTO content_vectors (hash, seq, pos, model, embedded_at) VALUES ($1, $2, $3, $4, $5)")
             .Run(hash, (long)seq, (long)pos, model, embeddedAt);
 
         // 2. vec0 doesn't support OR REPLACE — use DELETE + INSERT
-        _vecTableExists ??= _db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>() != null;
-        if (_vecTableExists.Value)
+        this.vecTableExists ??= this.db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>() != null;
+        if (this.vecTableExists.Value)
         {
-            _db.Prepare("DELETE FROM vectors_vec WHERE hash_seq = $1").Run(hashSeq);
+            this.db.Prepare("DELETE FROM vectors_vec WHERE hash_seq = $1").Run(hashSeq);
             var bytes = FloatArrayToBytes(embedding);
-            _db.Prepare("INSERT INTO vectors_vec (hash_seq, embedding) VALUES ($1, $2)")
+            this.db.Prepare("INSERT INTO vectors_vec (hash_seq, embedding) VALUES ($1, $2)")
                 .Run(hashSeq, bytes);
         }
     }
 
     /// <summary>Reset vec table cache — needed after table creation during embedding.</summary>
-    public void ResetVecTableCache() => _vecTableExists = null;
+    public void ResetVecTableCache() => this.vecTableExists = null;
 
     /// <summary>
     /// Clear all embeddings (force re-embed).
     /// </summary>
     public void ClearAllEmbeddings()
     {
-        _db.Exec("DELETE FROM content_vectors");
-        _db.Exec("DROP TABLE IF EXISTS vectors_vec");
+        this.db.Exec("DELETE FROM content_vectors");
+        this.db.Exec("DROP TABLE IF EXISTS vectors_vec");
     }
 
     /// <summary>

@@ -9,32 +9,32 @@ namespace Qmd.Core.Tests.Embedding;
 [Trait("Category", "Database")]
 public class EmbeddingOperationsTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly EmbeddingRepository _embeddingRepo;
-    private readonly DocumentRepository _docRepo;
+    private readonly IQmdDatabase db;
+    private readonly EmbeddingRepository embeddingRepo;
+    private readonly DocumentRepository docRepo;
 
     public EmbeddingOperationsTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _embeddingRepo = new EmbeddingRepository(_db);
-        _docRepo = new DocumentRepository(_db);
-        SeedDocs();
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.embeddingRepo = new EmbeddingRepository(this.db);
+        this.docRepo = new DocumentRepository(this.db);
+        this.SeedDocs();
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     private void SeedDocs()
     {
-        _docRepo.InsertContent("hash1", "Content 1", "2025-01-01");
-        _docRepo.InsertContent("hash2", "Content 2", "2025-01-01");
-        _docRepo.InsertDocument("docs", "a.md", "Doc A", "hash1", "2025-01-01", "2025-01-01");
-        _docRepo.InsertDocument("docs", "b.md", "Doc B", "hash2", "2025-01-01", "2025-01-01");
+        this.docRepo.InsertContent("hash1", "Content 1", "2025-01-01");
+        this.docRepo.InsertContent("hash2", "Content 2", "2025-01-01");
+        this.docRepo.InsertDocument("docs", "a.md", "Doc A", "hash1", "2025-01-01", "2025-01-01");
+        this.docRepo.InsertDocument("docs", "b.md", "Doc B", "hash2", "2025-01-01", "2025-01-01");
     }
 
     [Fact]
     public void GetPendingEmbeddingDocs_ReturnsDocsWithoutEmbeddings()
     {
-        var pending = _embeddingRepo.GetPendingEmbeddingDocs();
+        var pending = this.embeddingRepo.GetPendingEmbeddingDocs();
         pending.Should().HaveCount(2);
         pending.Should().Contain(d => d.Hash == "hash1");
         pending.Should().Contain(d => d.Hash == "hash2");
@@ -43,8 +43,8 @@ public class EmbeddingOperationsTests : IDisposable
     [Fact]
     public void GetPendingEmbeddingDocs_SkipsInactiveDocs()
     {
-        _docRepo.DeactivateDocument("docs", "b.md");
-        var pending = _embeddingRepo.GetPendingEmbeddingDocs();
+        this.docRepo.DeactivateDocument("docs", "b.md");
+        var pending = this.embeddingRepo.GetPendingEmbeddingDocs();
         pending.Should().HaveCount(1);
         pending[0].Hash.Should().Be("hash1");
     }
@@ -52,8 +52,8 @@ public class EmbeddingOperationsTests : IDisposable
     [Fact]
     public void GetEmbeddingDocsForBatch_LoadsBodies()
     {
-        var pending = _embeddingRepo.GetPendingEmbeddingDocs();
-        var docs = _embeddingRepo.GetEmbeddingDocsForBatch(pending);
+        var pending = this.embeddingRepo.GetPendingEmbeddingDocs();
+        var docs = this.embeddingRepo.GetEmbeddingDocsForBatch(pending);
         docs.Should().HaveCount(2);
         docs.Should().Contain(d => d.Body == "Content 1");
         docs.Should().Contain(d => d.Body == "Content 2");
@@ -63,12 +63,12 @@ public class EmbeddingOperationsTests : IDisposable
     public void ClearAllEmbeddings_RemovesContentVectors()
     {
         // Insert a content_vectors row first
-        _db.Prepare("INSERT INTO content_vectors (hash, seq, pos, model, embedded_at) VALUES ($1, $2, $3, $4, $5)")
+        this.db.Prepare("INSERT INTO content_vectors (hash, seq, pos, model, embedded_at) VALUES ($1, $2, $3, $4, $5)")
             .Run("hash1", 0L, 0L, "test-model", "2025-01-01");
 
-        _embeddingRepo.ClearAllEmbeddings();
+        this.embeddingRepo.ClearAllEmbeddings();
 
-        var count = _db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").Get<CountRow>();
+        var count = this.db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").Get<CountRow>();
         count!.Cnt.Should().Be(0);
     }
 

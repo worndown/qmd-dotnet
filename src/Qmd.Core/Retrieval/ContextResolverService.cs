@@ -4,13 +4,13 @@ namespace Qmd.Core.Retrieval;
 
 internal class ContextResolverService : IContextResolverService
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public ContextResolverService(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public string? GetContextForFile(string filepath) =>
-        ContextResolver.GetContextForFile(_db, filepath);
+        ContextResolver.GetContextForFile(this.db, filepath);
 }

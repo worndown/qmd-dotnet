@@ -8,38 +8,38 @@ namespace Qmd.Core.Tests.Indexing;
 [Trait("Category", "Database")]
 public class CacheOperationsTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly CacheRepository _repo;
+    private readonly IQmdDatabase db;
+    private readonly CacheRepository repo;
 
     public CacheOperationsTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _repo = new CacheRepository(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.repo = new CacheRepository(this.db);
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void SetAndGetCachedResult()
     {
         var key = CacheRepository.GetCacheKey("test-url", new { query = "hello" });
-        _repo.SetCachedResult(key, "cached result");
-        _repo.GetCachedResult(key).Should().Be("cached result");
+        this.repo.SetCachedResult(key, "cached result");
+        this.repo.GetCachedResult(key).Should().Be("cached result");
     }
 
     [Fact]
     public void GetCachedResult_ReturnsNull_WhenMissing()
     {
-        _repo.GetCachedResult("nonexistent").Should().BeNull();
+        this.repo.GetCachedResult("nonexistent").Should().BeNull();
     }
 
     [Fact]
     public void ClearCache_RemovesAll()
     {
         var key = CacheRepository.GetCacheKey("url", "body");
-        _repo.SetCachedResult(key, "result");
-        _repo.ClearCache();
-        _repo.GetCachedResult(key).Should().BeNull();
+        this.repo.SetCachedResult(key, "result");
+        this.repo.ClearCache();
+        this.repo.GetCachedResult(key).Should().BeNull();
     }
 
     [Fact]

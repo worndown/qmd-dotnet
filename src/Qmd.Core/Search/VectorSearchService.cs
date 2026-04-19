@@ -13,13 +13,13 @@ namespace Qmd.Core.Search;
 /// </summary>
 internal class VectorSearchService : IVectorSearchService
 {
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService? _llmService;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService? llmService;
 
     public VectorSearchService(IQmdDatabase db, ILlmService? llmService = null)
     {
-        _db = db;
-        _llmService = llmService;
+        this.db = db;
+        this.llmService = llmService;
     }
 
     public async Task<List<SearchResult>> SearchAsync(
@@ -31,23 +31,23 @@ internal class VectorSearchService : IVectorSearchService
         CancellationToken ct = default)
     {
         // Check if vectors_vec table exists
-        var tableExists = _db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'")
+        var tableExists = this.db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'")
             .Get<SqliteMasterRow>();
         if (tableExists == null) return [];
 
         // Get embedding
         float[]? embedding = precomputedEmbedding;
-        if (embedding == null && _llmService != null)
+        if (embedding == null && this.llmService != null)
         {
             var formatted = EmbeddingFormatter.FormatQueryForEmbedding(query, model);
-            var result = await _llmService.EmbedAsync(formatted, new EmbedOptions { Model = model, IsQuery = true }, ct);
+            var result = await this.llmService.EmbedAsync(formatted, new EmbedOptions { Model = model, IsQuery = true }, ct);
             embedding = result?.Embedding;
         }
         if (embedding == null) return [];
 
         // STEP 1: Get vector matches from sqlite-vec (NO JOINs allowed!)
         var embeddingBytes = EmbeddingRepository.FloatArrayToBytes(embedding);
-        var vecResults = _db.Prepare("SELECT hash_seq, distance FROM vectors_vec WHERE embedding MATCH $1 AND k = $2")
+        var vecResults = this.db.Prepare("SELECT hash_seq, distance FROM vectors_vec WHERE embedding MATCH $1 AND k = $2")
             .All<VectorMatchRow>(embeddingBytes, (long)(limit * 3));
 
         if (vecResults.Count == 0) return [];
@@ -88,7 +88,7 @@ internal class VectorSearchService : IVectorSearchService
                 parameters.Add(c);
         }
 
-        var docRows = _db.Prepare(docSql).All<ContentVectorDocRow>(parameters.ToArray());
+        var docRows = this.db.Prepare(docSql).All<ContentVectorDocRow>(parameters.ToArray());
 
         // Combine with distances and dedup by filepath (keep best distance)
         var seen = new Dictionary<string, (ContentVectorDocRow Row, double BestDist)>();
@@ -122,7 +122,7 @@ internal class VectorSearchService : IVectorSearchService
                     Score = 1 - x.BestDist,
                     Source = "vec",
                     ChunkPos = row.Pos,
-                    Context = ContextResolver.GetContextForFile(_db, virtualPath),
+                    Context = ContextResolver.GetContextForFile(this.db, virtualPath),
                 };
             })
             .ToList();

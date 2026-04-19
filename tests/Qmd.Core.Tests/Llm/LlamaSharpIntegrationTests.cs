@@ -15,23 +15,23 @@ namespace Qmd.Core.Tests.Llm;
 [Trait("Category", "LLM")]
 public class LlamaSharpIntegrationTests : IAsyncDisposable
 {
-    private LlamaSharpService? _llm;
+    private LlamaSharpService? llm;
 
     private LlamaSharpService GetLlm()
     {
-        _llm ??= new LlamaSharpService();
-        return _llm;
+        this.llm ??= new LlamaSharpService();
+        return this.llm;
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_llm != null) await _llm.DisposeAsync();
+        if (this.llm != null) await this.llm.DisposeAsync();
     }
 
     [Fact]
     public async Task Embed_GeneratesCorrectDimensions()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var result = await llm.EmbedAsync("Hello world");
 
         result.Should().NotBeNull();
@@ -44,7 +44,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task Embed_SameTextProducesSameEmbedding()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var result1 = await llm.EmbedAsync("Consistent embedding test");
         var result2 = await llm.EmbedAsync("Consistent embedding test");
 
@@ -56,7 +56,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task Embed_DifferentTextsProduceDifferentEmbeddings()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var result1 = await llm.EmbedAsync("The cat sat on the mat");
         var result2 = await llm.EmbedAsync("Quantum physics and relativity");
 
@@ -68,7 +68,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task EmbedBatch_ProducesSameResultsAsIndividual()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var texts = new List<string> { "First text", "Second text", "Third text" };
 
         var batchResults = await llm.EmbedBatchAsync(texts);
@@ -88,7 +88,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task LlamaSharpTokenizer_CountsTokensAccurately()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         // Force model load by embedding something first
         await llm.EmbedAsync("load model");
 
@@ -100,7 +100,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task ChunkDocumentByTokens_WithRealTokenizer_StaysWithinLimits()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         // Force model load
         await llm.EmbedAsync("load model");
 
@@ -121,7 +121,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task ExpandQuery_ReturnsVariants()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
@@ -135,7 +135,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task ExpandQuery_DiffersFromOriginal()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
@@ -150,7 +150,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     [Fact]
     public async Task Rerank_ScoresRelevantHigher()
     {
-        var llm = GetLlm();
+        var llm = this.GetLlm();
         var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
