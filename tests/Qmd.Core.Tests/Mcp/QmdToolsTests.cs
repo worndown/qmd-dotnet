@@ -13,16 +13,16 @@ public class QmdToolsTests : IAsyncLifetime
     private QmdTools seededTools = null!;
     private QmdTools emptyTools = null!;
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         this.seededStore = McpTestHelper.CreateSeededStore();
         this.emptyStore = McpTestHelper.CreateEmptyStore();
         this.seededTools = new QmdTools(this.seededStore);
         this.emptyTools = new QmdTools(this.emptyStore);
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await this.seededStore.DisposeAsync();
         await this.emptyStore.DisposeAsync();
@@ -140,7 +140,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_MatchingTerm_ReturnsResults()
     {
-        var result = await this.seededTools.Query("readme");
+        var result = await this.seededTools.Query("readme", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         text.Should().Contain("result(s)");
         text.Should().Contain("readme.md");
@@ -149,7 +149,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_NoMatches_ReturnsNoResults()
     {
-        var result = await this.seededTools.Query("xyznonexistent123");
+        var result = await this.seededTools.Query("xyznonexistent123", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         text.Should().Contain("No results found");
     }
@@ -157,7 +157,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_CollectionFilter_OnlyFromCollection()
     {
-        var result = await this.seededTools.Query("readme", collection: "code");
+        var result = await this.seededTools.Query("readme", collection: "code", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         // readme.md is in "docs", not "code"
         text.Should().NotContain("readme.md");
@@ -286,7 +286,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_EmptyQuery_HandlesGracefully()
     {
         // "handles empty query" — query tool with empty string
-        var result = await this.seededTools.Query("");
+        var result = await this.seededTools.Query("", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         // Should either return no results or an error, but NOT throw
         text.Should().NotBeNull();
@@ -296,10 +296,10 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_SpecialCharacters_DoesNotThrow()
     {
         // "handles special characters in query" — query with C++ or it's
-        var result = await this.seededTools.Query("C++");
+        var result = await this.seededTools.Query("C++", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
 
-        var result2 = await this.seededTools.Query("it's");
+        var result2 = await this.seededTools.Query("it's", ct: TestContext.Current.CancellationToken);
         result2.Should().NotBeNull();
     }
 
@@ -307,7 +307,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_Unicode_DoesNotThrow()
     {
         // "handles unicode in query"
-        var result = await this.seededTools.Query("\u6587\u6863");
+        var result = await this.seededTools.Query("\u6587\u6863", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
     }
 
@@ -349,7 +349,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_SearchResults_HaveCorrectStructure()
     {
         // "search results have correct structure for structuredContent"
-        var result = await this.seededTools.Query("readme");
+        var result = await this.seededTools.Query("readme", ct: TestContext.Current.CancellationToken);
         result.StructuredContent.Should().NotBeNull();
 
         // Parse the structured content JSON
@@ -416,7 +416,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_OnlyStopwords_HandlesGracefully()
     {
         // Pass common English stopwords — should return empty results or a graceful message, not throw.
-        var result = await this.seededTools.Query("the a an");
+        var result = await this.seededTools.Query("the a an", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
         var text = GetText(result);
         text.Should().NotBeNull();

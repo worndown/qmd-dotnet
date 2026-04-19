@@ -31,7 +31,7 @@ public class McpHttpTests : IAsyncLifetime
     private int jsonRpcId = 1;
     private string? sessionId;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var store = McpTestHelper.CreateSeededStore();
         var instructions = await InstructionsBuilder.BuildAsync(store);
@@ -58,7 +58,7 @@ public class McpHttpTests : IAsyncLifetime
 
         // Bind to ephemeral port
         this.app.Urls.Add("http://127.0.0.1:0");
-        await this.app.StartAsync();
+        await this.app.StartAsync(TestContext.Current.CancellationToken);
 
         // Get the actual port
         var address = this.app.Urls.First();
@@ -67,15 +67,15 @@ public class McpHttpTests : IAsyncLifetime
         this.client = new HttpClient { BaseAddress = new Uri(this.baseUrl) };
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         this.client.Dispose();
-        await this.app.StopAsync();
+        await this.app.StopAsync(TestContext.Current.CancellationToken);
         await this.app.DisposeAsync();
     }
 
     /// <summary>Send a JSON-RPC request to the MCP endpoint.</summary>
-    private async Task<JsonElement> SendMcpRequest(string method, object? @params = null)
+    private async Task<JsonElement> SendMcpRequest(string method, object? @params = null, CancellationToken ct = default)
     {
         var request = new
         {
@@ -95,13 +95,13 @@ public class McpHttpTests : IAsyncLifetime
         if (this.sessionId != null)
             httpRequest.Headers.Add("mcp-session-id", this.sessionId);
 
-        var response = await this.client.SendAsync(httpRequest);
+        var response = await this.client.SendAsync(httpRequest, ct);
         response.EnsureSuccessStatusCode();
 
         // Capture session ID from response
         if (response.Headers.TryGetValues("mcp-session-id", out var sessionValues)) this.sessionId = sessionValues.FirstOrDefault();
 
-        var body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync(ct);
 
         // MCP Streamable HTTP may return SSE or JSON. Parse accordingly.
         if (body.StartsWith("event:") || body.StartsWith("data:"))
@@ -129,10 +129,10 @@ public class McpHttpTests : IAsyncLifetime
     [Fact]
     public async Task Health_Returns200WithStatus()
     {
-        var response = await this.client.GetAsync("/health");
+        var response = await this.client.GetAsync("/health", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         body.GetProperty("status").GetString().Should().Be("ok");
         body.TryGetProperty("uptime", out _).Should().BeTrue();
     }
@@ -140,7 +140,7 @@ public class McpHttpTests : IAsyncLifetime
     [Fact]
     public async Task UnknownRoute_Returns404()
     {
-        var response = await this.client.GetAsync("/nonexistent");
+        var response = await this.client.GetAsync("/nonexistent", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -152,7 +152,7 @@ public class McpHttpTests : IAsyncLifetime
             protocolVersion = "2024-11-05",
             capabilities = new { },
             clientInfo = new { name = "test-client", version = "1.0" }
-        });
+        }, TestContext.Current.CancellationToken);
 
         result.TryGetProperty("result", out var initResult).Should().BeTrue();
         initResult.GetProperty("serverInfo").GetProperty("name").GetString().Should().Be("qmd");
@@ -167,10 +167,10 @@ public class McpHttpTests : IAsyncLifetime
             protocolVersion = "2024-11-05",
             capabilities = new { },
             clientInfo = new { name = "test-client", version = "1.0" }
-        });
-        await this.SendMcpRequest("notifications/initialized");
+        }, TestContext.Current.CancellationToken);
+        await this.SendMcpRequest("notifications/initialized", ct: TestContext.Current.CancellationToken);
 
-        var result = await this.SendMcpRequest("tools/list");
+        var result = await this.SendMcpRequest("tools/list", ct: TestContext.Current.CancellationToken);
 
         result.TryGetProperty("result", out var listResult).Should().BeTrue();
         var tools = listResult.GetProperty("tools");
@@ -193,14 +193,14 @@ public class McpHttpTests : IAsyncLifetime
             protocolVersion = "2024-11-05",
             capabilities = new { },
             clientInfo = new { name = "test-client", version = "1.0" }
-        });
-        await this.SendMcpRequest("notifications/initialized");
+        }, TestContext.Current.CancellationToken);
+        await this.SendMcpRequest("notifications/initialized", ct: TestContext.Current.CancellationToken);
 
         var result = await this.SendMcpRequest("tools/call", new
         {
             name = "query",
             arguments = new { query = "readme", limit = 5 }
-        });
+        }, TestContext.Current.CancellationToken);
 
         result.TryGetProperty("result", out var callResult).Should().BeTrue();
         var content = callResult.GetProperty("content");
@@ -216,14 +216,14 @@ public class McpHttpTests : IAsyncLifetime
             protocolVersion = "2024-11-05",
             capabilities = new { },
             clientInfo = new { name = "test-client", version = "1.0" }
-        });
-        await this.SendMcpRequest("notifications/initialized");
+        }, TestContext.Current.CancellationToken);
+        await this.SendMcpRequest("notifications/initialized", ct: TestContext.Current.CancellationToken);
 
         var result = await this.SendMcpRequest("tools/call", new
         {
             name = "get",
             arguments = new { file = "readme.md" }
-        });
+        }, TestContext.Current.CancellationToken);
 
         result.TryGetProperty("result", out var callResult).Should().BeTrue();
         var content = callResult.GetProperty("content");

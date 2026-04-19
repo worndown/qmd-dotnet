@@ -37,7 +37,7 @@ public class VectorSearcherTests : IDisposable
 
         var llm = new MockLlmService();
         var vecService = new VectorSearchService(this.db, llm);
-        var results = await vecService.SearchAsync("query", "embeddinggemma", limit: 10);
+        var results = await vecService.SearchAsync("query", "embeddinggemma", limit: 10, ct: TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 }

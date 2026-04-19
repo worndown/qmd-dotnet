@@ -10,7 +10,7 @@ namespace Qmd.Cli.Tests.Commands;
 
 [Collection("ConsoleOutput")]
 [Trait("Category", "Unit")]
-public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
+public sealed class SearchCommandOutputTests : IAsyncLifetime, IDisposable
 {
     private readonly TestConsoleOutput console = new();
     private readonly IConsoleOutput original;
@@ -22,7 +22,7 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
         CliContext.Console = this.console;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var config = new CollectionConfig
         {
@@ -41,14 +41,14 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
         core.DocumentRepo.InsertDocument("docs", "api.md", title, hash, "2025-01-01", "2025-01-01");
     }
 
-    public async Task DisposeAsync() => await this.store.DisposeAsync();
+    public async ValueTask DisposeAsync() => await this.store.DisposeAsync();
 
     public void Dispose() => CliContext.Console = this.original;
 
     [Fact]
     public async Task Search_WithResults_Json_WritesJsonToStdout()
     {
-        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         output.Should().NotBeEmpty();
@@ -60,7 +60,7 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Search_WithResults_Csv_WritesHeaderAndData()
     {
-        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Csv, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Csv, false, false, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         output.Should().StartWith("docid,score,file,title,context,line,snippet");
@@ -70,7 +70,7 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Search_NoResults_WritesEmptyJson()
     {
-        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
         this.console.GetOutput().Should().Be("[]");
     }
@@ -78,7 +78,7 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Search_NoResults_Cli_WritesNoResultsToStderr()
     {
-        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Cli, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Cli, false, false, TestContext.Current.CancellationToken);
 
         this.console.GetOutput().Should().BeEmpty();
         this.console.GetError().Should().Contain("No results found.");
@@ -88,7 +88,7 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     public async Task Search_MinScore_FiltersResults()
     {
         // Use an extremely high min-score to filter out everything
-        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 999.0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 999.0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
         this.console.GetOutput().Should().Be("[]");
     }

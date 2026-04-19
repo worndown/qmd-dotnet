@@ -9,7 +9,7 @@ namespace Qmd.Cli.Tests.Commands;
 
 [Collection("ConsoleOutput")]
 [Trait("Category", "Unit")]
-public class GetCommandOutputTests : IAsyncLifetime, IDisposable
+public sealed class GetCommandOutputTests : IAsyncLifetime, IDisposable
 {
     private readonly TestConsoleOutput console = new();
     private readonly IConsoleOutput original;
@@ -21,7 +21,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
         CliContext.Console = this.console;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var config = new CollectionConfig
         {
@@ -43,7 +43,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
         await this.store.AddContextAsync("docs", "/notes", "Internal meeting notes");
     }
 
-    public async Task DisposeAsync() => await this.store.DisposeAsync();
+    public async ValueTask DisposeAsync() => await this.store.DisposeAsync();
 
     public void Dispose() => CliContext.Console = this.original;
 
@@ -58,7 +58,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_FoundDocument_OutputsHeaderAndBody()
     {
-        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, false, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         output.Should().Contain("# docs/readme.md");
@@ -69,7 +69,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_FoundDocument_WithContext_IncludesContextLine()
     {
-        await GetCommand.HandleGetAsync(this.store, "notes/meeting.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "notes/meeting.md", null, null, false, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         output.Should().Contain("# docs/notes/meeting.md");
@@ -80,7 +80,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_NotFound_WritesErrorToStderr()
     {
-        await GetCommand.HandleGetAsync(this.store, "nonexistent.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "nonexistent.md", null, null, false, TestContext.Current.CancellationToken);
 
         this.console.GetOutput().Should().BeEmpty();
         this.console.GetError().Should().Contain("Not found: nonexistent.md");
@@ -90,7 +90,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     public async Task Get_NotFound_ShowsSimilarFiles()
     {
         // "readm.md" is similar to "readme.md"
-        await GetCommand.HandleGetAsync(this.store, "readm.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "readm.md", null, null, false, TestContext.Current.CancellationToken);
 
         var error = this.console.GetError();
         error.Should().Contain("Not found: readm.md");
@@ -103,7 +103,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     {
         // Content: "# Test Project\n\nThis is a test project.\n\nLine 4.\nLine 5.\nLine 6.\nLine 7.\n"
         // Lines:    1: "# Test Project"  2: ""  3: "This is a test project."  4: ""  5: "Line 4."  6: "Line 5."
-        await GetCommand.HandleGetAsync(this.store, "readme.md", 5, 2, false);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", 5, 2, false, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         output.Should().Contain("Line 4.");
@@ -115,7 +115,7 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_WithLineNumbers_FormatsWithNumbers()
     {
-        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, true);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, true, TestContext.Current.CancellationToken);
 
         var output = this.console.GetOutput();
         // FormatHelpers.AddLineNumbers prepends line numbers like "1: ..."

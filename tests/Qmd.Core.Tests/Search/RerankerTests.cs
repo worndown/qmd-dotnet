@@ -32,14 +32,14 @@ public class RerankerTests : IDisposable
             new("file1.md", "Content about APIs"),
             new("file2.md", "Content about databases"),
         };
-        var results = await this.reranker.RerankAsync("API", docs);
+        var results = await this.reranker.RerankAsync("API", docs, ct: TestContext.Current.CancellationToken);
         results.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Rerank_EmptyDocs_ReturnsEmpty()
     {
-        var results = await this.reranker.RerankAsync("query", []);
+        var results = await this.reranker.RerankAsync("query", [], ct: TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 
@@ -51,7 +51,7 @@ public class RerankerTests : IDisposable
             new("a.md", "Content A"),
             new("b.md", "Content B"),
         };
-        var results = await this.reranker.RerankAsync("query", docs);
+        var results = await this.reranker.RerankAsync("query", docs, ct: TestContext.Current.CancellationToken);
         results.Should().HaveCount(2);
         results.Should().AllSatisfy(r => r.File.Should().NotBeNullOrEmpty());
     }
@@ -67,9 +67,9 @@ public class RerankerTests : IDisposable
         };
 
         // First call
-        await reranker.RerankAsync("cache test query", docs);
+        await reranker.RerankAsync("cache test query", docs, ct: TestContext.Current.CancellationToken);
         // Second call — should hit cache
-        var results = await reranker.RerankAsync("cache test query", docs);
+        var results = await reranker.RerankAsync("cache test query", docs, ct: TestContext.Current.CancellationToken);
 
         results.Should().HaveCount(1);
         scoringLlm.RerankCallCount.Should().Be(1);
@@ -86,7 +86,7 @@ public class RerankerTests : IDisposable
             new("doc2.md", "Shared chunk text"),
         };
 
-        var results = await reranker.RerankAsync("shared", docs);
+        var results = await reranker.RerankAsync("shared", docs, ct: TestContext.Current.CancellationToken);
 
         results.Should().HaveCount(2);
         scoringLlm.RerankCallCount.Should().Be(1);
@@ -105,7 +105,7 @@ public class RerankerTests : IDisposable
             new("c.md", "different chunk"),
         };
 
-        var results = await reranker.RerankAsync("query", docs);
+        var results = await reranker.RerankAsync("query", docs, ct: TestContext.Current.CancellationToken);
 
         results.Should().HaveCount(3);
         scoringLlm.LastRerankDocCount.Should().Be(2);

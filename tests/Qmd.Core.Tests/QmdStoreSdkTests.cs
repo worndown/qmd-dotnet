@@ -245,17 +245,17 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStore();
         // Verify documents exist before removal
-        var filesBefore = await store.ListFilesAsync("docs");
+        var filesBefore = await store.ListFilesAsync("docs", ct: TestContext.Current.CancellationToken);
         filesBefore.Should().NotBeEmpty();
 
         (await store.RemoveCollectionAsync("docs")).Should().BeTrue();
 
         // Documents should be gone
-        var filesAfter = await store.ListFilesAsync("docs");
+        var filesAfter = await store.ListFilesAsync("docs", ct: TestContext.Current.CancellationToken);
         filesAfter.Should().BeEmpty();
 
         // Other collection should be unaffected
-        var notesFiles = await store.ListFilesAsync("notes");
+        var notesFiles = await store.ListFilesAsync("notes", ct: TestContext.Current.CancellationToken);
         notesFiles.Should().NotBeEmpty();
     }
 
@@ -327,7 +327,7 @@ public class QmdStoreSdkTests
     public async Task ListFiles_ReturnsAllFilesInCollection()
     {
         await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
+        var files = await store.ListFilesAsync("docs", ct: TestContext.Current.CancellationToken);
         files.Should().HaveCount(3);
         // SDK Seed stores paths as qmd://collection/path
         files.Select(f => f.Path).Should().Contain(p => p.Contains("readme.md"));
@@ -340,11 +340,11 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStore();
         // "notes" collection has meeting-2025-01.md and ideas.md
-        var allNotes = await store.ListFilesAsync("notes");
+        var allNotes = await store.ListFilesAsync("notes", ct: TestContext.Current.CancellationToken);
         allNotes.Should().HaveCountGreaterThan(1);
 
         // Filter by prefix — SDK Seed stores paths as qmd://notes/meeting...
-        var meetings = await store.ListFilesAsync("notes", "qmd://notes/meeting");
+        var meetings = await store.ListFilesAsync("notes", "qmd://notes/meeting", TestContext.Current.CancellationToken);
         meetings.Should().NotBeEmpty();
         meetings.Should().AllSatisfy(f => f.Path.Should().Contain("meeting"));
     }
@@ -353,7 +353,7 @@ public class QmdStoreSdkTests
     public async Task ListFiles_WithNonMatchingPrefix_ReturnsEmpty()
     {
         await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs", "nonexistent/");
+        var files = await store.ListFilesAsync("docs", "nonexistent/", TestContext.Current.CancellationToken);
         files.Should().BeEmpty();
     }
 
@@ -361,7 +361,7 @@ public class QmdStoreSdkTests
     public async Task ListFiles_ReturnsBodyLength()
     {
         await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
+        var files = await store.ListFilesAsync("docs", ct: TestContext.Current.CancellationToken);
         files.Should().AllSatisfy(f => f.BodyLength.Should().BeGreaterThan(0));
     }
 
@@ -369,7 +369,7 @@ public class QmdStoreSdkTests
     public async Task ListFiles_OrdersByPath()
     {
         await using var store = CreateSeededStore();
-        var files = await store.ListFilesAsync("docs");
+        var files = await store.ListFilesAsync("docs", ct: TestContext.Current.CancellationToken);
         files.Select(f => f.Path).Should().BeInAscendingOrder();
     }
 
@@ -554,7 +554,7 @@ public class QmdStoreSdkTests
     public async Task SearchLex_ReturnsResultsForMatchingQuery()
     {
         await using var store = CreateSeededStore();
-        var results = await store.SearchLexAsync("authentication");
+        var results = await store.SearchLexAsync("authentication", ct: TestContext.Current.CancellationToken);
         results.Count.Should().BeGreaterThan(0);
     }
 
@@ -562,7 +562,7 @@ public class QmdStoreSdkTests
     public async Task SearchLex_ResultsHaveExpectedShape()
     {
         await using var store = CreateSeededStore();
-        var results = await store.SearchLexAsync("authentication");
+        var results = await store.SearchLexAsync("authentication", ct: TestContext.Current.CancellationToken);
         results.Count.Should().BeGreaterThan(0);
 
         var result = results[0];
@@ -577,7 +577,7 @@ public class QmdStoreSdkTests
     public async Task SearchLex_RespectsLimit()
     {
         await using var store = CreateSeededStore();
-        var results = await store.SearchLexAsync("meeting", new LexSearchOptions { Limit = 1 });
+        var results = await store.SearchLexAsync("meeting", new LexSearchOptions { Limit = 1 }, TestContext.Current.CancellationToken);
         results.Count.Should().BeLessThanOrEqualTo(1);
     }
 
@@ -586,7 +586,8 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStore();
         var results = await store.SearchLexAsync("authentication",
-            new LexSearchOptions { Collections = new List<string> { "notes" } });
+            new LexSearchOptions { Collections = new List<string> { "notes" } },
+            TestContext.Current.CancellationToken);
         foreach (var r in results)
         {
             r.CollectionName.Should().Be("notes");
@@ -597,7 +598,7 @@ public class QmdStoreSdkTests
     public async Task SearchLex_ReturnsEmptyForNonMatching()
     {
         await using var store = CreateSeededStore();
-        var results = await store.SearchLexAsync("xyznonexistentterm123");
+        var results = await store.SearchLexAsync("xyznonexistentterm123", ct: TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 
@@ -605,7 +606,7 @@ public class QmdStoreSdkTests
     public async Task SearchLex_EmptyStore_ReturnsEmpty()
     {
         await using var store = await QmdStoreFactory.CreateInMemoryAsync();
-        var results = await store.SearchLexAsync("test");
+        var results = await store.SearchLexAsync("test", ct: TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 
@@ -617,7 +618,7 @@ public class QmdStoreSdkTests
     public async Task HybridQueryAsync_ReturnsResults()
     {
         await using var store = CreateSeededStoreWithMockLlm();
-        var results = await store.HybridQueryAsync("authentication");
+        var results = await store.HybridQueryAsync("authentication", ct: TestContext.Current.CancellationToken);
         results.Count.Should().BeGreaterThan(0);
     }
 
@@ -626,7 +627,8 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStoreWithMockLlm();
         var results = await store.HybridQueryAsync("authentication",
-            new HybridQueryOptions { Limit = 1, SkipRerank = true });
+            new HybridQueryOptions { Limit = 1, SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Count.Should().BeLessThanOrEqualTo(1);
     }
 
@@ -635,7 +637,8 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStoreWithMockLlm();
         var results = await store.HybridQueryAsync("authentication",
-            new HybridQueryOptions { Collections = ["notes"], SkipRerank = true });
+            new HybridQueryOptions { Collections = ["notes"], SkipRerank = true },
+            TestContext.Current.CancellationToken);
         foreach (var r in results)
         {
             r.DisplayPath.Should().Contain("notes");
@@ -700,7 +703,7 @@ public class QmdStoreSdkTests
     public async Task FindSimilarFiles_FindsCloseMatches()
     {
         await using var store = CreateSeededStore();
-        var similar = await store.FindSimilarFilesAsync("qmd://docs/auth.m");
+        var similar = await store.FindSimilarFilesAsync("qmd://docs/auth.m", ct: TestContext.Current.CancellationToken);
         similar.Should().Contain(p => p.Contains("auth.md"));
     }
 
@@ -708,7 +711,7 @@ public class QmdStoreSdkTests
     public async Task FindSimilarFiles_RespectsLimit()
     {
         await using var store = CreateSeededStore();
-        var similar = await store.FindSimilarFilesAsync("qmd://docs/a", limit: 1);
+        var similar = await store.FindSimilarFilesAsync("qmd://docs/a", limit: 1, ct: TestContext.Current.CancellationToken);
         similar.Count.Should().BeLessThanOrEqualTo(1);
     }
 
@@ -716,7 +719,7 @@ public class QmdStoreSdkTests
     public async Task FindSimilarFiles_ReturnsEmpty_WhenNoCloseMatch()
     {
         await using var store = CreateSeededStore();
-        var similar = await store.FindSimilarFilesAsync("completely-unrelated-path-xyz", maxDistance: 1);
+        var similar = await store.FindSimilarFilesAsync("completely-unrelated-path-xyz", maxDistance: 1, ct: TestContext.Current.CancellationToken);
         similar.Should().BeEmpty();
     }
 
@@ -728,7 +731,7 @@ public class QmdStoreSdkTests
     public async Task GetActiveDocumentPaths_ReturnsPaths()
     {
         await using var store = CreateSeededStore();
-        var paths = await store.GetActiveDocumentPathsAsync("docs");
+        var paths = await store.GetActiveDocumentPathsAsync("docs", TestContext.Current.CancellationToken);
         paths.Should().HaveCount(3);
         paths.Should().Contain(p => p.Contains("readme.md"));
         paths.Should().Contain(p => p.Contains("auth.md"));
@@ -739,7 +742,7 @@ public class QmdStoreSdkTests
     public async Task GetActiveDocumentPaths_ReturnsEmpty_ForUnknownCollection()
     {
         await using var store = CreateSeededStore();
-        var paths = await store.GetActiveDocumentPathsAsync("nonexistent");
+        var paths = await store.GetActiveDocumentPathsAsync("nonexistent", TestContext.Current.CancellationToken);
         paths.Should().BeEmpty();
     }
 
@@ -751,7 +754,7 @@ public class QmdStoreSdkTests
     public async Task Get_RetrievesDocumentByPath()
     {
         await using var store = CreateSeededStore();
-        var result = await store.GetAsync("qmd://docs/auth.md");
+        var result = await store.GetAsync("qmd://docs/auth.md", ct: TestContext.Current.CancellationToken);
 
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Be("Authentication");
@@ -762,7 +765,7 @@ public class QmdStoreSdkTests
     public async Task Get_WithIncludeBodyReturnsBody()
     {
         await using var store = CreateSeededStore();
-        var result = await store.GetAsync("qmd://docs/auth.md", new GetOptions { IncludeBody = true });
+        var result = await store.GetAsync("qmd://docs/auth.md", new GetOptions { IncludeBody = true }, TestContext.Current.CancellationToken);
 
         result.IsFound.Should().BeTrue();
         result.Document!.Body.Should().NotBeNull();
@@ -773,7 +776,7 @@ public class QmdStoreSdkTests
     public async Task Get_ReturnsNotFoundForMissing()
     {
         await using var store = CreateSeededStore();
-        var result = await store.GetAsync("qmd://docs/nonexistent.md");
+        var result = await store.GetAsync("qmd://docs/nonexistent.md", ct: TestContext.Current.CancellationToken);
 
         result.IsFound.Should().BeFalse();
         result.NotFound.Should().NotBeNull();
@@ -785,10 +788,10 @@ public class QmdStoreSdkTests
     {
         await using var store = CreateSeededStore();
         // First get a document to find its docid
-        var doc = await store.GetAsync("qmd://docs/readme.md");
+        var doc = await store.GetAsync("qmd://docs/readme.md", ct: TestContext.Current.CancellationToken);
         doc.IsFound.Should().BeTrue();
 
-        var byDocId = await store.GetAsync($"#{doc.Document!.DocId}");
+        var byDocId = await store.GetAsync($"#{doc.Document!.DocId}", ct: TestContext.Current.CancellationToken);
         byDocId.IsFound.Should().BeTrue();
         byDocId.Document!.DocId.Should().Be(doc.Document!.DocId);
     }
@@ -797,7 +800,7 @@ public class QmdStoreSdkTests
     public async Task MultiGet_RetrievesMultipleDocuments()
     {
         await using var store = CreateSeededStore();
-        var (docs, errors) = await store.MultiGetAsync("qmd://docs/*.md");
+        var (docs, errors) = await store.MultiGetAsync("qmd://docs/*.md", ct: TestContext.Current.CancellationToken);
         docs.Count.Should().BeGreaterThan(0);
     }
 
@@ -1190,7 +1193,7 @@ public class QmdStoreSdkTests
                 new("lex", "login session"),
             },
             new StructuredSearchOptions { SkipRerank = true },
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
         results.Count.Should().BeGreaterThan(0);
     }
 
@@ -1211,7 +1214,7 @@ public class QmdStoreSdkTests
                     Collections = new() { ["docs"] = new Collection { Path = docsDir, Pattern = "**/*.md" } }
                 });
 
-            var result = await store.UpdateAsync();
+            var result = await store.UpdateAsync(ct: TestContext.Current.CancellationToken);
             result.Collections.Should().Be(1);
             result.Indexed.Should().Be(3); // readme.md, auth.md, api.md
             result.Updated.Should().Be(0);
@@ -1234,8 +1237,8 @@ public class QmdStoreSdkTests
                     Collections = new() { ["docs"] = new Collection { Path = docsDir, Pattern = "**/*.md" } }
                 });
 
-            await store.UpdateAsync();
-            var result = await store.UpdateAsync();
+            await store.UpdateAsync(ct: TestContext.Current.CancellationToken);
+            var result = await store.UpdateAsync(ct: TestContext.Current.CancellationToken);
 
             result.Indexed.Should().Be(0);
             result.Unchanged.Should().Be(3);
@@ -1260,7 +1263,7 @@ public class QmdStoreSdkTests
             await store.UpdateAsync(new UpdateOptions
             {
                 Progress = new TestHelpers.SyncProgress<ReindexProgress>(p => progress.Add(p)),
-            });
+            }, TestContext.Current.CancellationToken);
 
             progress.Count.Should().BeGreaterThan(0);
             progress[0].Total.Should().Be(3);
@@ -1289,7 +1292,7 @@ public class QmdStoreSdkTests
             var result = await store.UpdateAsync(new UpdateOptions
             {
                 Collections = new List<string> { "docs" }
-            });
+            }, TestContext.Current.CancellationToken);
 
             result.Collections.Should().Be(1);
             result.Indexed.Should().Be(3); // Only docs
@@ -1315,7 +1318,7 @@ public class QmdStoreSdkTests
                     }
                 });
 
-            var result = await store.UpdateAsync();
+            var result = await store.UpdateAsync(ct: TestContext.Current.CancellationToken);
             result.Collections.Should().Be(2);
             result.Indexed.Should().Be(6); // 3 docs + 3 notes
         }
@@ -1335,9 +1338,9 @@ public class QmdStoreSdkTests
                     Collections = new() { ["docs"] = new Collection { Path = docsDir, Pattern = "**/*.md" } }
                 });
 
-            await store.UpdateAsync();
+            await store.UpdateAsync(ct: TestContext.Current.CancellationToken);
 
-            var results = await store.SearchLexAsync("authentication");
+            var results = await store.SearchLexAsync("authentication", ct: TestContext.Current.CancellationToken);
             results.Count.Should().BeGreaterThan(0);
         }
         finally { TryCleanupDir(docsDir); }
@@ -1353,10 +1356,10 @@ public class QmdStoreSdkTests
         // Embed rejects invalid batch limits
         await using var store = await QmdStoreFactory.CreateInMemoryAsync(new CollectionConfig());
 
-        var act1 = async () => await store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 });
+        var act1 = async () => await store.EmbedAsync(new EmbedPipelineOptions { MaxDocsPerBatch = 0 }, TestContext.Current.CancellationToken);
         await act1.Should().ThrowAsync<Exception>();
 
-        var act2 = async () => await store.EmbedAsync(new EmbedPipelineOptions { MaxBatchBytes = 0 });
+        var act2 = async () => await store.EmbedAsync(new EmbedPipelineOptions { MaxBatchBytes = 0 }, TestContext.Current.CancellationToken);
         await act2.Should().ThrowAsync<Exception>();
     }
 
@@ -1381,7 +1384,7 @@ public class QmdStoreSdkTests
         {
             // Session 1: create with config, update
             var store1 = await QmdStoreFactory.CreateAsync(new StoreOptions { DbPath = dbPath, Config = config });
-            await store1.UpdateAsync();
+            await store1.UpdateAsync(ct: TestContext.Current.CancellationToken);
             var status1 = await store1.GetStatusAsync();
             status1.TotalDocuments.Should().BeGreaterThan(0);
             await store1.DisposeAsync();
@@ -1394,7 +1397,7 @@ public class QmdStoreSdkTests
             collections.Select(c => c.Name).Should().Contain("docs");
 
             // Search should still work
-            var results = await store2.SearchLexAsync("authentication");
+            var results = await store2.SearchLexAsync("authentication", ct: TestContext.Current.CancellationToken);
             results.Count.Should().BeGreaterThan(0);
 
             // Global context should persist
@@ -1458,7 +1461,7 @@ public class QmdStoreSdkTests
     {
         // SearchLex finds documents across collections
         await using var store = CreateSeededStore();
-        var results = await store.SearchLexAsync("authentication", new LexSearchOptions { Limit = 10 });
+        var results = await store.SearchLexAsync("authentication", new LexSearchOptions { Limit = 10 }, TestContext.Current.CancellationToken);
         // Auth appears in docs/auth.md and potentially notes
         results.Count.Should().BeGreaterThanOrEqualTo(1);
     }

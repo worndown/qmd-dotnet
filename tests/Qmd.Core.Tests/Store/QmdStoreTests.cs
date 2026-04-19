@@ -95,7 +95,7 @@ public class QmdStoreTests : IDisposable
         this.store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
         this.store.DeactivateDocument("docs", "a.md");
 
-        var result = await this.store.CleanupAsync();
+        var result = await this.store.CleanupAsync(ct: TestContext.Current.CancellationToken);
         result.OrphanedCollectionDocsDeleted.Should().Be(1);
     }
 

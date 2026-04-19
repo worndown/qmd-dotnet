@@ -32,7 +32,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     public async Task Embed_GeneratesCorrectDimensions()
     {
         var llm = this.GetLlm();
-        var result = await llm.EmbedAsync("Hello world");
+        var result = await llm.EmbedAsync("Hello world", ct: TestContext.Current.CancellationToken);
 
         result.Should().NotBeNull();
         // Exact dimension depends on the active model (768 for embeddinggemma-300M,
@@ -45,8 +45,8 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     public async Task Embed_SameTextProducesSameEmbedding()
     {
         var llm = this.GetLlm();
-        var result1 = await llm.EmbedAsync("Consistent embedding test");
-        var result2 = await llm.EmbedAsync("Consistent embedding test");
+        var result1 = await llm.EmbedAsync("Consistent embedding test", ct: TestContext.Current.CancellationToken);
+        var result2 = await llm.EmbedAsync("Consistent embedding test", ct: TestContext.Current.CancellationToken);
 
         result1.Should().NotBeNull();
         result2.Should().NotBeNull();
@@ -57,8 +57,8 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     public async Task Embed_DifferentTextsProduceDifferentEmbeddings()
     {
         var llm = this.GetLlm();
-        var result1 = await llm.EmbedAsync("The cat sat on the mat");
-        var result2 = await llm.EmbedAsync("Quantum physics and relativity");
+        var result1 = await llm.EmbedAsync("The cat sat on the mat", ct: TestContext.Current.CancellationToken);
+        var result2 = await llm.EmbedAsync("Quantum physics and relativity", ct: TestContext.Current.CancellationToken);
 
         result1.Should().NotBeNull();
         result2.Should().NotBeNull();
@@ -71,10 +71,10 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         var llm = this.GetLlm();
         var texts = new List<string> { "First text", "Second text", "Third text" };
 
-        var batchResults = await llm.EmbedBatchAsync(texts);
+        var batchResults = await llm.EmbedBatchAsync(texts, ct: TestContext.Current.CancellationToken);
         var individualResults = new List<EmbeddingResult?>();
         foreach (var text in texts)
-            individualResults.Add(await llm.EmbedAsync(text));
+            individualResults.Add(await llm.EmbedAsync(text, ct: TestContext.Current.CancellationToken));
 
         batchResults.Should().HaveCount(3);
         for (int i = 0; i < 3; i++)
@@ -90,7 +90,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     {
         var llm = this.GetLlm();
         // Force model load by embedding something first
-        await llm.EmbedAsync("load model");
+        await llm.EmbedAsync("load model", ct: TestContext.Current.CancellationToken);
 
         var tokenCount = llm.CountTokens("Hello world, this is a test.");
         tokenCount.Should().BeGreaterThan(0);
@@ -102,13 +102,13 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
     {
         var llm = this.GetLlm();
         // Force model load
-        await llm.EmbedAsync("load model");
+        await llm.EmbedAsync("load model", ct: TestContext.Current.CancellationToken);
 
         // Create a LlamaSharpTokenizer-like wrapper
         var tokenizer = new LlmServiceTokenizer(llm);
         var content = string.Concat(Enumerable.Repeat("The quick brown fox jumps over the lazy dog. ", 250));
 
-        var chunks = DocumentChunker.ChunkDocumentByTokens(tokenizer, content, 900, 135);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(tokenizer, content, 900, 135, cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Count.Should().BeGreaterThan(1);
         foreach (var chunk in chunks)
@@ -125,7 +125,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         var db = new SqliteDatabase(":memory:");
         SchemaInitializer.Initialize(db);
 
-        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync("machine learning algorithms");
+        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync("machine learning algorithms", ct: TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         // Should have different query types
@@ -140,7 +140,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
         SchemaInitializer.Initialize(db);
 
         var query = "how to deploy to production";
-        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync(query);
+        var results = await new QueryExpanderService(db, llm).ExpandQueryAsync(query, ct: TestContext.Current.CancellationToken);
 
         // At least one expansion should differ from the original
         results.Should().NotBeEmpty();
@@ -160,7 +160,7 @@ public class LlamaSharpIntegrationTests : IAsyncDisposable
             new("irrelevant.md", "The recipe for chocolate cake requires flour, sugar, eggs, and cocoa powder."),
         };
 
-        var results = await new RerankerService(db, llm).RerankAsync("What is machine learning?", documents);
+        var results = await new RerankerService(db, llm).RerankAsync("What is machine learning?", documents, ct: TestContext.Current.CancellationToken);
 
         results.Should().HaveCount(2);
         var relevantScore = results.First(r => r.File == "relevant.md").Score;

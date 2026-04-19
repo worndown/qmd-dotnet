@@ -25,16 +25,16 @@ public class QueryExpanderTests : IDisposable
     [Fact]
     public async Task ExpandQuery_ReturnsExpansions()
     {
-        var results = await this.expander.ExpandQueryAsync("test query");
+        var results = await this.expander.ExpandQueryAsync("test query", ct: TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
     }
 
     [Fact]
     public async Task ExpandQuery_CachesResult()
     {
-        await this.expander.ExpandQueryAsync("cached query");
+        await this.expander.ExpandQueryAsync("cached query", ct: TestContext.Current.CancellationToken);
         // Second call should hit cache
-        await this.expander.ExpandQueryAsync("cached query");
+        await this.expander.ExpandQueryAsync("cached query", ct: TestContext.Current.CancellationToken);
 
         var cacheCount = this.db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").Get<CountRow>();
         cacheCount!.Cnt.Should().BeGreaterThan(0);
@@ -43,8 +43,8 @@ public class QueryExpanderTests : IDisposable
     [Fact]
     public async Task ExpandQuery_DifferentQueriesDifferentCache()
     {
-        await this.expander.ExpandQueryAsync("query A");
-        await this.expander.ExpandQueryAsync("query B");
+        await this.expander.ExpandQueryAsync("query A", ct: TestContext.Current.CancellationToken);
+        await this.expander.ExpandQueryAsync("query B", ct: TestContext.Current.CancellationToken);
 
         var cacheCount = this.db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").Get<CountRow>();
         cacheCount!.Cnt.Should().Be(2);

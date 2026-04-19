@@ -9,7 +9,7 @@ using Qmd.Core.Tests.TestHelpers;
 namespace Qmd.Core.Tests.Search;
 
 [Trait("Category", "Database")]
-public class HybridQueryTests : IDisposable
+public sealed class HybridQueryTests : IDisposable
 {
     private readonly QmdStore store;
     private readonly MockLlmService llm;
@@ -41,7 +41,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "API authentication",
-            new HybridQueryOptions { SkipRerank = true });
+            new HybridQueryOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
     }
 
@@ -50,7 +51,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "guide",
-            new HybridQueryOptions { Limit = 2, SkipRerank = true });
+            new HybridQueryOptions { Limit = 2, SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().HaveCountLessThanOrEqualTo(2);
     }
 
@@ -59,7 +61,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "OAuth2",
-            new HybridQueryOptions { SkipRerank = true });
+            new HybridQueryOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
     }
 
@@ -68,7 +71,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "API",
-            new HybridQueryOptions { Intent = "security review", SkipRerank = true });
+            new HybridQueryOptions { Intent = "security review", SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
     }
 
@@ -77,7 +81,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "deployment Docker",
-            new HybridQueryOptions { SkipRerank = true });
+            new HybridQueryOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.Score.Should().BeGreaterThan(0));
     }
@@ -87,7 +92,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "API",
-            new HybridQueryOptions { Explain = true, SkipRerank = true });
+            new HybridQueryOptions { Explain = true, SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
         results[0].Explain.Should().NotBeNull();
     }
@@ -97,7 +103,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "API",
-            new HybridQueryOptions { MinScore = 0.99, SkipRerank = true });
+            new HybridQueryOptions { MinScore = 0.99, SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().HaveCountLessThanOrEqualTo(1);
     }
 
@@ -106,7 +113,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "API",
-            new HybridQueryOptions { SkipRerank = true });
+            new HybridQueryOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
         results[0].BestChunk.Should().NotBeNullOrEmpty();
     }
@@ -116,7 +124,8 @@ public class HybridQueryTests : IDisposable
     {
         var results = await this.CreateService().HybridQueryAsync(
             "",
-            new HybridQueryOptions { SkipRerank = true });
+            new HybridQueryOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 
@@ -127,7 +136,8 @@ public class HybridQueryTests : IDisposable
         var config = new SearchConfig { FtsMinSignal = 0.0 };
         var results = await this.CreateService(config).HybridQueryAsync(
             "systems",
-            new HybridQueryOptions { Collections = ["notes"], SkipRerank = true });
+            new HybridQueryOptions { Collections = ["notes"], SkipRerank = true },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.File.Should().Contain("notes"));
     }
@@ -140,7 +150,8 @@ public class HybridQueryTests : IDisposable
         var diag = new HybridQueryDiagnostics();
         var results = await this.CreateService(config).HybridQueryAsync(
             "API authentication",
-            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag });
+            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag },
+            TestContext.Current.CancellationToken);
         // Results should still come back via BM25 strong-signal path (bypasses ftsWeak gate)
         // or be empty if vector is unavailable — either way no crash
         diag.HasFtsResults.Should().BeFalse();
@@ -154,7 +165,8 @@ public class HybridQueryTests : IDisposable
         var diag = new HybridQueryDiagnostics();
         var results = await this.CreateService(config).HybridQueryAsync(
             "API authentication",
-            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag });
+            new HybridQueryOptions { SkipRerank = true, Diagnostics = diag },
+            TestContext.Current.CancellationToken);
         results.Should().NotBeEmpty();
         diag.HasFtsResults.Should().BeTrue();
     }

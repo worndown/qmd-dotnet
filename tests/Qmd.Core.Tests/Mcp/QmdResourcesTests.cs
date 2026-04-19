@@ -13,14 +13,14 @@ public class QmdResourcesTests : IAsyncLifetime
     private IQmdStore seededStore = null!;
     private QmdResources resources = null!;
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         this.seededStore = McpTestHelper.CreateSeededStore();
         this.resources = new QmdResources(this.seededStore);
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await this.seededStore.DisposeAsync();
     }
@@ -86,7 +86,10 @@ public class QmdResourcesTests : IAsyncLifetime
         // the underlying store's MultiGetAsync with a broad glob pattern.
         // The seeded store has 6 docs: readme.md, api/guide.md, index.ts,
         // meetings/meeting-2024-01.md, meetings/meeting-2024-02.md, large-file.md.
-        var (docs, _) = await this.seededStore.MultiGetAsync("qmd://**/*", new MultiGetOptions { IncludeBody = false });
+        var (docs, _) = await this.seededStore.MultiGetAsync(
+            "qmd://**/*",
+            new MultiGetOptions { IncludeBody = false },
+            TestContext.Current.CancellationToken);
         docs.Count.Should().Be(6);
 
         var paths = docs.Select(d => d.Doc.DisplayPath).ToList();

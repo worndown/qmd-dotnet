@@ -43,7 +43,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("api.md");
@@ -59,7 +60,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results.Should().HaveCountGreaterThanOrEqualTo(2);
@@ -74,7 +76,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { Limit = 2, SkipRerank = true });
+            new StructuredSearchOptions { Limit = 2, SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().HaveCountLessThanOrEqualTo(2);
     }
@@ -101,7 +104,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().BeEmpty();
     }
@@ -115,7 +119,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { Collections = ["docs"], SkipRerank = true });
+            new StructuredSearchOptions { Collections = ["docs"], SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.File.Should().Contain("docs"));
@@ -130,7 +135,8 @@ public class StructuredSearchTests : IDisposable
         };
 
         var results = await this.CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results[0].BestChunk.Should().NotBeNullOrEmpty();

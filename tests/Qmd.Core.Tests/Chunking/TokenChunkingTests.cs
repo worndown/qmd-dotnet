@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Qmd.Core.Chunking;
-using Qmd.Core.Models;
 
 namespace Qmd.Core.Tests.Chunking;
 
@@ -13,7 +12,8 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_SingleChunkForSmallDocs()
     {
         var content = "This is a small document.";
-        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Should().HaveCount(1);
         chunks[0].Text.Should().Be(content);
@@ -26,7 +26,8 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_SplitsLargeDocuments()
     {
         var content = string.Concat(Enumerable.Repeat("The quick brown fox jumps over the lazy dog. ", 250));
-        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 900, 135,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Count.Should().BeGreaterThan(1);
 
@@ -45,7 +46,8 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_CreatesOverlappingChunks()
     {
         var content = string.Concat(Enumerable.Repeat("Word ", 500));
-        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 200, 30);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content, 200, 30,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Count.Should().BeGreaterThan(1);
 
@@ -61,7 +63,8 @@ public class TokenChunkingTests
     public void ChunkDocumentByTokens_ReturnsActualTokenCounts()
     {
         var content = "Hello world, this is a test.";
-        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content);
+        var chunks = DocumentChunker.ChunkDocumentByTokens(this.charTokenizer, content,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Should().HaveCount(1);
         chunks[0].Tokens.Should().BeGreaterThan(0);
@@ -82,7 +85,8 @@ public class TokenChunkingTests
     {
         var content = new string('A', 5000); // 5000 chars = 5000 tokens with this tokenizer
         var chunks = DocumentChunker.ChunkDocumentByTokens(
-            new OneCharPerTokenTokenizer(), content, 900, 135);
+            new OneCharPerTokenTokenizer(), content, 900, 135,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Count.Should().BeGreaterThan(1);
 
@@ -96,7 +100,8 @@ public class TokenChunkingTests
     {
         var content = string.Concat(Enumerable.Repeat("Word ", 2000)); // 10000 chars
         var chunks = DocumentChunker.ChunkDocumentByTokens(
-            new OneCharPerTokenTokenizer(), content, 900, 0);
+            new OneCharPerTokenTokenizer(), content, 900, 0,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Positions should be non-decreasing
         for (int i = 1; i < chunks.Count; i++)
@@ -126,7 +131,8 @@ public class TokenChunkingTests
     {
         var content = new string('B', 5000);
         var chunks = DocumentChunker.ChunkDocumentByTokens(
-            new OneCharPerTokenTokenizer(), content, 500, 75);
+            new OneCharPerTokenTokenizer(), content, 500, 75,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         chunks.Count.Should().BeGreaterThan(2);
 

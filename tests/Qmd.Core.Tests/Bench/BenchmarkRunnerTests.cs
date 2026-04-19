@@ -10,7 +10,7 @@ namespace Qmd.Core.Tests.Bench;
 /// Tests for the benchmark runner with a mock IQmdStore.
 /// </summary>
 [Trait("Category", "Unit")]
-public class BenchmarkRunnerTests : IAsyncDisposable
+public sealed class BenchmarkRunnerTests : IAsyncDisposable
 {
     private readonly IQmdStore store;
 
@@ -43,11 +43,15 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             ],
         };
 
-        var result = await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture, new BenchmarkRunOptions
-        {
-            Json = true, // suppress stderr output
-            Backends = ["bm25"], // only test bm25 since our stub only supports SearchLexAsync
-        });
+        var result = await BenchmarkRunner.RunBenchmarkAsync(
+            this.store,
+            fixture,
+            new BenchmarkRunOptions
+            {
+                Json = true, // suppress stderr output
+                Backends = ["bm25"], // only test bm25 since our stub only supports SearchLexAsync
+            },
+            ct: TestContext.Current.CancellationToken);
 
         result.Results.Should().HaveCount(1);
         result.Results[0].Id.Should().Be("q1");
@@ -85,11 +89,15 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             ],
         };
 
-        var result = await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture, new BenchmarkRunOptions
-        {
-            Json = true,
-            Backends = ["bm25"],
-        });
+        var result = await BenchmarkRunner.RunBenchmarkAsync(
+            this.store,
+            fixture,
+            new BenchmarkRunOptions
+            {
+                Json = true,
+                Backends = ["bm25"],
+            },
+            ct: TestContext.Current.CancellationToken);
 
         result.Results.Should().HaveCount(2);
         result.Summary.Should().ContainKey("bm25");
@@ -169,7 +177,7 @@ public class BenchmarkRunnerTests : IAsyncDisposable
             Queries = [],
         };
 
-        var act = async () => await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture);
+        var act = async () => await BenchmarkRunner.RunBenchmarkAsync(this.store, fixture, ct: TestContext.Current.CancellationToken);
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*missing*queries*");
     }
