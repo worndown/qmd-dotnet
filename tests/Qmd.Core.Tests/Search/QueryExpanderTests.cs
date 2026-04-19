@@ -36,8 +36,8 @@ public class QueryExpanderTests : IDisposable
         // Second call should hit cache
         await _expander.ExpandQueryAsync("cached query");
 
-        var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").GetDynamic();
-        Convert.ToInt64(cacheCount!["cnt"]).Should().BeGreaterThan(0);
+        var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").Get<CountRow>();
+        cacheCount!.Cnt.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class QueryExpanderTests : IDisposable
         await _expander.ExpandQueryAsync("query A");
         await _expander.ExpandQueryAsync("query B");
 
-        var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").GetDynamic();
-        Convert.ToInt64(cacheCount!["cnt"]).Should().Be(2);
+        var cacheCount = _db.Prepare("SELECT COUNT(*) as cnt FROM llm_cache").Get<CountRow>();
+        cacheCount!.Cnt.Should().Be(2);
     }
 }

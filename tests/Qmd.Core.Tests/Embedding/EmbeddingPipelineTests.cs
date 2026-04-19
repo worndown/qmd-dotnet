@@ -67,8 +67,8 @@ public class EmbeddingPipelineTests : IDisposable
             ensureVecTable: _ => { /* skip vec table for non-vec tests */ });
 
         // Verify content_vectors was populated
-        var cvCount = _db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").GetDynamic();
-        Convert.ToInt64(cvCount!["cnt"]).Should().BeGreaterThan(0);
+        var cvCount = _db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").Get<CountRow>();
+        cvCount!.Cnt.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -175,9 +175,9 @@ public class EmbeddingPipelineTests : IDisposable
         _llm.EmbedBatchOptionsCalls[0]?.Model.Should().Be(model);
 
         // Verify model stored in content_vectors table
-        var row = _db.Prepare("SELECT DISTINCT model FROM content_vectors").GetDynamic();
+        var row = _db.Prepare("SELECT DISTINCT model FROM content_vectors").Get<ModelRow>();
         row.Should().NotBeNull();
-        row!["model"]!.ToString().Should().Be(model);
+        row!.Model.Should().Be(model);
     }
 
     [Fact]
@@ -194,5 +194,10 @@ public class EmbeddingPipelineTests : IDisposable
             ensureVecTable: _ => { });
         await act2.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*maxBatchBytes*");
+    }
+
+    private class ModelRow
+    {
+        public string Model { get; set; } = "";
     }
 }

@@ -28,7 +28,7 @@ public class SchemaInitializerTests : IDisposable
     {
         var row = _db.Prepare(
             "SELECT name FROM sqlite_master WHERE type IN ('table', 'virtual table') AND name = $1")
-            .GetDynamic(tableName);
+            .Get<SqliteMasterRow>(tableName);
         row.Should().NotBeNull($"table '{tableName}' should exist");
     }
 
@@ -40,7 +40,7 @@ public class SchemaInitializerTests : IDisposable
     {
         var row = _db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='index' AND name = $1")
-            .GetDynamic(indexName);
+            .Get<SqliteMasterRow>(indexName);
         row.Should().NotBeNull($"index '{indexName}' should exist");
     }
 
@@ -52,14 +52,14 @@ public class SchemaInitializerTests : IDisposable
     {
         var row = _db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='trigger' AND name = $1")
-            .GetDynamic(triggerName);
+            .Get<SqliteMasterRow>(triggerName);
         row.Should().NotBeNull($"trigger '{triggerName}' should exist");
     }
 
     [Fact]
     public void Initialize_WalModeEnabled()
     {
-        var row = _db.Prepare("PRAGMA journal_mode").GetDynamic();
+        var row = _db.Prepare("PRAGMA journal_mode").Get<JournalModeRow>();
         row.Should().NotBeNull();
         // In-memory databases use "memory" mode, not WAL
         // WAL is set but SQLite may report "memory" for in-memory DBs
@@ -71,9 +71,9 @@ public class SchemaInitializerTests : IDisposable
         _db.Prepare("INSERT INTO content (hash, doc, created_at) VALUES ($1, $2, $3)")
             .Run("abc123", "Hello world", "2025-01-01");
 
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").GetDynamic("abc123");
+        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
         row.Should().NotBeNull();
-        row!["doc"].Should().Be("Hello world");
+        row!.Doc.Should().Be("Hello world");
     }
 
     [Fact]
@@ -87,9 +87,9 @@ public class SchemaInitializerTests : IDisposable
             .Run("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
 
         var row = _db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("docs", "readme.md");
+            .Get<TitleRow>("docs", "readme.md");
         row.Should().NotBeNull();
-        row!["title"].Should().Be("README");
+        row!.Title.Should().Be("README");
     }
 
     [Fact]
@@ -104,10 +104,10 @@ public class SchemaInitializerTests : IDisposable
 
         // FTS should have the document
         var ftsRow = _db.Prepare("SELECT filepath, title FROM documents_fts WHERE documents_fts MATCH $1")
-            .GetDynamic("searchable");
+            .Get<FtsFilepathTitleRow>("searchable");
         ftsRow.Should().NotBeNull();
-        ftsRow!["filepath"].Should().Be("docs/readme.md");
-        ftsRow["title"].Should().Be("README");
+        ftsRow!.Filepath.Should().Be("docs/readme.md");
+        ftsRow.Title.Should().Be("README");
     }
 
     [Fact]
@@ -118,9 +118,9 @@ public class SchemaInitializerTests : IDisposable
 
         var tables = _db.Prepare(
             "SELECT count(*) as cnt FROM sqlite_master WHERE type IN ('table', 'virtual table')")
-            .GetDynamic();
+            .Get<CountRow>();
         tables.Should().NotBeNull();
-        ((long)tables!["cnt"]!).Should().BeGreaterThan(0);
+        tables!.Cnt.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -138,8 +138,39 @@ public class SchemaInitializerTests : IDisposable
         SchemaInitializer.Initialize(db2);
 
         // Verify new schema has seq column
-        var cols = db2.Prepare("PRAGMA table_info(content_vectors)").AllDynamic();
-        cols.Should().Contain(c => c["name"]!.ToString() == "seq");
-        cols.Should().Contain(c => c["name"]!.ToString() == "pos");
+        var cols = db2.Prepare("PRAGMA table_info(content_vectors)").All<TableInfoRow>();
+        cols.Should().Contain(c => c.Name == "seq");
+        cols.Should().Contain(c => c.Name == "pos");
+    }
+
+    private class JournalModeRow
+    {
+        public string JournalMode { get; set; } = "";
+    }
+
+    private class DocRow
+    {
+        public string Doc { get; set; } = "";
+    }
+
+    private class TitleRow
+    {
+        public string Title { get; set; } = "";
+    }
+
+    private class FtsFilepathTitleRow
+    {
+        public string Filepath { get; set; } = "";
+        public string Title { get; set; } = "";
+    }
+
+    private class TableInfoRow
+    {
+        public int Cid { get; set; }
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public int Notnull { get; set; }
+        public object? DfltValue { get; set; }
+        public int Pk { get; set; }
     }
 }

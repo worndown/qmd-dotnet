@@ -33,11 +33,12 @@ public class ConfigSyncTests : IDisposable
 
         _configSync.SyncToDb(config);
 
-        var rows = _db.Prepare("SELECT name, path FROM store_collections ORDER BY name").AllDynamic();
+        var rows = _db.Prepare("SELECT name, path FROM store_collections ORDER BY name")
+            .All<StoreCollectionRow>();
         rows.Should().HaveCount(2);
-        rows[0]["name"].Should().Be("docs");
-        rows[0]["path"].Should().Be("/docs");
-        rows[1]["name"].Should().Be("notes");
+        rows[0].Name.Should().Be("docs");
+        rows[0].Path.Should().Be("/docs");
+        rows[1].Name.Should().Be("notes");
     }
 
     [Fact]
@@ -62,9 +63,9 @@ public class ConfigSyncTests : IDisposable
         };
         _configSync.SyncToDb(config2);
 
-        var rows = _db.Prepare("SELECT name FROM store_collections").AllDynamic();
+        var rows = _db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         rows.Should().HaveCount(1);
-        rows[0]["name"].Should().Be("a");
+        rows[0].Name.Should().Be("a");
     }
 
     [Fact]
@@ -74,9 +75,9 @@ public class ConfigSyncTests : IDisposable
         _configSync.SyncToDb(config);
 
         var row = _db.Prepare("SELECT value FROM store_config WHERE key = $1")
-            .GetDynamic("global_context");
+            .Get<SingleValueRow>("global_context");
         row.Should().NotBeNull();
-        row!["value"].Should().Be("test context");
+        row!.Value.Should().Be("test context");
     }
 
     [Fact]
@@ -92,7 +93,7 @@ public class ConfigSyncTests : IDisposable
         // Second sync should be a no-op (same hash)
         _configSync.SyncToDb(config);
 
-        var rows = _db.Prepare("SELECT name FROM store_collections").AllDynamic();
+        var rows = _db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         rows.Should().HaveCount(1);
     }
 
@@ -112,7 +113,7 @@ public class ConfigSyncTests : IDisposable
         _configSync.SyncToDb(config2);
 
         var row = _db.Prepare("SELECT path FROM store_collections WHERE name = $1")
-            .GetDynamic("a");
-        row!["path"].Should().Be("/new");
+            .Get<SinglePathRow>("a");
+        row!.Path.Should().Be("/new");
     }
 }

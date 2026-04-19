@@ -48,9 +48,9 @@ public class ContentHasherTests : IDisposable
     public void InsertContent_InsertsRow()
     {
         _docRepo.InsertContent("abc123", "Hello", "2025-01-01");
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").GetDynamic("abc123");
+        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
         row.Should().NotBeNull();
-        row!["doc"].Should().Be("Hello");
+        row!.Doc.Should().Be("Hello");
     }
 
     [Fact]
@@ -58,7 +58,12 @@ public class ContentHasherTests : IDisposable
     {
         _docRepo.InsertContent("abc123", "First", "2025-01-01");
         _docRepo.InsertContent("abc123", "Second", "2025-01-02");
-        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").GetDynamic("abc123");
-        row!["doc"].Should().Be("First"); // First insert wins
+        var row = _db.Prepare("SELECT doc FROM content WHERE hash = $1").Get<DocRow>("abc123");
+        row!.Doc.Should().Be("First"); // First insert wins
+    }
+
+    private class DocRow
+    {
+        public string Doc { get; set; } = "";
     }
 }

@@ -27,9 +27,9 @@ public class DocumentOperationsTests : IDisposable
     {
         _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
         var row = _db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("docs", "readme.md");
+            .Get<TitleRow>("docs", "readme.md");
         row.Should().NotBeNull();
-        row!["title"].Should().Be("README");
+        row!.Title.Should().Be("README");
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public class DocumentOperationsTests : IDisposable
         _repo.InsertDocument("docs", "readme.md", "New Title", "hash2", "2025-01-01", "2025-01-02");
 
         var row = _db.Prepare("SELECT title, hash FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("docs", "readme.md");
-        row!["title"].Should().Be("New Title");
-        row["hash"].Should().Be("hash2");
+            .Get<TitleHashRow>("docs", "readme.md");
+        row!.Title.Should().Be("New Title");
+        row.Hash.Should().Be("hash2");
     }
 
     [Fact]
@@ -108,9 +108,9 @@ public class DocumentOperationsTests : IDisposable
     {
         _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
         var fts = _db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
-            .GetDynamic("Content");
+            .Get<FilepathRow>("Content");
         fts.Should().NotBeNull();
-        fts!["filepath"].Should().Be("docs/readme.md");
+        fts!.Filepath.Should().Be("docs/readme.md");
     }
 
     [Fact]
@@ -119,7 +119,23 @@ public class DocumentOperationsTests : IDisposable
         _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
         _repo.DeactivateDocument("docs", "readme.md");
         var fts = _db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
-            .GetDynamic("Content");
+            .Get<FilepathRow>("Content");
         fts.Should().BeNull();
+    }
+
+    private class TitleRow
+    {
+        public string Title { get; set; } = "";
+    }
+
+    private class TitleHashRow
+    {
+        public string Title { get; set; } = "";
+        public string Hash { get; set; } = "";
+    }
+
+    private class FilepathRow
+    {
+        public string Filepath { get; set; } = "";
     }
 }

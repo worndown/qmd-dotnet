@@ -621,9 +621,9 @@ public class CliIntegrationTests : IAsyncLifetime
 
         // Verify it exists
         var before = _coreStore.Db.Prepare(
-            "SELECT COUNT(*) as c FROM documents WHERE collection = $1")
-            .GetDynamic("ghost-collection");
-        Convert.ToInt32(before!["c"]).Should().Be(1);
+            "SELECT COUNT(*) as cnt FROM documents WHERE collection = $1")
+            .Get<CountRow>("ghost-collection");
+        before!.Cnt.Should().Be(1);
 
         // Run the same cleanup SQL as CleanupCommand
         var removed = _coreStore.Db.Prepare(@"
@@ -635,9 +635,9 @@ public class CliIntegrationTests : IAsyncLifetime
 
         // Verify it's gone
         var after = _coreStore.Db.Prepare(
-            "SELECT COUNT(*) as c FROM documents WHERE collection = $1")
-            .GetDynamic("ghost-collection");
-        Convert.ToInt32(after!["c"]).Should().Be(0);
+            "SELECT COUNT(*) as cnt FROM documents WHERE collection = $1")
+            .Get<CountRow>("ghost-collection");
+        after!.Cnt.Should().Be(0);
     }
 
     [Fact]

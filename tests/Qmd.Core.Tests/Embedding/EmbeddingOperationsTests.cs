@@ -68,8 +68,8 @@ public class EmbeddingOperationsTests : IDisposable
 
         _embeddingRepo.ClearAllEmbeddings();
 
-        var count = _db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").GetDynamic();
-        Convert.ToInt64(count!["cnt"]).Should().Be(0);
+        var count = _db.Prepare("SELECT COUNT(*) as cnt FROM content_vectors").Get<CountRow>();
+        count!.Cnt.Should().Be(0);
     }
 
     [Fact]
