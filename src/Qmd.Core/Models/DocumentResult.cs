@@ -33,7 +33,7 @@ public class FindDocumentResult
 {
     public DocumentResult? Document { get; init; }
     public DocumentNotFound? NotFound { get; init; }
-    public bool IsFound => Document != null;
+    public bool IsFound => this.Document != null;
 
     public static FindDocumentResult Found(DocumentResult doc) => new() { Document = doc };
     public static FindDocumentResult Missing(string query, List<string> similar) =>

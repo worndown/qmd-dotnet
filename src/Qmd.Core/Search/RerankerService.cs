@@ -11,13 +11,13 @@ namespace Qmd.Core.Search;
 /// </summary>
 internal class RerankerService : IRerankerService
 {
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService _llmService;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService llmService;
 
     public RerankerService(IQmdDatabase db, ILlmService llmService)
     {
-        _db = db;
-        _llmService = llmService;
+        this.db = db;
+        this.llmService = llmService;
     }
 
     public async Task<List<(string File, double Score)>> RerankAsync(
@@ -40,7 +40,7 @@ internal class RerankerService : IRerankerService
         foreach (var doc in documents)
         {
             var cacheKey = ComputeCacheKey(rerankQuery, model, doc.Text);
-            var cached = _db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+            var cached = this.db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
             if (cached?.Value is string cachedScore && double.TryParse(cachedScore, out var score))
             {
                 cachedResults[doc.Text] = score;
@@ -56,7 +56,7 @@ internal class RerankerService : IRerankerService
         if (uncachedDocsByChunk.Count > 0)
         {
             var uncachedDocs = uncachedDocsByChunk.Values.ToList();
-            var rerankResult = await _llmService.RerankAsync(rerankQuery, uncachedDocs,
+            var rerankResult = await this.llmService.RerankAsync(rerankQuery, uncachedDocs,
                 new RerankOptions { Model = model }, ct);
 
             foreach (var r in rerankResult.Results)
@@ -67,7 +67,7 @@ internal class RerankerService : IRerankerService
                     var chunkText = uncachedDocs[r.Index].Text;
                     var cacheKey = ComputeCacheKey(rerankQuery, model, chunkText);
                     var now = DateTime.UtcNow.ToString("o");
-                    _db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
+                    this.db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
                         .Run(cacheKey, r.Score.ToString("G17"), now);
                     cachedResults[chunkText] = r.Score;
                 }

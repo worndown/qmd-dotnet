@@ -11,15 +11,15 @@ internal class MultiGetService : IMultiGetService
 {
     private const int DefaultMaxBytes = 10 * 1024; // 10KB
 
-    private readonly IQmdDatabase _db;
-    private readonly IDocumentFinderService _documentFinder;
-    private readonly IContextResolverService _contextResolver;
+    private readonly IQmdDatabase db;
+    private readonly IDocumentFinderService documentFinder;
+    private readonly IContextResolverService contextResolver;
 
     public MultiGetService(IQmdDatabase db, IDocumentFinderService documentFinder, IContextResolverService contextResolver)
     {
-        _db = db;
-        _documentFinder = documentFinder;
-        _contextResolver = contextResolver;
+        this.db = db;
+        this.documentFinder = documentFinder;
+        this.contextResolver = contextResolver;
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ internal class MultiGetService : IMultiGetService
 
             foreach (var name in names)
             {
-                var findResult = _documentFinder.FindDocument(name, includeBody, similarFilesLimit: 3);
+                var findResult = this.documentFinder.FindDocument(name, includeBody, similarFilesLimit: 3);
                 if (findResult.IsFound)
                 {
                     var doc = findResult.Document!;
@@ -82,7 +82,7 @@ internal class MultiGetService : IMultiGetService
         else
         {
             // Glob pattern match
-            var matched = GlobMatcher.MatchFilesByGlob(_db, pattern);
+            var matched = GlobMatcher.MatchFilesByGlob(this.db, pattern);
             if (matched.Count == 0)
             {
                 errors.Add($"No files matched pattern: {pattern}");
@@ -100,7 +100,7 @@ internal class MultiGetService : IMultiGetService
                         {
                             Filepath = match.VirtualPath,
                             DisplayPath = match.DisplayPath,
-                            Context = _contextResolver.GetContextForFile(match.VirtualPath),
+                            Context = this.contextResolver.GetContextForFile(match.VirtualPath),
                         },
                         Skipped = true,
                         SkipReason = $"File too large ({(int)Math.Round(match.BodyLength / 1024.0)}KB > {maxBytes / 1024}KB)",
@@ -108,7 +108,7 @@ internal class MultiGetService : IMultiGetService
                     continue;
                 }
 
-                var findResult = _documentFinder.FindDocument(match.VirtualPath, includeBody);
+                var findResult = this.documentFinder.FindDocument(match.VirtualPath, includeBody);
                 if (findResult.IsFound)
                 {
                     results.Add(new MultiGetResult { Doc = findResult.Document!, Skipped = false });

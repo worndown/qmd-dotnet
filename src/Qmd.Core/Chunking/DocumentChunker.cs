@@ -83,7 +83,7 @@ internal static class DocumentChunker
 
         if (strategy == ChunkStrategy.Auto && filepath != null)
         {
-            var astPoints = AstBreakPointScanner.GetASTBreakPoints(content, filepath);
+            var astPoints = AstBreakPointScanner.GetAstBreakPoints(content, filepath);
             if (astPoints.Count > 0)
             {
                 breakPoints = BreakPointScanner.MergeBreakPoints(breakPoints, astPoints);

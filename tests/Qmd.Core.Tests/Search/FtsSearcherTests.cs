@@ -11,14 +11,14 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class FtsSearcherTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly FtsSearchService _fts;
+    private readonly IQmdDatabase db;
+    private readonly FtsSearchService fts;
 
     public FtsSearcherTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _fts = new FtsSearchService(_db);
-        TestDbHelper.SeedDocuments(_db,
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.fts = new FtsSearchService(this.db);
+        TestDbHelper.SeedDocuments(this.db,
             ("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication and authorization."),
             ("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Learn how to install and configure the system."),
             ("docs", "faq.md", "FAQ", "Frequently asked questions about performance, scaling, and deployment."),
@@ -26,12 +26,12 @@ public class FtsSearcherTests : IDisposable
         );
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void SearchFTS_ReturnsResults()
     {
-        var results = _fts.Search("API");
+        var results = this.fts.Search("API");
         results.Should().NotBeEmpty();
         results[0].Title.Should().Be("API Reference");
     }
@@ -39,7 +39,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_ScoresNormalized()
     {
-        var results = _fts.Search("API");
+        var results = this.fts.Search("API");
         foreach (var r in results)
         {
             r.Score.Should().BeGreaterThan(0);
@@ -50,7 +50,7 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_OrderedByRelevance()
     {
-        var results = _fts.Search("guide install configure");
+        var results = this.fts.Search("guide install configure");
         results.Should().NotBeEmpty();
         for (int i = 1; i < results.Count; i++)
             results[i].Score.Should().BeLessThanOrEqualTo(results[i - 1].Score);
@@ -59,14 +59,14 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_RespectsLimit()
     {
-        var results = _fts.Search("the", limit: 2);
+        var results = this.fts.Search("the", limit: 2);
         results.Should().HaveCountLessThanOrEqualTo(2);
     }
 
     [Fact]
     public void SearchFTS_FiltersByCollection()
     {
-        var results = _fts.Search("systems", collections: ["notes"]);
+        var results = this.fts.Search("systems", collections: ["notes"]);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.CollectionName.Should().Be("notes"));
     }
@@ -74,21 +74,21 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_ReturnsEmptyForNoMatch()
     {
-        var results = _fts.Search("xyznonexistent");
+        var results = this.fts.Search("xyznonexistent");
         results.Should().BeEmpty();
     }
 
     [Fact]
     public void SearchFTS_EmptyQuery_ReturnsEmpty()
     {
-        var results = _fts.Search("");
+        var results = this.fts.Search("");
         results.Should().BeEmpty();
     }
 
     [Fact]
-    public void SearchFTS_SetsDocid()
+    public void SearchFTS_SetsDocId()
     {
-        var results = _fts.Search("API");
+        var results = this.fts.Search("API");
         results[0].DocId.Should().HaveLength(6);
         results[0].DocId.Should().MatchRegex("^[a-f0-9]+$");
     }
@@ -96,15 +96,15 @@ public class FtsSearcherTests : IDisposable
     [Fact]
     public void SearchFTS_SetsSource()
     {
-        var results = _fts.Search("API");
+        var results = this.fts.Search("API");
         results[0].Source.Should().Be("fts");
     }
 
     [Fact]
     public void SearchFTS_ExcludesInactiveDocuments()
     {
-        new DocumentRepository(_db).DeactivateDocument("docs", "api.md");
-        var results = _fts.Search("API endpoints");
+        new DocumentRepository(this.db).DeactivateDocument("docs", "api.md");
+        var results = this.fts.Search("API endpoints");
         results.Should().NotContain(r => r.DisplayPath == "docs/api.md");
     }
 

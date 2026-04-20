@@ -7,11 +7,11 @@ namespace Qmd.Core.Search;
 
 internal class FtsSearchService : IFtsSearchService
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public FtsSearchService(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public List<SearchResult> Search(string query, int limit = 20, List<string>? collections = null)
@@ -55,7 +55,7 @@ internal class FtsSearchService : IFtsSearchService
         sql += " ORDER BY fm.bm25_score ASC LIMIT $" + (parameters.Count + 1);
         parameters.Add((long)limit);
 
-        var rows = _db.Prepare(sql).All<FtsMatchRow>(parameters.ToArray());
+        var rows = this.db.Prepare(sql).All<FtsMatchRow>(parameters.ToArray());
 
         return rows.Select(row =>
         {
@@ -70,14 +70,14 @@ internal class FtsSearchService : IFtsSearchService
                 DisplayPath = row.DisplayPath,
                 Title = row.Title,
                 Hash = hash,
-                DocId = DocidUtils.GetDocid(hash),
+                DocId = DocIdUtils.GetDocId(hash),
                 CollectionName = row.Collection,
                 ModifiedAt = "",
                 BodyLength = body.Length,
                 Body = body,
                 Score = score,
                 Source = "fts",
-                Context = ContextResolver.GetContextForFile(_db, virtualPath),
+                Context = ContextResolver.GetContextForFile(this.db, virtualPath),
             };
         }).ToList();
     }

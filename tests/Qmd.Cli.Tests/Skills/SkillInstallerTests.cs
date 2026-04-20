@@ -6,24 +6,24 @@ namespace Qmd.Cli.Tests.Skills;
 [Trait("Category", "Integration")]
 public class SkillInstallerTests : IDisposable
 {
-    private readonly string _tempDir;
+    private readonly string tempDir;
 
     public SkillInstallerTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "qmd-test-" + Guid.NewGuid().ToString("N")[..8]);
-        Directory.CreateDirectory(_tempDir);
+        this.tempDir = Path.Combine(Path.GetTempPath(), "qmd-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(this.tempDir);
     }
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir))
-            Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(this.tempDir))
+            Directory.Delete(this.tempDir, recursive: true);
     }
 
     [Fact]
     public void WriteEmbeddedSkill_CreatesDirectoryStructure()
     {
-        var targetDir = Path.Combine(_tempDir, "skills", "qmd");
+        var targetDir = Path.Combine(this.tempDir, "skills", "qmd");
         SkillInstaller.WriteEmbeddedSkill(targetDir, force: false);
 
         Directory.Exists(targetDir).Should().BeTrue();
@@ -34,7 +34,7 @@ public class SkillInstallerTests : IDisposable
     [Fact]
     public void WriteEmbeddedSkill_WritesCorrectContent()
     {
-        var targetDir = Path.Combine(_tempDir, "skills", "qmd");
+        var targetDir = Path.Combine(this.tempDir, "skills", "qmd");
         SkillInstaller.WriteEmbeddedSkill(targetDir, force: false);
 
         var skillContent = File.ReadAllText(Path.Combine(targetDir, "SKILL.md"));
@@ -45,7 +45,7 @@ public class SkillInstallerTests : IDisposable
     [Fact]
     public void WriteEmbeddedSkill_ThrowsWhenExistsAndForceIsFalse()
     {
-        var targetDir = Path.Combine(_tempDir, "skills", "qmd");
+        var targetDir = Path.Combine(this.tempDir, "skills", "qmd");
         SkillInstaller.WriteEmbeddedSkill(targetDir, force: false);
 
         var act = () => SkillInstaller.WriteEmbeddedSkill(targetDir, force: false);
@@ -56,7 +56,7 @@ public class SkillInstallerTests : IDisposable
     [Fact]
     public void WriteEmbeddedSkill_ReplacesWhenForceIsTrue()
     {
-        var targetDir = Path.Combine(_tempDir, "skills", "qmd");
+        var targetDir = Path.Combine(this.tempDir, "skills", "qmd");
         SkillInstaller.WriteEmbeddedSkill(targetDir, force: false);
 
         // Add an extra file that should be removed after force reinstall
@@ -107,7 +107,7 @@ public class SkillInstallerTests : IDisposable
     {
         // If .claude/skills and .agents/skills resolve to the same directory,
         // creating the symlink would loop. EnsureClaudeSymlink should return false.
-        var sharedDir = Path.Combine(_tempDir, "skills");
+        var sharedDir = Path.Combine(this.tempDir, "skills");
         Directory.CreateDirectory(sharedDir);
 
         var linkPath = Path.Combine(sharedDir, "qmd");

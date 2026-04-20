@@ -128,7 +128,7 @@ public static class McpServerSetup
                     r.BestChunk ?? r.Body, primaryQuery, 300, r.BestChunkPos, intent: body.Intent);
                 return new
                 {
-                    docid = $"#{r.Docid}",
+                    docid = $"#{r.DocId}",
                     file = r.DisplayPath,
                     title = r.Title,
                     score = Math.Round(r.Score * 100) / 100,

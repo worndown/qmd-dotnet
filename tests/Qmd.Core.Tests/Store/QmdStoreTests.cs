@@ -10,20 +10,20 @@ namespace Qmd.Core.Tests.Store;
 [Trait("Category", "Database")]
 public class QmdStoreTests : IDisposable
 {
-    private readonly QmdStore _store;
+    private readonly QmdStore store;
 
     public QmdStoreTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     [Fact]
     public void CreateStore_InitializesSchema()
     {
-        var row = _store.Db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='documents'")
-            .GetDynamic();
+        var row = this.store.Db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='documents'")
+            .Get<SqliteMasterRow>();
         row.Should().NotBeNull();
     }
 
@@ -31,11 +31,11 @@ public class QmdStoreTests : IDisposable
     public void Store_InsertAndSearch()
     {
         var content = "This document covers authentication patterns and OAuth2 implementation.";
-        var hash = _store.HashContent(content);
-        _store.InsertContent(hash, content, "2025-01-01");
-        _store.InsertDocument("docs", "auth.md", "Authentication", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent(content);
+        this.store.InsertContent(hash, content, "2025-01-01");
+        this.store.InsertDocument("docs", "auth.md", "Authentication", hash, "2025-01-01", "2025-01-01");
 
-        var results = _store.SearchFTS("authentication");
+        var results = this.store.SearchFTS("authentication");
         results.Should().NotBeEmpty();
         results[0].Title.Should().Be("Authentication");
     }
@@ -43,11 +43,11 @@ public class QmdStoreTests : IDisposable
     [Fact]
     public void Store_IndexAndRetrieve()
     {
-        var hash = _store.HashContent("Hello world");
-        _store.InsertContent(hash, "Hello world", "2025-01-01");
-        _store.InsertDocument("docs", "hello.md", "Hello", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent("Hello world");
+        this.store.InsertContent(hash, "Hello world", "2025-01-01");
+        this.store.InsertDocument("docs", "hello.md", "Hello", hash, "2025-01-01", "2025-01-01");
 
-        var active = _store.FindActiveDocument("docs", "hello.md");
+        var active = this.store.FindActiveDocument("docs", "hello.md");
         active.Should().NotBeNull();
         active!.Hash.Should().Be(hash);
     }
@@ -59,13 +59,13 @@ public class QmdStoreTests : IDisposable
         {
             Collections = new() { ["docs"] = new Collection { Path = "/docs" } }
         };
-        _store.SyncConfig(config);
+        this.store.SyncConfig(config);
 
-        var hash = _store.HashContent("Content");
-        _store.InsertContent(hash, "Content", "2025-01-01");
-        _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
+        var hash = this.store.HashContent("Content");
+        this.store.InsertContent(hash, "Content", "2025-01-01");
+        this.store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
 
-        var status = _store.GetStatus();
+        var status = this.store.GetStatus();
         status.TotalDocuments.Should().Be(1);
         status.Collections.Should().HaveCount(1);
     }
@@ -81,21 +81,21 @@ public class QmdStoreTests : IDisposable
     [Fact]
     public void Store_Cache()
     {
-        _store.SetCachedResult("key1", "value1");
-        _store.GetCachedResult("key1").Should().Be("value1");
-        _store.ClearCache();
-        _store.GetCachedResult("key1").Should().BeNull();
+        this.store.SetCachedResult("key1", "value1");
+        this.store.GetCachedResult("key1").Should().Be("value1");
+        this.store.ClearCache();
+        this.store.GetCachedResult("key1").Should().BeNull();
     }
 
     [Fact]
     public async Task Store_Maintenance()
     {
-        var hash = _store.HashContent("Content");
-        _store.InsertContent(hash, "Content", "2025-01-01");
-        _store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
-        _store.DeactivateDocument("docs", "a.md");
+        var hash = this.store.HashContent("Content");
+        this.store.InsertContent(hash, "Content", "2025-01-01");
+        this.store.InsertDocument("docs", "a.md", "A", hash, "2025-01-01", "2025-01-01");
+        this.store.DeactivateDocument("docs", "a.md");
 
-        var result = await _store.CleanupAsync();
+        var result = await this.store.CleanupAsync(ct: TestContext.Current.CancellationToken);
         result.OrphanedCollectionDocsDeleted.Should().Be(1);
     }
 
@@ -199,17 +199,17 @@ public class QmdStoreTests : IDisposable
 
         // Both documents should reference the same hash
         var hash1 = store.Db.Prepare("SELECT hash FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("collection1", "doc1.md");
+            .Get<HashRow>("collection1", "doc1.md");
         var hash2 = store.Db.Prepare("SELECT hash FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("collection2", "doc2.md");
+            .Get<HashRow>("collection2", "doc2.md");
 
-        hash1!["hash"]!.ToString().Should().Be(expectedHash);
-        hash2!["hash"]!.ToString().Should().Be(expectedHash);
+        hash1!.Hash.Should().Be(expectedHash);
+        hash2!.Hash.Should().Be(expectedHash);
 
         // There should only be one entry in the content table for this hash
-        var contentCount = store.Db.Prepare("SELECT COUNT(*) as count FROM content WHERE hash = $1")
-            .GetDynamic(expectedHash);
-        Convert.ToInt32(contentCount!["count"]).Should().Be(1);
+        var contentCount = store.Db.Prepare("SELECT COUNT(*) as cnt FROM content WHERE hash = $1")
+            .Get<CountRow>(expectedHash);
+        contentCount!.Cnt.Should().Be(1);
     }
 
     [Fact]
@@ -231,9 +231,9 @@ public class QmdStoreTests : IDisposable
         store.InsertDocument("collection1", "unique.md", "unique", uniqueHash, "2025-01-01", "2025-01-01");
 
         // Verify both hashes exist in content table
-        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").GetDynamic(sharedHash)
+        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").Get<HashRow>(sharedHash)
             .Should().NotBeNull();
-        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").GetDynamic(uniqueHash)
+        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").Get<HashRow>(uniqueHash)
             .Should().NotBeNull();
 
         // Remove collection1 documents
@@ -246,11 +246,11 @@ public class QmdStoreTests : IDisposable
         ");
 
         // Shared content should still exist (used by collection2)
-        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").GetDynamic(sharedHash)
+        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").Get<HashRow>(sharedHash)
             .Should().NotBeNull();
 
         // Unique content should be removed (only used by collection1)
-        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").GetDynamic(uniqueHash)
+        store.Db.Prepare("SELECT hash FROM content WHERE hash = $1").Get<HashRow>(uniqueHash)
             .Should().BeNull();
     }
 
@@ -275,18 +275,18 @@ public class QmdStoreTests : IDisposable
 
         // Both hashes should exist in content table
         var hash1Db = store.Db.Prepare("SELECT hash FROM documents WHERE path = $1")
-            .GetDynamic("doc1.md");
+            .Get<HashRow>("doc1.md");
         var hash2Db = store.Db.Prepare("SELECT hash FROM documents WHERE path = $1")
-            .GetDynamic("doc2.md");
+            .Get<HashRow>("doc2.md");
 
-        hash1Db!["hash"]!.ToString().Should().Be(hash1);
-        hash2Db!["hash"]!.ToString().Should().Be(hash2);
-        hash1Db!["hash"]!.ToString().Should().NotBe(hash2Db!["hash"]!.ToString());
+        hash1Db!.Hash.Should().Be(hash1);
+        hash2Db!.Hash.Should().Be(hash2);
+        hash1Db.Hash.Should().NotBe(hash2Db.Hash);
 
         // Should have 2 entries in content table
-        var contentCount = store.Db.Prepare("SELECT COUNT(*) as count FROM content")
-            .GetDynamic();
-        Convert.ToInt32(contentCount!["count"]).Should().Be(2);
+        var contentCount = store.Db.Prepare("SELECT COUNT(*) as cnt FROM content")
+            .Get<CountRow>();
+        contentCount!.Cnt.Should().Be(2);
     }
 
     [Fact]
@@ -305,20 +305,20 @@ public class QmdStoreTests : IDisposable
         }
 
         // Should have 5 documents
-        var docCount = store.Db.Prepare("SELECT COUNT(*) as count FROM documents WHERE active = 1")
-            .GetDynamic();
-        Convert.ToInt32(docCount!["count"]).Should().Be(5);
+        var docCount = store.Db.Prepare("SELECT COUNT(*) as cnt FROM documents WHERE active = 1")
+            .Get<CountRow>();
+        docCount!.Cnt.Should().Be(5);
 
         // But only 1 content entry
-        var contentCount = store.Db.Prepare("SELECT COUNT(*) as count FROM content WHERE hash = $1")
-            .GetDynamic(sharedHash);
-        Convert.ToInt32(contentCount!["count"]).Should().Be(1);
+        var contentCount = store.Db.Prepare("SELECT COUNT(*) as cnt FROM content WHERE hash = $1")
+            .Get<CountRow>(sharedHash);
+        contentCount!.Cnt.Should().Be(1);
 
         // All documents should point to the same hash
         var hashes = store.Db.Prepare("SELECT DISTINCT hash FROM documents WHERE active = 1")
-            .AllDynamic();
+            .All<HashRow>();
         hashes.Should().HaveCount(1);
-        hashes[0]["hash"]!.ToString().Should().Be(sharedHash);
+        hashes[0].Hash.Should().Be(sharedHash);
     }
 
     [Fact]
@@ -349,11 +349,11 @@ public class QmdStoreTests : IDisposable
         var rows = store.Db.Prepare(@"
             SELECT id, hash, active FROM documents
             WHERE collection = $1 AND path = $2
-        ").AllDynamic("docs", "docs/foo.md");
+        ").All<IdHashActiveRow>("docs", "docs/foo.md");
 
         rows.Should().HaveCount(1);
-        Convert.ToInt32(rows[0]["active"]).Should().Be(1);
-        rows[0]["hash"]!.ToString().Should().Be(newHash);
+        rows[0].Active.Should().Be(1);
+        rows[0].Hash.Should().Be(newHash);
     }
 
     [Fact]
@@ -392,17 +392,28 @@ public class QmdStoreTests : IDisposable
     private static void SeedCollectionForStore(QmdStore store, string name, string path)
     {
         // Merge into existing config to avoid overwriting other collections
-        var existing = store.Db.Prepare("SELECT name FROM store_collections").AllDynamic();
+        var existing = store.Db.Prepare("SELECT name FROM store_collections").All<SingleNameRow>();
         var config = new CollectionConfig { Collections = new() };
         foreach (var row in existing)
         {
-            var n = row["name"]!.ToString()!;
             var p = store.Db.Prepare("SELECT path FROM store_collections WHERE name = $1")
-                .GetDynamic(n);
-            config.Collections[n] = new Collection { Path = p!["path"]!.ToString()! };
+                .Get<SinglePathRow>(row.Name);
+            config.Collections[row.Name] = new Collection { Path = p!.Path };
         }
         config.Collections[name] = new Collection { Path = path };
         store.Db.Prepare("DELETE FROM store_config WHERE key = $1").Run("config_hash");
         store.SyncConfig(config);
+    }
+
+    private class HashRow
+    {
+        public string Hash { get; set; } = "";
+    }
+
+    private class IdHashActiveRow
+    {
+        public long Id { get; set; }
+        public string Hash { get; set; } = "";
+        public int Active { get; set; }
     }
 }

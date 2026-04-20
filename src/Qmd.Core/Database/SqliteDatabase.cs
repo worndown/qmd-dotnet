@@ -8,7 +8,7 @@ namespace Qmd.Core.Database;
 /// </summary>
 internal class SqliteDatabase : IQmdDatabase
 {
-    private readonly SqliteConnection _connection;
+    private readonly SqliteConnection connection;
 
     public SqliteDatabase(string path)
     {
@@ -18,29 +18,29 @@ internal class SqliteDatabase : IQmdDatabase
             Mode = path == ":memory:" ? SqliteOpenMode.Memory : SqliteOpenMode.ReadWriteCreate,
         }.ToString();
 
-        _connection = new SqliteConnection(connectionString);
-        _connection.Open();
+        this.connection = new SqliteConnection(connectionString);
+        this.connection.Open();
     }
 
     public void Exec(string sql)
     {
-        using var cmd = _connection.CreateCommand();
+        using var cmd = this.connection.CreateCommand();
         cmd.CommandText = sql;
         cmd.ExecuteNonQuery();
     }
 
     public IStatement Prepare(string sql)
     {
-        return new SqliteStatement(_connection, sql);
+        return new SqliteStatement(this.connection, sql);
     }
 
     public void LoadExtension(string path)
     {
-        _connection.LoadExtension(path);
+        this.connection.LoadExtension(path);
     }
 
     public void Dispose()
     {
-        _connection.Dispose();
+        this.connection.Dispose();
     }
 }

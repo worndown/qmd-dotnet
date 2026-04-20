@@ -11,15 +11,15 @@ namespace Qmd.Core.Tests.Retrieval;
 [Trait("Category", "Database")]
 public class DocumentFinderTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public DocumentFinderTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        SeedData();
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.SeedData();
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     private void SeedData()
     {
@@ -28,10 +28,10 @@ public class DocumentFinderTests : IDisposable
         {
             Collections = new() { ["docs"] = new Collection { Path = "/home/docs" } }
         };
-        new ConfigSyncService(_db).SyncToDb(config);
+        new ConfigSyncService(this.db).SyncToDb(config);
 
         // Seed documents
-        var docRepo = new DocumentRepository(_db);
+        var docRepo = new DocumentRepository(this.db);
         docRepo.InsertContent("aabbcc112233", "# API Reference\nREST API docs.", "2025-01-01");
         docRepo.InsertContent("ddeeff445566", "# Guide\nGetting started.", "2025-01-01");
         docRepo.InsertDocument("docs", "api.md", "API Reference", "aabbcc112233", "2025-01-01", "2025-01-01");
@@ -41,31 +41,31 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_ByVirtualPath()
     {
-        var result = DocumentFinder.FindDocument(_db, "qmd://docs/api.md");
+        var result = DocumentFinder.FindDocument(this.db, "qmd://docs/api.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Be("API Reference");
         result.Document.Filepath.Should().Be("qmd://docs/api.md");
     }
 
     [Fact]
-    public void FindDocument_ByDocid()
+    public void FindDocument_ByDocId()
     {
-        var result = DocumentFinder.FindDocument(_db, "#aabbcc");
+        var result = DocumentFinder.FindDocument(this.db, "#aabbcc");
         result.IsFound.Should().BeTrue();
         result.Document!.DisplayPath.Should().Contain("api.md");
     }
 
     [Fact]
-    public void FindDocument_ByDocidWithoutHash()
+    public void FindDocument_ByDocIdWithoutHash()
     {
-        var result = DocumentFinder.FindDocument(_db, "aabbcc");
+        var result = DocumentFinder.FindDocument(this.db, "aabbcc");
         result.IsFound.Should().BeTrue();
     }
 
     [Fact]
     public void FindDocument_ByRelativePath()
     {
-        var result = DocumentFinder.FindDocument(_db, "guide.md");
+        var result = DocumentFinder.FindDocument(this.db, "guide.md");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Be("Guide");
     }
@@ -73,7 +73,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_ByPartialVirtualPath()
     {
-        var result = DocumentFinder.FindDocument(_db, "docs/api.md");
+        var result = DocumentFinder.FindDocument(this.db, "docs/api.md");
         // Should find via LIKE %docs/api.md match
         result.IsFound.Should().BeTrue();
     }
@@ -81,7 +81,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_NotFound_ReturnsSimilarFiles()
     {
-        var result = DocumentFinder.FindDocument(_db, "nonexistent.md");
+        var result = DocumentFinder.FindDocument(this.db, "nonexistent.md");
         result.IsFound.Should().BeFalse();
         result.NotFound.Should().NotBeNull();
         result.NotFound!.Query.Should().Be("nonexistent.md");
@@ -90,7 +90,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_WithBody()
     {
-        var result = DocumentFinder.FindDocument(_db, "qmd://docs/api.md", includeBody: true);
+        var result = DocumentFinder.FindDocument(this.db, "qmd://docs/api.md", includeBody: true);
         result.IsFound.Should().BeTrue();
         result.Document!.Body.Should().Contain("REST API");
     }
@@ -98,7 +98,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void FindDocument_StripLineNumber()
     {
-        var result = DocumentFinder.FindDocument(_db, "qmd://docs/api.md:10");
+        var result = DocumentFinder.FindDocument(this.db, "qmd://docs/api.md:10");
         result.IsFound.Should().BeTrue();
         result.Document!.Title.Should().Be("API Reference");
     }
@@ -106,7 +106,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void GetDocumentBody_FullContent()
     {
-        var body = DocumentFinder.GetDocumentBody(_db, "qmd://docs/api.md");
+        var body = DocumentFinder.GetDocumentBody(this.db, "qmd://docs/api.md");
         body.Should().NotBeNull();
         body.Should().Contain("REST API");
     }
@@ -114,7 +114,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void GetDocumentBody_LineSlicing()
     {
-        var body = DocumentFinder.GetDocumentBody(_db, "qmd://docs/api.md", fromLine: 2, maxLines: 1);
+        var body = DocumentFinder.GetDocumentBody(this.db, "qmd://docs/api.md", fromLine: 2, maxLines: 1);
         body.Should().NotBeNull();
         body.Should().Contain("REST API");
         body!.Split('\n').Should().HaveCount(1);
@@ -123,7 +123,7 @@ public class DocumentFinderTests : IDisposable
     [Fact]
     public void GetDocumentBody_NotFound()
     {
-        var body = DocumentFinder.GetDocumentBody(_db, "qmd://docs/nonexistent.md");
+        var body = DocumentFinder.GetDocumentBody(this.db, "qmd://docs/nonexistent.md");
         body.Should().BeNull();
     }
 
@@ -131,7 +131,7 @@ public class DocumentFinderTests : IDisposable
     public void FindDocument_ByDisplayPath_WithoutQmdPrefix()
     {
         // Lookup using collection/path format without qmd://
-        var result = DocumentFinder.FindDocument(_db, "docs/api.md");
+        var result = DocumentFinder.FindDocument(this.db, "docs/api.md");
         result.IsFound.Should().BeTrue();
     }
 

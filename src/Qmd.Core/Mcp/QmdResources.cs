@@ -11,11 +11,11 @@ namespace Qmd.Core.Mcp;
 [McpServerResourceType]
 internal class QmdResources
 {
-    private readonly IQmdStore _store;
+    private readonly IQmdStore store;
 
     public QmdResources(IQmdStore store)
     {
-        _store = store;
+        this.store = store;
     }
 
     [McpServerResource(UriTemplate = "qmd://{+path}", Name = "QMD Document", MimeType = "text/markdown")]
@@ -23,7 +23,7 @@ internal class QmdResources
     public async Task<ResourceContents> ReadDocument(string path)
     {
         var decodedPath = Uri.UnescapeDataString(path);
-        var result = await _store.GetAsync(decodedPath, new GetOptions { IncludeBody = true });
+        var result = await this.store.GetAsync(decodedPath, new GetOptions { IncludeBody = true });
 
         if (!result.IsFound)
         {

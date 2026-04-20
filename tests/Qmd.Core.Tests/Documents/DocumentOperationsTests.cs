@@ -8,47 +8,47 @@ namespace Qmd.Core.Tests.Documents;
 [Trait("Category", "Database")]
 public class DocumentOperationsTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
-    private readonly DocumentRepository _repo;
+    private readonly IQmdDatabase db;
+    private readonly DocumentRepository repo;
 
     public DocumentOperationsTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        _repo = new DocumentRepository(_db);
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.repo = new DocumentRepository(this.db);
         // Seed content for FK
-        _repo.InsertContent("hash1", "Content 1", "2025-01-01");
-        _repo.InsertContent("hash2", "Content 2", "2025-01-01");
+        this.repo.InsertContent("hash1", "Content 1", "2025-01-01");
+        this.repo.InsertContent("hash2", "Content 2", "2025-01-01");
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void InsertDocument_CreatesNewDocument()
     {
-        _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
-        var row = _db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("docs", "readme.md");
+        this.repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
+        var row = this.db.Prepare("SELECT title FROM documents WHERE collection = $1 AND path = $2")
+            .Get<TitleRow>("docs", "readme.md");
         row.Should().NotBeNull();
-        row!["title"].Should().Be("README");
+        row!.Title.Should().Be("README");
     }
 
     [Fact]
     public void InsertDocument_UpsertsOnConflict()
     {
-        _repo.InsertDocument("docs", "readme.md", "Old Title", "hash1", "2025-01-01", "2025-01-01");
-        _repo.InsertDocument("docs", "readme.md", "New Title", "hash2", "2025-01-01", "2025-01-02");
+        this.repo.InsertDocument("docs", "readme.md", "Old Title", "hash1", "2025-01-01", "2025-01-01");
+        this.repo.InsertDocument("docs", "readme.md", "New Title", "hash2", "2025-01-01", "2025-01-02");
 
-        var row = _db.Prepare("SELECT title, hash FROM documents WHERE collection = $1 AND path = $2")
-            .GetDynamic("docs", "readme.md");
-        row!["title"].Should().Be("New Title");
-        row["hash"].Should().Be("hash2");
+        var row = this.db.Prepare("SELECT title, hash FROM documents WHERE collection = $1 AND path = $2")
+            .Get<TitleHashRow>("docs", "readme.md");
+        row!.Title.Should().Be("New Title");
+        row.Hash.Should().Be("hash2");
     }
 
     [Fact]
     public void FindActiveDocument_ReturnsRow()
     {
-        _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
-        var result = _repo.FindActiveDocument("docs", "readme.md");
+        this.repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
+        var result = this.repo.FindActiveDocument("docs", "readme.md");
         result.Should().NotBeNull();
         result!.Hash.Should().Be("hash1");
         result.Title.Should().Be("README");
@@ -57,28 +57,28 @@ public class DocumentOperationsTests : IDisposable
     [Fact]
     public void FindActiveDocument_ReturnsNull_WhenNotFound()
     {
-        _repo.FindActiveDocument("docs", "nonexistent.md").Should().BeNull();
+        this.repo.FindActiveDocument("docs", "nonexistent.md").Should().BeNull();
     }
 
     [Fact]
     public void UpdateDocumentTitle_ChangesTitle()
     {
-        _repo.InsertDocument("docs", "readme.md", "Old", "hash1", "2025-01-01", "2025-01-01");
-        var doc = _repo.FindActiveDocument("docs", "readme.md")!;
-        _repo.UpdateDocumentTitle(doc.Id, "New Title", "2025-01-02");
+        this.repo.InsertDocument("docs", "readme.md", "Old", "hash1", "2025-01-01", "2025-01-01");
+        var doc = this.repo.FindActiveDocument("docs", "readme.md")!;
+        this.repo.UpdateDocumentTitle(doc.Id, "New Title", "2025-01-02");
 
-        var updated = _repo.FindActiveDocument("docs", "readme.md")!;
+        var updated = this.repo.FindActiveDocument("docs", "readme.md")!;
         updated.Title.Should().Be("New Title");
     }
 
     [Fact]
     public void UpdateDocument_ChangesHashAndTitle()
     {
-        _repo.InsertDocument("docs", "readme.md", "Old", "hash1", "2025-01-01", "2025-01-01");
-        var doc = _repo.FindActiveDocument("docs", "readme.md")!;
-        _repo.UpdateDocument(doc.Id, "Updated", "hash2", "2025-01-02");
+        this.repo.InsertDocument("docs", "readme.md", "Old", "hash1", "2025-01-01", "2025-01-01");
+        var doc = this.repo.FindActiveDocument("docs", "readme.md")!;
+        this.repo.UpdateDocument(doc.Id, "Updated", "hash2", "2025-01-02");
 
-        var updated = _repo.FindActiveDocument("docs", "readme.md")!;
+        var updated = this.repo.FindActiveDocument("docs", "readme.md")!;
         updated.Title.Should().Be("Updated");
         updated.Hash.Should().Be("hash2");
     }
@@ -86,19 +86,19 @@ public class DocumentOperationsTests : IDisposable
     [Fact]
     public void DeactivateDocument_SetsInactive()
     {
-        _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
-        _repo.DeactivateDocument("docs", "readme.md");
-        _repo.FindActiveDocument("docs", "readme.md").Should().BeNull();
+        this.repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
+        this.repo.DeactivateDocument("docs", "readme.md");
+        this.repo.FindActiveDocument("docs", "readme.md").Should().BeNull();
     }
 
     [Fact]
     public void GetActiveDocumentPaths_ReturnsActivePaths()
     {
-        _repo.InsertDocument("docs", "a.md", "A", "hash1", "2025-01-01", "2025-01-01");
-        _repo.InsertDocument("docs", "b.md", "B", "hash2", "2025-01-01", "2025-01-01");
-        _repo.DeactivateDocument("docs", "b.md");
+        this.repo.InsertDocument("docs", "a.md", "A", "hash1", "2025-01-01", "2025-01-01");
+        this.repo.InsertDocument("docs", "b.md", "B", "hash2", "2025-01-01", "2025-01-01");
+        this.repo.DeactivateDocument("docs", "b.md");
 
-        var paths = _repo.GetActiveDocumentPaths("docs");
+        var paths = this.repo.GetActiveDocumentPaths("docs");
         paths.Should().Contain("a.md");
         paths.Should().NotContain("b.md");
     }
@@ -106,20 +106,36 @@ public class DocumentOperationsTests : IDisposable
     [Fact]
     public void FtsTrigger_SyncsOnInsert()
     {
-        _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
-        var fts = _db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
-            .GetDynamic("Content");
+        this.repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
+        var fts = this.db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
+            .Get<FilepathRow>("Content");
         fts.Should().NotBeNull();
-        fts!["filepath"].Should().Be("docs/readme.md");
+        fts!.Filepath.Should().Be("docs/readme.md");
     }
 
     [Fact]
     public void FtsTrigger_RemovesOnDeactivate()
     {
-        _repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
-        _repo.DeactivateDocument("docs", "readme.md");
-        var fts = _db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
-            .GetDynamic("Content");
+        this.repo.InsertDocument("docs", "readme.md", "README", "hash1", "2025-01-01", "2025-01-01");
+        this.repo.DeactivateDocument("docs", "readme.md");
+        var fts = this.db.Prepare("SELECT filepath FROM documents_fts WHERE documents_fts MATCH $1")
+            .Get<FilepathRow>("Content");
         fts.Should().BeNull();
+    }
+
+    private class TitleRow
+    {
+        public string Title { get; set; } = "";
+    }
+
+    private class TitleHashRow
+    {
+        public string Title { get; set; } = "";
+        public string Hash { get; set; } = "";
+    }
+
+    private class FilepathRow
+    {
+        public string Filepath { get; set; } = "";
     }
 }

@@ -7,18 +7,18 @@ namespace Qmd.Core.Llm;
 /// </summary>
 internal class SessionManager : IAsyncDisposable
 {
-    private readonly LlamaSharpService _service;
-    private readonly int _inactivityTimeoutMs;
-    private readonly bool _disposeModelsOnInactivity;
-    private Timer? _inactivityTimer;
-    private readonly object _lock = new();
-    private bool _disposed;
+    private readonly LlamaSharpService service;
+    private readonly int inactivityTimeoutMs;
+    private readonly bool disposeModelsOnInactivity;
+    private Timer? inactivityTimer;
+    private readonly object @lock = new();
+    private bool disposed;
 
     public SessionManager(LlamaSharpService service, SessionManagerOptions? options = null)
     {
-        _service = service;
-        _inactivityTimeoutMs = options?.InactivityTimeoutMs ?? LlmConstants.DefaultInactivityTimeoutMs;
-        _disposeModelsOnInactivity = options?.DisposeModelsOnInactivity ?? false;
+        this.service = service;
+        this.inactivityTimeoutMs = options?.InactivityTimeoutMs ?? LlmConstants.DefaultInactivityTimeoutMs;
+        this.disposeModelsOnInactivity = options?.DisposeModelsOnInactivity ?? false;
     }
 
     /// <summary>
@@ -27,11 +27,11 @@ internal class SessionManager : IAsyncDisposable
     /// </summary>
     public void TouchActivity()
     {
-        lock (_lock)
+        lock (this.@lock)
         {
-            if (_disposed) return;
-            _inactivityTimer?.Dispose();
-            _inactivityTimer = new Timer(OnInactivityTimeout, null, _inactivityTimeoutMs, Timeout.Infinite);
+            if (this.disposed) return;
+            this.inactivityTimer?.Dispose();
+            this.inactivityTimer = new Timer(this.OnInactivityTimeout, null, this.inactivityTimeoutMs, Timeout.Infinite);
         }
     }
 
@@ -40,14 +40,14 @@ internal class SessionManager : IAsyncDisposable
     /// </summary>
     public async Task<T> WithSessionAsync<T>(Func<ILlmService, Task<T>> operation, CancellationToken ct = default)
     {
-        TouchActivity();
+        this.TouchActivity();
         try
         {
-            return await operation(_service);
+            return await operation(this.service);
         }
         finally
         {
-            TouchActivity();
+            this.TouchActivity();
         }
     }
 
@@ -56,30 +56,30 @@ internal class SessionManager : IAsyncDisposable
     /// </summary>
     public async Task WithSessionAsync(Func<ILlmService, Task> operation, CancellationToken ct = default)
     {
-        TouchActivity();
+        this.TouchActivity();
         try
         {
-            await operation(_service);
+            await operation(this.service);
         }
         finally
         {
-            TouchActivity();
+            this.TouchActivity();
         }
     }
 
     private void OnInactivityTimeout(object? state)
     {
-        if (!_disposeModelsOnInactivity) return;
+        if (!this.disposeModelsOnInactivity) return;
 
-        lock (_lock)
+        lock (this.@lock)
         {
-            if (_disposed) return;
+            if (this.disposed) return;
             // Dispose the service asynchronously — fire-and-forget on background timer
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await _service.DisposeAsync();
+                    await this.service.DisposeAsync();
                 }
                 catch
                 {
@@ -91,15 +91,15 @@ internal class SessionManager : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        lock (_lock)
+        lock (this.@lock)
         {
-            if (_disposed) return;
-            _disposed = true;
-            _inactivityTimer?.Dispose();
-            _inactivityTimer = null;
+            if (this.disposed) return;
+            this.disposed = true;
+            this.inactivityTimer?.Dispose();
+            this.inactivityTimer = null;
         }
 
-        await _service.DisposeAsync();
+        await this.service.DisposeAsync();
         GC.SuppressFinalize(this);
     }
 }

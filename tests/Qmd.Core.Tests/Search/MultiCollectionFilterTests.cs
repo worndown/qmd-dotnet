@@ -8,12 +8,12 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class MultiCollectionFilterTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public MultiCollectionFilterTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        TestDbHelper.SeedDocuments(_db,
+        this.db = TestDbHelper.CreateInMemoryDb();
+        TestDbHelper.SeedDocuments(this.db,
             ("docs", "api.md", "API Reference", "REST API endpoints for authentication."),
             ("docs", "guide.md", "Getting Started", "How to install and configure the system."),
             ("code", "auth.ts", "Auth Module", "OAuth2 authentication flow implementation."),
@@ -21,12 +21,12 @@ public class MultiCollectionFilterTests : IDisposable
         );
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public void SearchFTS_NoCollectionFilter_ReturnsAll()
     {
-        var results = new FtsSearchService(_db).Search( "authentication");
+        var results = new FtsSearchService(this.db).Search( "authentication");
         results.Should().HaveCountGreaterThanOrEqualTo(2);
         var collections = results.Select(r => r.CollectionName).Distinct().ToList();
         collections.Should().HaveCountGreaterThanOrEqualTo(2);
@@ -35,7 +35,7 @@ public class MultiCollectionFilterTests : IDisposable
     [Fact]
     public void SearchFTS_SingleCollection_FiltersCorrectly()
     {
-        var results = new FtsSearchService(_db).Search( "authentication", collections: ["docs"]);
+        var results = new FtsSearchService(this.db).Search( "authentication", collections: ["docs"]);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.CollectionName.Should().Be("docs"));
     }
@@ -43,7 +43,7 @@ public class MultiCollectionFilterTests : IDisposable
     [Fact]
     public void SearchFTS_MultipleCollections_OrMatch()
     {
-        var results = new FtsSearchService(_db).Search( "authentication", collections: ["docs", "code"]);
+        var results = new FtsSearchService(this.db).Search( "authentication", collections: ["docs", "code"]);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r =>
             new[] { "docs", "code" }.Should().Contain(r.CollectionName));
@@ -52,7 +52,7 @@ public class MultiCollectionFilterTests : IDisposable
     [Fact]
     public void SearchFTS_MultipleCollections_ExcludesOthers()
     {
-        var results = new FtsSearchService(_db).Search( "API", collections: ["docs", "notes"]);
+        var results = new FtsSearchService(this.db).Search( "API", collections: ["docs", "notes"]);
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r =>
             r.CollectionName.Should().NotBe("code"));
@@ -61,7 +61,7 @@ public class MultiCollectionFilterTests : IDisposable
     [Fact]
     public void SearchFTS_NonexistentCollection_ReturnsEmpty()
     {
-        var results = new FtsSearchService(_db).Search( "API", collections: ["nonexistent"]);
+        var results = new FtsSearchService(this.db).Search( "API", collections: ["nonexistent"]);
         results.Should().BeEmpty();
     }
 
@@ -69,9 +69,9 @@ public class MultiCollectionFilterTests : IDisposable
     public void SearchFTS_EmptyCollectionList_SearchesAll()
     {
         // null or empty list should search all collections
-        var results = new FtsSearchService(_db).Search( "API", collections: null);
+        var results = new FtsSearchService(this.db).Search( "API", collections: null);
         results.Should().NotBeEmpty();
-        var resultsEmpty = new FtsSearchService(_db).Search( "API", collections: []);
+        var resultsEmpty = new FtsSearchService(this.db).Search( "API", collections: []);
         resultsEmpty.Should().NotBeEmpty();
         resultsEmpty.Should().HaveCount(results.Count);
     }
@@ -79,7 +79,7 @@ public class MultiCollectionFilterTests : IDisposable
     [Fact]
     public void SearchFTS_SingleCollectionAsList_MatchesCollectionFilter()
     {
-        var withList = new FtsSearchService(_db).Search( "authentication", collections: ["docs"]);
+        var withList = new FtsSearchService(this.db).Search( "authentication", collections: ["docs"]);
         // Should only get docs results
         withList.Should().NotBeEmpty();
         withList.Should().AllSatisfy(r => r.CollectionName.Should().Be("docs"));

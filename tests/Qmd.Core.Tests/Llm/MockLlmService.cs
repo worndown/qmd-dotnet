@@ -26,29 +26,29 @@ public class MockLlmService : ILlmService
 
     public Task<EmbeddingResult?> EmbedAsync(string text, EmbedOptions? options = null, CancellationToken ct = default)
     {
-        EmbedCallCount++;
-        EmbedOptionsCalls.Add(options);
-        var modelName = options?.Model ?? EmbedModelName;
-        var embedding = new float[EmbedDimension];
+        this.EmbedCallCount++;
+        this.EmbedOptionsCalls.Add(options);
+        var modelName = options?.Model ?? this.EmbedModelName;
+        var embedding = new float[this.EmbedDimension];
         // Deterministic: hash-based embedding
         var hash = text.GetHashCode();
-        for (int i = 0; i < EmbedDimension; i++)
+        for (int i = 0; i < this.EmbedDimension; i++)
             embedding[i] = (float)((hash + i) % 1000) / 1000f;
         return Task.FromResult<EmbeddingResult?>(new EmbeddingResult(embedding, modelName));
     }
 
     public Task<List<EmbeddingResult?>> EmbedBatchAsync(List<string> texts, EmbedOptions? options = null, CancellationToken ct = default)
     {
-        EmbedBatchCallCount++;
-        EmbedBatchOptionsCalls.Add(options);
-        EmbedBatchSizes.Add(texts.Count);
-        var modelName = options?.Model ?? EmbedModelName;
+        this.EmbedBatchCallCount++;
+        this.EmbedBatchOptionsCalls.Add(options);
+        this.EmbedBatchSizes.Add(texts.Count);
+        var modelName = options?.Model ?? this.EmbedModelName;
         var results = new List<EmbeddingResult?>();
         foreach (var text in texts)
         {
-            var embedding = new float[EmbedDimension];
+            var embedding = new float[this.EmbedDimension];
             var hash = text.GetHashCode();
-            for (int i = 0; i < EmbedDimension; i++)
+            for (int i = 0; i < this.EmbedDimension; i++)
                 embedding[i] = (float)((hash + i) % 1000) / 1000f;
             results.Add(new EmbeddingResult(embedding, modelName));
         }

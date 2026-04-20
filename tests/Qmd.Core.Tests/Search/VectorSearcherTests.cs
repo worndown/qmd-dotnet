@@ -12,14 +12,14 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class VectorSearcherTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public VectorSearcherTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
+        this.db = TestDbHelper.CreateInMemoryDb();
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     [Fact]
     public async Task SearchVec_ReturnsEmpty_WhenNoVectorIndex()
@@ -28,16 +28,16 @@ public class VectorSearcherTests : IDisposable
         {
             Collections = new() { ["docs"] = new Collection { Path = "/docs" } }
         };
-        new ConfigSyncService(_db).SyncToDb(config);
+        new ConfigSyncService(this.db).SyncToDb(config);
 
-        var docRepo = new DocumentRepository(_db);
+        var docRepo = new DocumentRepository(this.db);
         var hash = ContentHasher.HashContent("Some content");
         docRepo.InsertContent(hash, "Some content", "2025-01-01");
         docRepo.InsertDocument("docs", "doc1.md", "Doc 1", hash, "2025-01-01", "2025-01-01");
 
         var llm = new MockLlmService();
-        var vecService = new VectorSearchService(_db, llm);
-        var results = await vecService.SearchAsync("query", "embeddinggemma", limit: 10);
+        var vecService = new VectorSearchService(this.db, llm);
+        var results = await vecService.SearchAsync("query", "embeddinggemma", limit: 10, ct: TestContext.Current.CancellationToken);
         results.Should().BeEmpty();
     }
 }

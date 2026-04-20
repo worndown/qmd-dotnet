@@ -11,14 +11,14 @@ namespace Qmd.Core.Tests.Search;
 [Trait("Category", "Database")]
 public class StructuredSearchTests : IDisposable
 {
-    private readonly QmdStore _store;
-    private readonly MockLlmService _llm = new();
+    private readonly QmdStore store;
+    private readonly MockLlmService llm = new();
 
     public StructuredSearchTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
-        _store.LlmService = _llm;
-        TestDbHelper.SeedDocuments(_store.Db,
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.store.LlmService = this.llm;
+        TestDbHelper.SeedDocuments(this.store.Db,
             ("docs", "api.md", "API Reference", "This document describes the REST API endpoints for authentication."),
             ("docs", "guide.md", "Getting Started", "Welcome to the getting started guide. Install and configure the system."),
             ("code", "auth.ts", "Auth Module", "OAuth2 authentication flow for users and service accounts."),
@@ -26,14 +26,12 @@ public class StructuredSearchTests : IDisposable
         );
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     private StructuredSearchService CreateService()
     {
-        return new StructuredSearchService(
-            _store.FtsSearch, _store.VectorSearch,
-            new RerankerService(_store.Db, _llm),
-            _store.Db, _llm);
+        return new StructuredSearchService(this.store.FtsSearch, this.store.VectorSearch,
+            new RerankerService(this.store.Db, this.llm), this.store.Db, this.llm);
     }
 
     [Fact]
@@ -44,8 +42,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "API endpoints"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results[0].DisplayPath.Should().Contain("api.md");
@@ -60,8 +59,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "authentication OAuth"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results.Should().HaveCountGreaterThanOrEqualTo(2);
@@ -75,8 +75,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "the"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { Limit = 2, SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { Limit = 2, SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().HaveCountLessThanOrEqualTo(2);
     }
@@ -89,7 +90,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "query\nwith\nnewlines"),
         };
 
-        var act = () => CreateService().SearchAsync(searches);
+        var act = () => this.CreateService().SearchAsync(searches);
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*single-line*");
     }
@@ -102,8 +103,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "xyznonexistent12345"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().BeEmpty();
     }
@@ -116,8 +118,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "authentication"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { Collections = ["docs"], SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { Collections = ["docs"], SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results.Should().AllSatisfy(r => r.File.Should().Contain("docs"));
@@ -131,8 +134,9 @@ public class StructuredSearchTests : IDisposable
             new("lex", "API endpoints"),
         };
 
-        var results = await CreateService().SearchAsync(searches,
-            new StructuredSearchOptions { SkipRerank = true });
+        var results = await this.CreateService().SearchAsync(searches,
+            new StructuredSearchOptions { SkipRerank = true },
+            TestContext.Current.CancellationToken);
 
         results.Should().NotBeEmpty();
         results[0].BestChunk.Should().NotBeNullOrEmpty();
@@ -146,7 +150,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "multiple   spaces   between"),
         };
 
-        var act = () => CreateService().SearchAsync(searches,
+        var act = () => this.CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
         await act.Should().NotThrowAsync();
     }
@@ -159,7 +163,7 @@ public class StructuredSearchTests : IDisposable
             new("lex", "unmatched \"quote here"),
         };
 
-        var act = () => CreateService().SearchAsync(searches,
+        var act = () => this.CreateService().SearchAsync(searches,
             new StructuredSearchOptions { SkipRerank = true });
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*unmatched*quote*");

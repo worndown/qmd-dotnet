@@ -135,7 +135,7 @@ public static class QueryCommand
                 DisplayPath = r.DisplayPath,
                 Title = r.Title,
                 Hash = "",
-                DocId = r.Docid,
+                DocId = r.DocId,
                 Body = full ? r.Body : r.BestChunk,
                 Score = r.Score,
                 Source = "hybrid",

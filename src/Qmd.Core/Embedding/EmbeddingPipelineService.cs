@@ -13,15 +13,15 @@ namespace Qmd.Core.Embedding;
 /// </summary>
 internal class EmbeddingPipelineService : IEmbeddingPipelineService
 {
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService _llmService;
-    private readonly IEmbeddingRepository _embeddingRepo;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService llmService;
+    private readonly IEmbeddingRepository embeddingRepo;
 
     public EmbeddingPipelineService(IQmdDatabase db, ILlmService llmService, IEmbeddingRepository embeddingRepo)
     {
-        _db = db;
-        _llmService = llmService;
-        _embeddingRepo = embeddingRepo;
+        this.db = db;
+        this.llmService = llmService;
+        this.embeddingRepo = embeddingRepo;
     }
 
     public async Task<EmbedResult> GenerateEmbeddingsAsync(
@@ -35,13 +35,12 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
         if (options.MaxBatchBytes <= 0)
             throw new ArgumentException("maxBatchBytes must be positive", nameof(options));
 
-        var model = options.Model ?? _llmService.EmbedModelName;
+        var model = options.Model ?? this.llmService.EmbedModelName;
         var sw = Stopwatch.StartNew();
 
-        if (options.Force)
-            _embeddingRepo.ClearAllEmbeddings();
+        if (options.Force) this.embeddingRepo.ClearAllEmbeddings();
 
-        var pending = _embeddingRepo.GetPendingEmbeddingDocs();
+        var pending = this.embeddingRepo.GetPendingEmbeddingDocs();
         if (pending.Count == 0)
             return new EmbedResult(0, 0, 0, sw.ElapsedMilliseconds);
 
@@ -54,13 +53,13 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
         long totalBytesProcessed = 0;
         long totalBytes = pending.Sum(d => d.Bytes);
 
-        var tokenizer = new LlmServiceTokenizer(_llmService);
+        var tokenizer = new LlmServiceTokenizer(this.llmService);
 
         foreach (var batch in batches)
         {
             options.CancellationToken.ThrowIfCancellationRequested();
 
-            var docs = _embeddingRepo.GetEmbeddingDocsForBatch(batch);
+            var docs = this.embeddingRepo.GetEmbeddingDocsForBatch(batch);
 
             foreach (var doc in docs)
             {
@@ -83,7 +82,7 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
                     List<EmbeddingResult?> embeddings;
                     try
                     {
-                        embeddings = await _llmService.EmbedBatchAsync(formattedTexts,
+                        embeddings = await this.llmService.EmbedBatchAsync(formattedTexts,
                             new EmbedOptions { Model = model }, options.CancellationToken);
                     }
                     catch (OperationCanceledException) { throw; }
@@ -95,7 +94,7 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
                         {
                             try
                             {
-                                embeddings[j] = await _llmService.EmbedAsync(formattedTexts[j],
+                                embeddings[j] = await this.llmService.EmbedAsync(formattedTexts[j],
                                     new EmbedOptions { Model = model }, options.CancellationToken);
                             }
                             catch (OperationCanceledException) { throw; }
@@ -111,9 +110,9 @@ internal class EmbeddingPipelineService : IEmbeddingPipelineService
 
                             // Ensure vec table exists with correct dimensions
                             ensureVecTable?.Invoke(emb.Embedding.Length);
-                            _embeddingRepo.ResetVecTableCache();
+                            this.embeddingRepo.ResetVecTableCache();
 
-                            _embeddingRepo.InsertEmbedding(
+                            this.embeddingRepo.InsertEmbedding(
                                 doc.Hash, i, chunks[i].Pos,
                                 emb.Embedding, model,
                                 DateTime.UtcNow.ToString("o"));

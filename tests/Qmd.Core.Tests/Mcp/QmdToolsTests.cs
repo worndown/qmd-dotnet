@@ -8,24 +8,24 @@ namespace Qmd.Core.Tests.Mcp;
 [Trait("Category", "Integration")]
 public class QmdToolsTests : IAsyncLifetime
 {
-    private IQmdStore _seededStore = null!;
-    private IQmdStore _emptyStore = null!;
-    private QmdTools _seededTools = null!;
-    private QmdTools _emptyTools = null!;
+    private IQmdStore seededStore = null!;
+    private IQmdStore emptyStore = null!;
+    private QmdTools seededTools = null!;
+    private QmdTools emptyTools = null!;
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
-        _seededStore = McpTestHelper.CreateSeededStore();
-        _emptyStore = McpTestHelper.CreateEmptyStore();
-        _seededTools = new QmdTools(_seededStore);
-        _emptyTools = new QmdTools(_emptyStore);
-        return Task.CompletedTask;
+        this.seededStore = McpTestHelper.CreateSeededStore();
+        this.emptyStore = McpTestHelper.CreateEmptyStore();
+        this.seededTools = new QmdTools(this.seededStore);
+        this.emptyTools = new QmdTools(this.emptyStore);
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        await _seededStore.DisposeAsync();
-        await _emptyStore.DisposeAsync();
+        await this.seededStore.DisposeAsync();
+        await this.emptyStore.DisposeAsync();
     }
 
     /// <summary>
@@ -45,14 +45,14 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Instructions_EmptyStore_ShowsZeroDocuments()
     {
-        var instructions = await InstructionsBuilder.BuildAsync(_emptyStore);
+        var instructions = await InstructionsBuilder.BuildAsync(this.emptyStore);
         instructions.Should().Contain("0 indexed documents");
     }
 
     [Fact]
     public async Task Instructions_WithCollections_ListsCollectionNames()
     {
-        var instructions = await InstructionsBuilder.BuildAsync(_seededStore);
+        var instructions = await InstructionsBuilder.BuildAsync(this.seededStore);
         instructions.Should().Contain("docs");
         instructions.Should().Contain("code");
     }
@@ -63,8 +63,8 @@ public class QmdToolsTests : IAsyncLifetime
         // Whether the vector index warning appears depends on whether vec0.dll
         // is present. TS equivalent: if sqlite-vec loads, no warning is shown;
         // if it doesn't load, the "Vector index not available" warning appears.
-        var instructions = await InstructionsBuilder.BuildAsync(_seededStore);
-        var status = await _seededStore.GetStatusAsync();
+        var instructions = await InstructionsBuilder.BuildAsync(this.seededStore);
+        var status = await this.seededStore.GetStatusAsync();
         if (!status.HasVectorIndex)
         {
             instructions.Should().Contain("Vector index not available");
@@ -78,7 +78,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Status_EmptyStore_ShowsZeroDocuments()
     {
-        var result = await _emptyTools.Status();
+        var result = await this.emptyTools.Status();
         var text = GetText(result);
         text.Should().Contain("Total documents: 0");
     }
@@ -86,7 +86,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Status_WithDocs_ShowsCorrectCounts()
     {
-        var result = await _seededTools.Status();
+        var result = await this.seededTools.Status();
         var text = GetText(result);
         text.Should().Contain("Total documents: 6");
         text.Should().Contain("docs:");
@@ -97,15 +97,15 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Get_ValidPath_ReturnsDocumentContent()
     {
-        var result = await _seededTools.Get("qmd://docs/readme.md");
+        var result = await this.seededTools.Get("qmd://docs/readme.md");
         var text = GetText(result);
         text.Should().Contain("Project README");
     }
 
     [Fact]
-    public async Task Get_ByDocid_ReturnsDocument()
+    public async Task Get_ByDocId_ReturnsDocument()
     {
-        var result = await _seededTools.Get("qmd://docs/api/guide.md");
+        var result = await this.seededTools.Get("qmd://docs/api/guide.md");
         var text = GetText(result);
         text.Should().Contain("API Guide");
     }
@@ -113,7 +113,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Get_NotFound_ShowsSuggestions()
     {
-        var result = await _seededTools.Get("nonexistent.md");
+        var result = await this.seededTools.Get("nonexistent.md");
         result.IsError.Should().BeTrue();
         var text = GetText(result);
         text.Should().Contain("Document not found");
@@ -122,7 +122,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Get_WithLineNumbers_IncludesNumbers()
     {
-        var result = await _seededTools.Get("qmd://docs/readme.md", lineNumbers: true);
+        var result = await this.seededTools.Get("qmd://docs/readme.md", lineNumbers: true);
         var text = GetText(result);
         text.Should().Contain("1:");
     }
@@ -130,7 +130,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Get_LineSlicing_ReturnsSubset()
     {
-        var result = await _seededTools.Get("qmd://docs/readme.md", fromLine: 3, maxLines: 2);
+        var result = await this.seededTools.Get("qmd://docs/readme.md", fromLine: 3, maxLines: 2);
         var text = GetText(result);
         text.Should().NotBeEmpty();
         var lines = text.Split('\n');
@@ -140,7 +140,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_MatchingTerm_ReturnsResults()
     {
-        var result = await _seededTools.Query("readme");
+        var result = await this.seededTools.Query("readme", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         text.Should().Contain("result(s)");
         text.Should().Contain("readme.md");
@@ -149,7 +149,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_NoMatches_ReturnsNoResults()
     {
-        var result = await _seededTools.Query("xyznonexistent123");
+        var result = await this.seededTools.Query("xyznonexistent123", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         text.Should().Contain("No results found");
     }
@@ -157,7 +157,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task Query_CollectionFilter_OnlyFromCollection()
     {
-        var result = await _seededTools.Query("readme", collection: "code");
+        var result = await this.seededTools.Query("readme", collection: "code", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         // readme.md is in "docs", not "code"
         text.Should().NotContain("readme.md");
@@ -166,7 +166,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task MultiGet_GlobPattern_ReturnsMatchingDocs()
     {
-        var result = await _seededTools.MultiGet("qmd://docs/*.md");
+        var result = await this.seededTools.MultiGet("qmd://docs/*.md");
         var text = GetAllText(result);
         text.Should().Contain("readme.md");
     }
@@ -174,7 +174,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task MultiGet_CommaSeparated_ResolvesFiles()
     {
-        var result = await _seededTools.MultiGet("qmd://docs/readme.md, qmd://code/index.ts");
+        var result = await this.seededTools.MultiGet("qmd://docs/readme.md, qmd://code/index.ts");
         var text = GetAllText(result);
         text.Should().Contain("readme.md");
         text.Should().Contain("index.ts");
@@ -184,7 +184,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task MultiGet_FileTooLarge_ShowsSkipped()
     {
         // large-file.md is ~15KB, set maxBytes=1024 to trigger skip
-        var result = await _seededTools.MultiGet("qmd://docs/large-file.md", maxBytes: 1024);
+        var result = await this.seededTools.MultiGet("qmd://docs/large-file.md", maxBytes: 1024);
         var text = GetAllText(result);
         text.Should().Contain("SKIPPED");
     }
@@ -192,7 +192,7 @@ public class QmdToolsTests : IAsyncLifetime
     [Fact]
     public async Task MultiGet_NoMatches_ReturnsMessage()
     {
-        var result = await _seededTools.MultiGet("nonexistent-pattern-*.xyz");
+        var result = await this.seededTools.MultiGet("nonexistent-pattern-*.xyz");
         var text = GetAllText(result);
         text.Should().Contain("No files matched pattern");
     }
@@ -201,7 +201,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Get_ByDisplayPath_ReturnsDocument()
     {
         // "retrieves document by display_path" — use "docs/readme.md" without qmd:// prefix
-        var result = await _seededTools.Get("docs/readme.md");
+        var result = await this.seededTools.Get("docs/readme.md");
         var text = GetText(result);
         text.Should().Contain("Project README");
     }
@@ -210,7 +210,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Get_ByPartialPath_ReturnsDocument()
     {
         // "retrieves document by partial path" — just "readme.md"
-        var result = await _seededTools.Get("readme.md");
+        var result = await this.seededTools.Get("readme.md");
         result.IsError.Should().NotBe(true);
         var text = GetText(result);
         text.Should().Contain("Project README");
@@ -220,7 +220,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Get_WithLineRangeSuffix_ReturnsSubset()
     {
         // "supports line range with :line suffix" — e.g., "readme.md:2"
-        var result = await _seededTools.Get("readme.md:2");
+        var result = await this.seededTools.Get("readme.md:2");
         result.IsError.Should().NotBe(true);
         var text = GetText(result);
         text.Should().NotBeEmpty();
@@ -234,7 +234,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Get_IncludesContextForMeetingDoc()
     {
         // "includes context for documents in context path"
-        var result = await _seededTools.Get("meetings/meeting-2024-01.md");
+        var result = await this.seededTools.Get("meetings/meeting-2024-01.md");
         result.IsError.Should().NotBe(true);
         var text = GetText(result);
         text.Should().Contain("Meeting notes and transcripts");
@@ -244,7 +244,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task MultiGet_CommaSeparatedList_RetrievesDocuments()
     {
         // "retrieves documents by comma-separated list"
-        var result = await _seededTools.MultiGet("readme.md, api/guide.md");
+        var result = await this.seededTools.MultiGet("readme.md, api/guide.md");
         var text = GetAllText(result);
         text.Should().Contain("readme.md");
         text.Should().Contain("guide.md");
@@ -254,7 +254,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task MultiGet_CommaSeparatedList_ReturnsErrorsForMissingFiles()
     {
         // "returns errors for missing files in comma list"
-        var result = await _seededTools.MultiGet("readme.md, nonexistent.md");
+        var result = await this.seededTools.MultiGet("readme.md, nonexistent.md");
         var text = GetAllText(result);
         // Should have at least the found document
         text.Should().Contain("readme.md");
@@ -266,7 +266,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task MultiGet_RespectsMaxLines()
     {
         // "respects maxLines parameter"
-        var result = await _seededTools.MultiGet("qmd://docs/readme.md", maxLines: 2);
+        var result = await this.seededTools.MultiGet("qmd://docs/readme.md", maxLines: 2);
         var text = GetAllText(result);
         text.Should().Contain("readme.md");
         // Should contain truncation notice when there are more lines
@@ -277,7 +277,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task MultiGet_NonMatchingGlob_ReturnsError()
     {
         // "returns error for non-matching glob"
-        var result = await _seededTools.MultiGet("nonexistent/*.md");
+        var result = await this.seededTools.MultiGet("nonexistent/*.md");
         var text = GetAllText(result);
         text.Should().Contain("No files matched pattern");
     }
@@ -286,7 +286,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_EmptyQuery_HandlesGracefully()
     {
         // "handles empty query" — query tool with empty string
-        var result = await _seededTools.Query("");
+        var result = await this.seededTools.Query("", ct: TestContext.Current.CancellationToken);
         var text = GetText(result);
         // Should either return no results or an error, but NOT throw
         text.Should().NotBeNull();
@@ -296,10 +296,10 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_SpecialCharacters_DoesNotThrow()
     {
         // "handles special characters in query" — query with C++ or it's
-        var result = await _seededTools.Query("C++");
+        var result = await this.seededTools.Query("C++", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
 
-        var result2 = await _seededTools.Query("it's");
+        var result2 = await this.seededTools.Query("it's", ct: TestContext.Current.CancellationToken);
         result2.Should().NotBeNull();
     }
 
@@ -307,7 +307,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_Unicode_DoesNotThrow()
     {
         // "handles unicode in query"
-        var result = await _seededTools.Query("\u6587\u6863");
+        var result = await this.seededTools.Query("\u6587\u6863", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
     }
 
@@ -349,7 +349,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_SearchResults_HaveCorrectStructure()
     {
         // "search results have correct structure for structuredContent"
-        var result = await _seededTools.Query("readme");
+        var result = await this.seededTools.Query("readme", ct: TestContext.Current.CancellationToken);
         result.StructuredContent.Should().NotBeNull();
 
         // Parse the structured content JSON
@@ -372,7 +372,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Get_ErrorResponse_IncludesIsErrorFlag()
     {
         // "error responses include isError flag"
-        var result = await _seededTools.Get("definitely-not-a-real-file.xyz");
+        var result = await this.seededTools.Get("definitely-not-a-real-file.xyz");
         result.IsError.Should().BeTrue();
         result.Content.Should().NotBeEmpty();
         var text = GetText(result);
@@ -384,7 +384,7 @@ public class QmdToolsTests : IAsyncLifetime
     {
         // The seeded store has context "/meetings" => "Meeting notes and transcripts" on the "docs" collection.
         // Multi-getting a meetings doc should include that context in the output.
-        var result = await _seededTools.MultiGet("qmd://docs/meetings/meeting-2024-01.md");
+        var result = await this.seededTools.MultiGet("qmd://docs/meetings/meeting-2024-01.md");
         var text = GetAllText(result);
         text.Should().Contain("Meeting notes and transcripts");
     }
@@ -393,7 +393,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Status_ShowsDocsNeedingEmbedding()
     {
         // The seeded store has documents but no embeddings generated, so NeedsEmbedding > 0.
-        var result = await _seededTools.Status();
+        var result = await this.seededTools.Status();
         var text = GetText(result);
         text.Should().Contain("Needs embedding:");
         // Structured content should also report the count
@@ -408,7 +408,7 @@ public class QmdToolsTests : IAsyncLifetime
     {
         // Pass a 10K+ character query string and assert it doesn't crash.
         var longQuery = new string('a', 10_000) + " readme";
-        var act = () => _seededTools.Query(longQuery);
+        var act = () => this.seededTools.Query(longQuery);
         await act.Should().NotThrowAsync();
     }
 
@@ -416,7 +416,7 @@ public class QmdToolsTests : IAsyncLifetime
     public async Task Query_OnlyStopwords_HandlesGracefully()
     {
         // Pass common English stopwords — should return empty results or a graceful message, not throw.
-        var result = await _seededTools.Query("the a an");
+        var result = await this.seededTools.Query("the a an", ct: TestContext.Current.CancellationToken);
         result.Should().NotBeNull();
         var text = GetText(result);
         text.Should().NotBeNull();

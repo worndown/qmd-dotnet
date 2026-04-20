@@ -7,7 +7,7 @@ namespace Qmd.Core.Tests.TestHelpers;
 /// </summary>
 internal class SyncProgress<T> : IProgress<T>
 {
-    private readonly Action<T> _handler;
-    public SyncProgress(Action<T> handler) => _handler = handler;
-    public void Report(T value) => _handler(value);
+    private readonly Action<T> handler;
+    public SyncProgress(Action<T> handler) => this.handler = handler;
+    public void Report(T value) => this.handler(value);
 }

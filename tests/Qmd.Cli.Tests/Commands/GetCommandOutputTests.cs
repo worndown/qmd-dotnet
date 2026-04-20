@@ -9,19 +9,19 @@ namespace Qmd.Cli.Tests.Commands;
 
 [Collection("ConsoleOutput")]
 [Trait("Category", "Unit")]
-public class GetCommandOutputTests : IAsyncLifetime, IDisposable
+public sealed class GetCommandOutputTests : IAsyncLifetime, IDisposable
 {
-    private readonly TestConsoleOutput _console = new();
-    private readonly IConsoleOutput _original;
-    private IQmdStore _store = null!;
+    private readonly TestConsoleOutput console = new();
+    private readonly IConsoleOutput original;
+    private IQmdStore store = null!;
 
     public GetCommandOutputTests()
     {
-        _original = CliContext.Console;
-        CliContext.Console = _console;
+        this.original = CliContext.Console;
+        CliContext.Console = this.console;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var config = new CollectionConfig
         {
@@ -30,8 +30,8 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
                 ["docs"] = new Collection { Path = "/test/docs", Pattern = "**/*.md" },
             }
         };
-        _store = await QmdStoreFactory.CreateInMemoryAsync(config);
-        var core = (QmdStore)_store;
+        this.store = await QmdStoreFactory.CreateInMemoryAsync(config);
+        var core = (QmdStore)this.store;
 
         Seed(core, "docs", "readme.md",
             "# Test Project\n\nThis is a test project.\n\nLine 4.\nLine 5.\nLine 6.\nLine 7.\n");
@@ -40,12 +40,12 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
             "# Meeting Notes\n\nDiscussion topics.\n");
 
         // Seed with context
-        await _store.AddContextAsync("docs", "/notes", "Internal meeting notes");
+        await this.store.AddContextAsync("docs", "/notes", "Internal meeting notes");
     }
 
-    public async Task DisposeAsync() => await _store.DisposeAsync();
+    public async ValueTask DisposeAsync() => await this.store.DisposeAsync();
 
-    public void Dispose() => CliContext.Console = _original;
+    public void Dispose() => CliContext.Console = this.original;
 
     private static void Seed(QmdStore core, string collection, string path, string content)
     {
@@ -58,20 +58,20 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_FoundDocument_OutputsHeaderAndBody()
     {
-        await GetCommand.HandleGetAsync(_store, "readme.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, false, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().Contain("# docs/readme.md");
         output.Should().Contain("This is a test project.");
-        _console.GetError().Should().BeEmpty();
+        this.console.GetError().Should().BeEmpty();
     }
 
     [Fact]
     public async Task Get_FoundDocument_WithContext_IncludesContextLine()
     {
-        await GetCommand.HandleGetAsync(_store, "notes/meeting.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "notes/meeting.md", null, null, false, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().Contain("# docs/notes/meeting.md");
         output.Should().Contain("Context: Internal meeting notes");
         output.Should().Contain("Discussion topics.");
@@ -80,19 +80,19 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_NotFound_WritesErrorToStderr()
     {
-        await GetCommand.HandleGetAsync(_store, "nonexistent.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "nonexistent.md", null, null, false, TestContext.Current.CancellationToken);
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("Not found: nonexistent.md");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("Not found: nonexistent.md");
     }
 
     [Fact]
     public async Task Get_NotFound_ShowsSimilarFiles()
     {
         // "readm.md" is similar to "readme.md"
-        await GetCommand.HandleGetAsync(_store, "readm.md", null, null, false);
+        await GetCommand.HandleGetAsync(this.store, "readm.md", null, null, false, TestContext.Current.CancellationToken);
 
-        var error = _console.GetError();
+        var error = this.console.GetError();
         error.Should().Contain("Not found: readm.md");
         error.Should().Contain("Similar files:");
         error.Should().Contain("readme.md");
@@ -103,9 +103,9 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     {
         // Content: "# Test Project\n\nThis is a test project.\n\nLine 4.\nLine 5.\nLine 6.\nLine 7.\n"
         // Lines:    1: "# Test Project"  2: ""  3: "This is a test project."  4: ""  5: "Line 4."  6: "Line 5."
-        await GetCommand.HandleGetAsync(_store, "readme.md", 5, 2, false);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", 5, 2, false, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().Contain("Line 4.");
         output.Should().Contain("Line 5.");
         output.Should().NotContain("# Test Project");
@@ -115,9 +115,9 @@ public class GetCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Get_WithLineNumbers_FormatsWithNumbers()
     {
-        await GetCommand.HandleGetAsync(_store, "readme.md", null, null, true);
+        await GetCommand.HandleGetAsync(this.store, "readme.md", null, null, true, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         // FormatHelpers.AddLineNumbers prepends line numbers like "1: ..."
         output.Should().MatchRegex(@"\d+:");
     }

@@ -12,18 +12,18 @@ namespace Qmd.Core.Search;
 /// </summary>
 internal class VectorSearchQueryService
 {
-    private readonly IVectorSearchService _vectorSearch;
-    private readonly IQueryExpanderService _queryExpander;
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService _llmService;
+    private readonly IVectorSearchService vectorSearch;
+    private readonly IQueryExpanderService queryExpander;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService llmService;
 
     public VectorSearchQueryService(IVectorSearchService vectorSearch, IQueryExpanderService queryExpander,
         IQmdDatabase db, ILlmService llmService)
     {
-        _vectorSearch = vectorSearch;
-        _queryExpander = queryExpander;
-        _db = db;
-        _llmService = llmService;
+        this.vectorSearch = vectorSearch;
+        this.queryExpander = queryExpander;
+        this.db = db;
+        this.llmService = llmService;
     }
 
     public async Task<List<SearchResult>> SearchAsync(
@@ -36,21 +36,21 @@ internal class VectorSearchQueryService
         var minScore = options.MinScore;
         var collections = options.Collections;
         var intent = options.Intent;
-        var model = _llmService.EmbedModelName;
+        var model = this.llmService.EmbedModelName;
 
         // Check if vectors_vec table exists
-        var vecTableExists = _db.Prepare(
+        var vecTableExists = this.db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
         if (vecTableExists == null) return [];
 
         // Expand query — filter to vec/hyde only (lex queries target FTS, not vector)
-        var allExpanded = await _queryExpander.ExpandQueryAsync(query, null, intent, ct);
+        var allExpanded = await this.queryExpander.ExpandQueryAsync(query, null, intent, ct);
         // When intent is provided, also include non-intent expansions as a baseline.
         // Intent-modified expansions can paradoxically score relevant documents lower
         // than generic expansions; merging both ensures intent can only help, not hurt.
         if (intent != null)
         {
-            var baseline = await _queryExpander.ExpandQueryAsync(query, null, null, ct);
+            var baseline = await this.queryExpander.ExpandQueryAsync(query, null, null, ct);
             allExpanded.AddRange(baseline);
         }
         var vecExpanded = allExpanded.Where(q => q.Type != "lex").ToList();
@@ -64,12 +64,12 @@ internal class VectorSearchQueryService
         foreach (var q in queryTexts)
         {
             ct.ThrowIfCancellationRequested();
-            var vecResults = await _vectorSearch.SearchAsync(q, model, limit, collections, ct: ct);
+            var vecResults = await this.vectorSearch.SearchAsync(q, model, limit, collections, ct: ct);
             foreach (var r in vecResults)
             {
                 if (!allResults.TryGetValue(r.Filepath, out var existing) || r.Score > existing.Score)
                 {
-                    r.Context = ContextResolver.GetContextForFile(_db, r.Filepath);
+                    r.Context = ContextResolver.GetContextForFile(this.db, r.Filepath);
                     allResults[r.Filepath] = r;
                 }
             }

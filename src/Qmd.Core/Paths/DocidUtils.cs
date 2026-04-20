@@ -6,14 +6,14 @@ namespace Qmd.Core.Paths;
 /// Utilities for document ID (docid) handling.
 /// A docid is the first 6 characters of a document's SHA256 hash.
 /// </summary>
-internal static class DocidUtils
+internal static class DocIdUtils
 {
     private static readonly Regex HexRegex = new(@"^[a-f0-9]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Get the docid (first 6 chars) from a full hash.
     /// </summary>
-    public static string GetDocid(string hash)
+    public static string GetDocId(string hash)
     {
         return hash[..6];
     }
@@ -42,7 +42,7 @@ internal static class DocidUtils
     /// <summary>
     /// Check if a string looks like a docid reference (6+ hex chars after normalization).
     /// </summary>
-    public static bool IsDocid(string input)
+    public static bool IsDocId(string input)
     {
         var normalized = Normalize(input);
         return normalized.Length >= 6 && HexRegex.IsMatch(normalized);

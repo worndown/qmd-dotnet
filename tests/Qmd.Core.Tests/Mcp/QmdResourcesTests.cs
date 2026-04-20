@@ -10,26 +10,26 @@ namespace Qmd.Core.Tests.Mcp;
 [Trait("Category", "Integration")]
 public class QmdResourcesTests : IAsyncLifetime
 {
-    private IQmdStore _seededStore = null!;
-    private QmdResources _resources = null!;
+    private IQmdStore seededStore = null!;
+    private QmdResources resources = null!;
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
-        _seededStore = McpTestHelper.CreateSeededStore();
-        _resources = new QmdResources(_seededStore);
-        return Task.CompletedTask;
+        this.seededStore = McpTestHelper.CreateSeededStore();
+        this.resources = new QmdResources(this.seededStore);
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        await _seededStore.DisposeAsync();
+        await this.seededStore.DisposeAsync();
     }
 
     [Fact]
     public async Task ReadDocument_ByDisplayPath_ReturnsContent()
     {
         // Query for "readme.md" by display path returns body containing "Project README"
-        var result = await _resources.ReadDocument("docs/readme.md");
+        var result = await this.resources.ReadDocument("docs/readme.md");
         var text = GetText(result);
         text.Should().Contain("Project README");
     }
@@ -38,7 +38,7 @@ public class QmdResourcesTests : IAsyncLifetime
     public async Task ReadDocument_BySuffixMatch_ResolvesPartialPath()
     {
         // "meeting-2024-01.md" (without meetings/ prefix) resolves to "meetings/meeting-2024-01.md"
-        var result = await _resources.ReadDocument("docs/meetings/meeting-2024-01.md");
+        var result = await this.resources.ReadDocument("docs/meetings/meeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
     }
@@ -47,7 +47,7 @@ public class QmdResourcesTests : IAsyncLifetime
     public async Task ReadDocument_Missing_ReturnsNotFound()
     {
         // nonexistent.md returns "Document not found"
-        var result = await _resources.ReadDocument("nonexistent.md");
+        var result = await this.resources.ReadDocument("nonexistent.md");
         var text = GetText(result);
         text.Should().Contain("Document not found");
     }
@@ -56,7 +56,7 @@ public class QmdResourcesTests : IAsyncLifetime
     public async Task ReadDocument_IncludesContextAsHtmlComment()
     {
         // Meetings doc has context "Meeting notes and transcripts" prepended as an HTML comment
-        var result = await _resources.ReadDocument("docs/meetings/meeting-2024-01.md");
+        var result = await this.resources.ReadDocument("docs/meetings/meeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("<!-- Context: Meeting notes and transcripts -->");
     }
@@ -65,7 +65,7 @@ public class QmdResourcesTests : IAsyncLifetime
     public async Task ReadDocument_UrlEncodedPath_DecodesCorrectly()
     {
         // "meetings%2Fmeeting-2024-01.md" decodes to "meetings/meeting-2024-01.md" and returns the correct document
-        var result = await _resources.ReadDocument("docs/meetings%2Fmeeting-2024-01.md");
+        var result = await this.resources.ReadDocument("docs/meetings%2Fmeeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
     }
@@ -86,7 +86,10 @@ public class QmdResourcesTests : IAsyncLifetime
         // the underlying store's MultiGetAsync with a broad glob pattern.
         // The seeded store has 6 docs: readme.md, api/guide.md, index.ts,
         // meetings/meeting-2024-01.md, meetings/meeting-2024-02.md, large-file.md.
-        var (docs, _) = await _seededStore.MultiGetAsync("qmd://**/*", new MultiGetOptions { IncludeBody = false });
+        var (docs, _) = await this.seededStore.MultiGetAsync(
+            "qmd://**/*",
+            new MultiGetOptions { IncludeBody = false },
+            TestContext.Current.CancellationToken);
         docs.Count.Should().Be(6);
 
         var paths = docs.Select(d => d.Doc.DisplayPath).ToList();
@@ -106,7 +109,7 @@ public class QmdResourcesTests : IAsyncLifetime
         // The QmdResources.ReadDocument calls Uri.UnescapeDataString once,
         // so "docs/meetings%252Fmeeting-2024-01.md" → "docs/meetings%2Fmeeting-2024-01.md"
         // which is still encoded. We verify single-encoded input works:
-        var result = await _resources.ReadDocument("docs/meetings%2Fmeeting-2024-01.md");
+        var result = await this.resources.ReadDocument("docs/meetings%2Fmeeting-2024-01.md");
         var text = GetText(result);
         text.Should().Contain("January Meeting Notes");
     }
@@ -119,7 +122,7 @@ public class QmdResourcesTests : IAsyncLifetime
         // the decoding behavior directly: %20 should decode to a space,
         // and the lookup should proceed (returning "not found" for a non-existent path,
         // but without crashing on the decode).
-        var result = await _resources.ReadDocument("docs/path%20with%20spaces.md");
+        var result = await this.resources.ReadDocument("docs/path%20with%20spaces.md");
         var text = GetText(result);
         // Should decode the path and attempt lookup — returns "not found" for non-existent file
         text.Should().Contain("Document not found");

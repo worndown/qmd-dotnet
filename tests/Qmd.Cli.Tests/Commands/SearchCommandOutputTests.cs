@@ -10,19 +10,19 @@ namespace Qmd.Cli.Tests.Commands;
 
 [Collection("ConsoleOutput")]
 [Trait("Category", "Unit")]
-public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
+public sealed class SearchCommandOutputTests : IAsyncLifetime, IDisposable
 {
-    private readonly TestConsoleOutput _console = new();
-    private readonly IConsoleOutput _original;
-    private IQmdStore _store = null!;
+    private readonly TestConsoleOutput console = new();
+    private readonly IConsoleOutput original;
+    private IQmdStore store = null!;
 
     public SearchCommandOutputTests()
     {
-        _original = CliContext.Console;
-        CliContext.Console = _console;
+        this.original = CliContext.Console;
+        CliContext.Console = this.console;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var config = new CollectionConfig
         {
@@ -31,8 +31,8 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
                 ["docs"] = new Collection { Path = "/test/docs", Pattern = "**/*.md" },
             }
         };
-        _store = await QmdStoreFactory.CreateInMemoryAsync(config);
-        var core = (QmdStore)_store;
+        this.store = await QmdStoreFactory.CreateInMemoryAsync(config);
+        var core = (QmdStore)this.store;
 
         var content = "# API Documentation\n\nSearch for documents using the API.\n";
         var hash = ContentHasher.HashContent(content);
@@ -41,17 +41,16 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
         core.DocumentRepo.InsertDocument("docs", "api.md", title, hash, "2025-01-01", "2025-01-01");
     }
 
-    public async Task DisposeAsync() => await _store.DisposeAsync();
+    public async ValueTask DisposeAsync() => await this.store.DisposeAsync();
 
-    public void Dispose() => CliContext.Console = _original;
+    public void Dispose() => CliContext.Console = this.original;
 
     [Fact]
     public async Task Search_WithResults_Json_WritesJsonToStdout()
     {
-        await SearchCommand.HandleSearchAsync(
-            _store, "API", [], 10, 0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().NotBeEmpty();
         output.Should().Contain("api.md");
         // Should be valid JSON
@@ -61,10 +60,9 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Search_WithResults_Csv_WritesHeaderAndData()
     {
-        await SearchCommand.HandleSearchAsync(
-            _store, "API", [], 10, 0, OutputFormat.Csv, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 0, OutputFormat.Csv, false, false, TestContext.Current.CancellationToken);
 
-        var output = _console.GetOutput();
+        var output = this.console.GetOutput();
         output.Should().StartWith("docid,score,file,title,context,line,snippet");
         output.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l)).Should().HaveCountGreaterThan(1);
     }
@@ -72,29 +70,26 @@ public class SearchCommandOutputTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Search_NoResults_WritesEmptyJson()
     {
-        await SearchCommand.HandleSearchAsync(
-            _store, "xyznonexistent123", [], 10, 0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
-        _console.GetOutput().Should().Be("[]");
+        this.console.GetOutput().Should().Be("[]");
     }
 
     [Fact]
     public async Task Search_NoResults_Cli_WritesNoResultsToStderr()
     {
-        await SearchCommand.HandleSearchAsync(
-            _store, "xyznonexistent123", [], 10, 0, OutputFormat.Cli, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "xyznonexistent123", [], 10, 0, OutputFormat.Cli, false, false, TestContext.Current.CancellationToken);
 
-        _console.GetOutput().Should().BeEmpty();
-        _console.GetError().Should().Contain("No results found.");
+        this.console.GetOutput().Should().BeEmpty();
+        this.console.GetError().Should().Contain("No results found.");
     }
 
     [Fact]
     public async Task Search_MinScore_FiltersResults()
     {
         // Use an extremely high min-score to filter out everything
-        await SearchCommand.HandleSearchAsync(
-            _store, "API", [], 10, 999.0, OutputFormat.Json, false, false);
+        await SearchCommand.HandleSearchAsync(this.store, "API", [], 10, 999.0, OutputFormat.Json, false, false, TestContext.Current.CancellationToken);
 
-        _console.GetOutput().Should().Be("[]");
+        this.console.GetOutput().Should().Be("[]");
     }
 }

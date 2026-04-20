@@ -210,7 +210,7 @@ internal static class AstBreakPointScanner
     /// Parse a source file and return break points at AST node boundaries.
     /// Returns empty list for unsupported languages, parse failures, or grammar loading failures.
     /// </summary>
-    public static List<BreakPoint> GetASTBreakPoints(string content, string filepath)
+    public static List<BreakPoint> GetAstBreakPoints(string content, string filepath)
     {
         var lang = DetectLanguage(filepath);
         if (lang == null) return [];

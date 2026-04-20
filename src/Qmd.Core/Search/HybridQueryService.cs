@@ -13,13 +13,13 @@ namespace Qmd.Core.Search;
 /// </summary>
 internal class HybridQueryService : IHybridQueryService
 {
-    private readonly IFtsSearchService _ftsSearch;
-    private readonly IVectorSearchService _vectorSearch;
-    private readonly IQueryExpanderService _queryExpander;
-    private readonly IRerankerService _reranker;
-    private readonly IQmdDatabase _db;
-    private readonly ILlmService _llmService;
-    private readonly SearchConfig _config;
+    private readonly IFtsSearchService ftsSearch;
+    private readonly IVectorSearchService vectorSearch;
+    private readonly IQueryExpanderService queryExpander;
+    private readonly IRerankerService reranker;
+    private readonly IQmdDatabase db;
+    private readonly ILlmService llmService;
+    private readonly SearchConfig config;
 
     public HybridQueryService(
         IFtsSearchService ftsSearch,
@@ -30,13 +30,13 @@ internal class HybridQueryService : IHybridQueryService
         ILlmService llmService,
         SearchConfig searchConfig)
     {
-        _ftsSearch = ftsSearch;
-        _vectorSearch = vectorSearch;
-        _queryExpander = queryExpander;
-        _reranker = reranker;
-        _db = db;
-        _llmService = llmService;
-        _config = searchConfig;
+        this.ftsSearch = ftsSearch;
+        this.vectorSearch = vectorSearch;
+        this.queryExpander = queryExpander;
+        this.reranker = reranker;
+        this.db = db;
+        this.llmService = llmService;
+        this.config = searchConfig;
     }
 
     public async Task<List<HybridQueryResult>> HybridQueryAsync(
@@ -53,7 +53,7 @@ internal class HybridQueryService : IHybridQueryService
         // =====================================================================
         // Step 1: BM25 Probe — detect strong signal
         // =====================================================================
-        var initialFts = _ftsSearch.Search(query, 20, collections);
+        var initialFts = this.ftsSearch.Search(query, 20, collections);
         var topScore = initialFts.Count > 0 ? initialFts[0].Score : 0.0;
         var secondScore = initialFts.Count > 1 ? initialFts[1].Score : 0.0;
         var strongSignal = intent == null
@@ -63,11 +63,11 @@ internal class HybridQueryService : IHybridQueryService
         // that valid-but-weak BM25 matches (e.g. single-word queries scoring 20-25%)
         // are included in RRF fusion instead of being silently discarded.
         var effectiveFtsMin = options.MinScore > 0
-            ? Math.Min(options.MinScore, _config.FtsMinSignal)
-            : _config.FtsMinSignal;
+            ? Math.Min(options.MinScore, this.config.FtsMinSignal)
+            : this.config.FtsMinSignal;
         var ftsWeak = topScore < effectiveFtsMin;
-        if (options.Diagnostics != null && effectiveFtsMin < _config.FtsMinSignal)
-            options.Diagnostics.RelaxedGates.Add($"FtsMinSignal ({_config.FtsMinSignal:F2} -> {effectiveFtsMin:F2})");
+        if (options.Diagnostics != null && effectiveFtsMin < this.config.FtsMinSignal)
+            options.Diagnostics.RelaxedGates.Add($"FtsMinSignal ({this.config.FtsMinSignal:F2} -> {effectiveFtsMin:F2})");
 
         // =====================================================================
         // Step 2: Query Expansion (skip if strong signal)
@@ -75,7 +75,7 @@ internal class HybridQueryService : IHybridQueryService
         var expandedQueries = new List<ExpandedQuery>();
         if (!strongSignal)
         {
-            expandedQueries = await _queryExpander.ExpandQueryAsync(query, null, intent, ct);
+            expandedQueries = await this.queryExpander.ExpandQueryAsync(query, null, intent, ct);
         }
 
         // =====================================================================
@@ -99,7 +99,7 @@ internal class HybridQueryService : IHybridQueryService
         {
             foreach (var eq in expandedQueries.Where(q => q.Type == "lex"))
             {
-                var ftsResults = _ftsSearch.Search(eq.Query, 20, collections);
+                var ftsResults = this.ftsSearch.Search(eq.Query, 20, collections);
                 if (ftsResults.Count > 0)
                 {
                     rankedLists.Add(ftsResults.Select(r => new RankedResult(
@@ -116,22 +116,22 @@ internal class HybridQueryService : IHybridQueryService
             .Select(q => (q.Query, q.Type)));
 
         // Check if vector table exists
-        var vecTableExists = _db.Prepare(
+        var vecTableExists = this.db.Prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='vectors_vec'").Get<SqliteMasterRow>();
 
-        if (vecTableExists != null && _llmService != null)
+        if (vecTableExists != null && this.llmService != null)
         {
             // Batch embed all vector queries
             var textsToEmbed = vecQueries
-                .Select(q => EmbeddingFormatter.FormatQueryForEmbedding(q.Text, _llmService.EmbedModelName))
+                .Select(q => EmbeddingFormatter.FormatQueryForEmbedding(q.Text, this.llmService.EmbedModelName))
                 .ToList();
-            var embeddings = await _llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
+            var embeddings = await this.llmService.EmbedBatchAsync(textsToEmbed, ct: ct);
 
             for (int i = 0; i < vecQueries.Count; i++)
             {
                 if (embeddings[i] == null) continue;
-                var vecResults = await _vectorSearch.SearchAsync(
-                    vecQueries[i].Text, _llmService.EmbedModelName,
+                var vecResults = await this.vectorSearch.SearchAsync(
+                    vecQueries[i].Text, this.llmService.EmbedModelName,
                     20, collections, embeddings[i]!.Embedding, ct);
                 if (vecResults.Count > 0)
                 {
@@ -167,10 +167,10 @@ internal class HybridQueryService : IHybridQueryService
         // Relaxed by MinScore so that --min-score can override an aggressive
         // autotuned threshold that would otherwise silently discard results.
         var effectiveVecGate = options.MinScore > 0
-            ? Math.Min(options.MinScore, _config.VecOnlyGateThreshold)
-            : _config.VecOnlyGateThreshold;
-        if (options.Diagnostics != null && effectiveVecGate < _config.VecOnlyGateThreshold)
-            options.Diagnostics.RelaxedGates.Add($"VecOnlyGateThreshold ({_config.VecOnlyGateThreshold:F2} -> {effectiveVecGate:F2})");
+            ? Math.Min(options.MinScore, this.config.VecOnlyGateThreshold)
+            : this.config.VecOnlyGateThreshold;
+        if (options.Diagnostics != null && effectiveVecGate < this.config.VecOnlyGateThreshold)
+            options.Diagnostics.RelaxedGates.Add($"VecOnlyGateThreshold ({this.config.VecOnlyGateThreshold:F2} -> {effectiveVecGate:F2})");
         if (!hasFts && bestVecScore < effectiveVecGate && rankedLists.Count > 0)
             return [];
 
@@ -222,7 +222,7 @@ internal class HybridQueryService : IHybridQueryService
             var chunksToRerank = candidatesWithChunks
                 .Select(c => new RerankDocument(c.Cand.File, c.BestChunk))
                 .ToList();
-            var reranked = await _reranker.RerankAsync(query, chunksToRerank, null, intent, ct);
+            var reranked = await this.reranker.RerankAsync(query, chunksToRerank, null, intent, ct);
             rerankScores = reranked.ToDictionary(r => r.File, r => r.Score);
         }
 
@@ -239,10 +239,10 @@ internal class HybridQueryService : IHybridQueryService
                 options.Diagnostics.BestRerankScore = bestRerank;
 
             var effectiveRerankGate = options.MinScore > 0
-                ? Math.Min(options.MinScore, _config.RerankGateThreshold)
-                : _config.RerankGateThreshold;
-            if (options.Diagnostics != null && effectiveRerankGate < _config.RerankGateThreshold)
-                options.Diagnostics.RelaxedGates.Add($"RerankGateThreshold ({_config.RerankGateThreshold:F2} -> {effectiveRerankGate:F2})");
+                ? Math.Min(options.MinScore, this.config.RerankGateThreshold)
+                : this.config.RerankGateThreshold;
+            if (options.Diagnostics != null && effectiveRerankGate < this.config.RerankGateThreshold)
+                options.Diagnostics.RelaxedGates.Add($"RerankGateThreshold ({this.config.RerankGateThreshold:F2} -> {effectiveRerankGate:F2})");
             if (!hasFts && bestRerank < effectiveRerankGate)
                 return [];
         }
@@ -278,8 +278,8 @@ internal class HybridQueryService : IHybridQueryService
                 BestChunk = bestChunk,
                 BestChunkPos = bestChunkPos,
                 Score = finalScore,
-                Context = ContextResolver.GetContextForFile(_db, cand.File),
-                Docid = DocidUtils.GetDocid(cand.Hash),
+                Context = ContextResolver.GetContextForFile(this.db, cand.File),
+                DocId = DocIdUtils.GetDocId(cand.Hash),
                 Explain = options.Explain ? BuildExplain(cand.File, rrfTraces, rerankScore, finalScore) : null,
             });
         }
@@ -303,7 +303,7 @@ internal class HybridQueryService : IHybridQueryService
         if (results.Count > 1)
         {
             var topBlended = results[0].Score;
-            var floor = topBlended * _config.ConfidenceGapRatio;
+            var floor = topBlended * this.config.ConfidenceGapRatio;
             results = results.Where(r => r.Score >= floor).ToList();
         }
 

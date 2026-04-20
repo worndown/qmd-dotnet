@@ -26,9 +26,9 @@ internal static class DocumentFinder
             filepath = filepath[..^colonMatch.Length];
 
         // DocId lookup (#abc123, abc123, etc.)
-        if (DocidUtils.IsDocid(filepath))
+        if (DocIdUtils.IsDocId(filepath))
         {
-            var docidMatch = FindDocumentByDocid(db, filepath);
+            var docidMatch = FindDocumentByDocId(db, filepath);
             if (docidMatch != null)
                 filepath = docidMatch.Value.Filepath;
             else
@@ -112,7 +112,7 @@ internal static class DocumentFinder
             DisplayPath = doc.DisplayPath,
             Title = doc.Title,
             Hash = hash,
-            DocId = DocidUtils.GetDocid(hash),
+            DocId = DocIdUtils.GetDocId(hash),
             CollectionName = doc.Collection,
             ModifiedAt = doc.ModifiedAt,
             BodyLength = doc.BodyLength,
@@ -176,9 +176,9 @@ internal static class DocumentFinder
         return body;
     }
 
-    private static (string Filepath, string Hash)? FindDocumentByDocid(IQmdDatabase db, string docid)
+    private static (string Filepath, string Hash)? FindDocumentByDocId(IQmdDatabase db, string docid)
     {
-        var normalized = DocidUtils.Normalize(docid);
+        var normalized = DocIdUtils.Normalize(docid);
         if (normalized.Length < 1) return null;
 
         var row = db.Prepare(@"
@@ -186,7 +186,7 @@ internal static class DocumentFinder
             FROM documents d
             WHERE d.hash LIKE $1 AND d.active = 1
             LIMIT 1
-        ").Get<DocidRow>($"{normalized}%");
+        ").Get<DocIdRow>($"{normalized}%");
 
         if (row == null) return null;
         return (row.Filepath, row.Hash);

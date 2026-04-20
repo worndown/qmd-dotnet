@@ -7,11 +7,11 @@ namespace Qmd.Core.Indexing;
 
 internal class CacheRepository : ICacheRepository
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public CacheRepository(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public static string GetCacheKey(string url, object body)
@@ -23,20 +23,20 @@ internal class CacheRepository : ICacheRepository
 
     public string? GetCachedResult(string cacheKey)
     {
-        var row = _db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
+        var row = this.db.Prepare("SELECT result as value FROM llm_cache WHERE hash = $1").Get<SingleValueRow>(cacheKey);
         return row?.Value;
     }
 
     public void SetCachedResult(string cacheKey, string result)
     {
         var now = DateTime.UtcNow.ToString("o");
-        _db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
+        this.db.Prepare("INSERT OR REPLACE INTO llm_cache (hash, result, created_at) VALUES ($1, $2, $3)")
             .Run(cacheKey, result, now);
 
         // 1% random cleanup — prevent unbounded cache growth
         if (Random.Shared.Next(100) == 0)
         {
-            _db.Prepare(@"
+            this.db.Prepare(@"
                 DELETE FROM llm_cache WHERE hash NOT IN (
                     SELECT hash FROM llm_cache ORDER BY created_at DESC LIMIT 1000
                 )
@@ -46,6 +46,6 @@ internal class CacheRepository : ICacheRepository
 
     public void ClearCache()
     {
-        _db.Prepare("DELETE FROM llm_cache").Run();
+        this.db.Prepare("DELETE FROM llm_cache").Run();
     }
 }

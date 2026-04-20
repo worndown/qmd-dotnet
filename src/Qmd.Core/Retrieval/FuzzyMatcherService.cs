@@ -4,13 +4,13 @@ namespace Qmd.Core.Retrieval;
 
 internal class FuzzyMatcherService : IFuzzyMatcherService
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public FuzzyMatcherService(IQmdDatabase db)
     {
-        _db = db;
+        this.db = db;
     }
 
     public List<string> FindSimilarFiles(string query, int maxDistance = 3, int limit = 5) =>
-        FuzzyMatcher.FindSimilarFiles(_db, query, maxDistance, limit);
+        FuzzyMatcher.FindSimilarFiles(this.db, query, maxDistance, limit);
 }

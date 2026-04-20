@@ -7,17 +7,17 @@ namespace Qmd.Core.Tests.Llm;
 [Collection("LlmEnvironment")]
 public class EmbeddingFormatterTests : IDisposable
 {
-    private readonly string? _originalEnv;
+    private readonly string? originalEnv;
 
     public EmbeddingFormatterTests()
     {
-        _originalEnv = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
+        this.originalEnv = Environment.GetEnvironmentVariable("QMD_EMBED_MODEL");
         Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", null);
     }
 
     public void Dispose()
     {
-        Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", _originalEnv);
+        Environment.SetEnvironmentVariable("QMD_EMBED_MODEL", this.originalEnv);
     }
 
     [Fact]

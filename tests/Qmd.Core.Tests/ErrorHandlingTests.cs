@@ -7,19 +7,19 @@ namespace Qmd.Core.Tests;
 [Trait("Category", "Unit")]
 public class ErrorHandlingTests : IDisposable
 {
-    private readonly QmdStore _store;
+    private readonly QmdStore store;
 
     public ErrorHandlingTests()
     {
-        _store = new QmdStore(new SqliteDatabase(":memory:"));
+        this.store = new QmdStore(new SqliteDatabase(":memory:"));
     }
 
-    public void Dispose() => _store.Dispose();
+    public void Dispose() => this.store.Dispose();
 
     [Fact]
     public async Task SearchAsync_ThrowsQmdModelException_WhenLlmNotConfigured()
     {
-        var act = async () => await _store.SearchAsync(new SearchOptions { Query = "test" });
+        var act = async () => await this.store.SearchAsync(new SearchOptions { Query = "test" }, TestContext.Current.CancellationToken);
         await act.Should().ThrowAsync<QmdModelException>()
             .WithMessage("*LLM service not configured*");
     }
@@ -27,7 +27,7 @@ public class ErrorHandlingTests : IDisposable
     [Fact]
     public async Task EmbedAsync_ThrowsQmdModelException_WhenLlmNotConfigured()
     {
-        var act = async () => await _store.EmbedAsync();
+        var act = async () => await this.store.EmbedAsync(ct: TestContext.Current.CancellationToken);
         await act.Should().ThrowAsync<QmdModelException>()
             .WithMessage("*LLM service not configured*");
     }
@@ -35,7 +35,7 @@ public class ErrorHandlingTests : IDisposable
     [Fact]
     public async Task ExpandQueryAsync_ThrowsQmdModelException_WhenLlmNotConfigured()
     {
-        var act = async () => await _store.ExpandQueryAsync("test");
+        var act = async () => await this.store.ExpandQueryAsync("test", ct: TestContext.Current.CancellationToken);
         await act.Should().ThrowAsync<QmdModelException>()
             .WithMessage("*LLM service not configured*");
     }

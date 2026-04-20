@@ -91,7 +91,7 @@ public class VirtualPathsTests
     }
 
     [Fact]
-    public void Normalize_DocidFormatPreserved()
+    public void Normalize_DocIdFormatPreserved()
     {
         VirtualPaths.Normalize("#abc123").Should().Be("#abc123");
         VirtualPaths.Normalize("#def456").Should().Be("#def456");
@@ -106,7 +106,7 @@ public class VirtualPathsTests
     }
 
     [Fact]
-    public void IsVirtualPath_RejectsDocid()
+    public void IsVirtualPath_RejectsDocId()
     {
         VirtualPaths.IsVirtualPath("#abc123").Should().BeFalse();
         VirtualPaths.IsVirtualPath("#def456").Should().BeFalse();

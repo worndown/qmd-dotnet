@@ -10,19 +10,19 @@ namespace Qmd.Core.Tests.Retrieval;
 [Trait("Category", "Database")]
 public class FuzzyMatcherTests : IDisposable
 {
-    private readonly IQmdDatabase _db;
+    private readonly IQmdDatabase db;
 
     public FuzzyMatcherTests()
     {
-        _db = TestDbHelper.CreateInMemoryDb();
-        SeedDocs();
+        this.db = TestDbHelper.CreateInMemoryDb();
+        this.SeedDocs();
     }
 
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => this.db.Dispose();
 
     private void SeedDocs()
     {
-        var repo = new DocumentRepository(_db);
+        var repo = new DocumentRepository(this.db);
         void Seed(string path)
         {
             var hash = ContentHasher.HashContent(path);
@@ -59,14 +59,14 @@ public class FuzzyMatcherTests : IDisposable
     [Fact]
     public void FindSimilarFiles_FindsCloseMatches()
     {
-        var similar = FuzzyMatcher.FindSimilarFiles(_db, "readmi.md", maxDistance: 2);
+        var similar = FuzzyMatcher.FindSimilarFiles(this.db, "readmi.md", maxDistance: 2);
         similar.Should().Contain("readme.md");
     }
 
     [Fact]
     public void FindSimilarFiles_RespectsLimit()
     {
-        var similar = FuzzyMatcher.FindSimilarFiles(_db, "readme", maxDistance: 10, limit: 2);
+        var similar = FuzzyMatcher.FindSimilarFiles(this.db, "readme", maxDistance: 10, limit: 2);
         similar.Should().HaveCountLessThanOrEqualTo(2);
     }
 

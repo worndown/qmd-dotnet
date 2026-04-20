@@ -6,17 +6,17 @@ namespace Qmd.Core.Tests.Paths;
 [Trait("Category", "Unit")]
 public class QmdPathsTests : IDisposable
 {
-    private readonly string? _originalPwd;
+    private readonly string? originalPwd;
 
     public QmdPathsTests()
     {
-        _originalPwd = Environment.GetEnvironmentVariable("PWD");
+        this.originalPwd = Environment.GetEnvironmentVariable("PWD");
     }
 
     public void Dispose()
     {
-        if (_originalPwd != null)
-            Environment.SetEnvironmentVariable("PWD", _originalPwd);
+        if (this.originalPwd != null)
+            Environment.SetEnvironmentVariable("PWD", this.originalPwd);
         else
             Environment.SetEnvironmentVariable("PWD", null);
     }

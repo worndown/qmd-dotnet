@@ -4,13 +4,13 @@ using Qmd.Core.Paths;
 namespace Qmd.Core.Tests.Paths;
 
 [Trait("Category", "Unit")]
-public class DocidUtilsTests
+public class DocIdUtilsTests
 {
     [Fact]
-    public void GetDocid_ReturnsFirst6Chars()
+    public void GetDocId_ReturnsFirst6Chars()
     {
-        DocidUtils.GetDocid("abc123def456").Should().Be("abc123");
-        DocidUtils.GetDocid("000000anything").Should().Be("000000");
+        DocIdUtils.GetDocId("abc123def456").Should().Be("abc123");
+        DocIdUtils.GetDocId("000000anything").Should().Be("000000");
     }
 
     [Theory]
@@ -22,7 +22,7 @@ public class DocidUtilsTests
     [InlineData("#abc123", "abc123")]
     public void Normalize_HandlesVariousFormats(string input, string expected)
     {
-        DocidUtils.Normalize(input).Should().Be(expected);
+        DocIdUtils.Normalize(input).Should().Be(expected);
     }
 
     [Theory]
@@ -34,37 +34,37 @@ public class DocidUtilsTests
     [InlineData("12345", false)]        // Too short
     [InlineData("bad-id", false)]       // Non-hex
     [InlineData("ghijkl", false)]       // Non-hex letters
-    public void IsDocid_ValidatesCorrectly(string input, bool expected)
+    public void IsDocId_ValidatesCorrectly(string input, bool expected)
     {
-        DocidUtils.IsDocid(input).Should().Be(expected);
+        DocIdUtils.IsDocId(input).Should().Be(expected);
     }
 
     [Fact]
     public void Normalize_UppercaseHexPreserved()
     {
-        DocidUtils.Normalize("#ABC123").Should().Be("ABC123");
-        DocidUtils.Normalize("\"ABC123\"").Should().Be("ABC123");
+        DocIdUtils.Normalize("#ABC123").Should().Be("ABC123");
+        DocIdUtils.Normalize("\"ABC123\"").Should().Be("ABC123");
     }
 
     [Fact]
     public void Normalize_MismatchedQuotesPreserved()
     {
         // Mismatched quotes should NOT be stripped
-        DocidUtils.Normalize("\"abc123'").Should().Be("\"abc123'");
-        DocidUtils.Normalize("'abc123\"").Should().Be("'abc123\"");
+        DocIdUtils.Normalize("\"abc123'").Should().Be("\"abc123'");
+        DocIdUtils.Normalize("'abc123\"").Should().Be("'abc123\"");
     }
 
     [Fact]
-    public void IsDocid_RejectsFilePaths()
+    public void IsDocId_RejectsFilePaths()
     {
-        DocidUtils.IsDocid("/path/to/file.md").Should().BeFalse();
-        DocidUtils.IsDocid("path/to/file.md").Should().BeFalse();
-        DocidUtils.IsDocid("qmd://collection/file.md").Should().BeFalse();
+        DocIdUtils.IsDocId("/path/to/file.md").Should().BeFalse();
+        DocIdUtils.IsDocId("path/to/file.md").Should().BeFalse();
+        DocIdUtils.IsDocId("qmd://collection/file.md").Should().BeFalse();
     }
 
     [Fact]
-    public void IsDocid_RejectsHexWithExtension()
+    public void IsDocId_RejectsHexWithExtension()
     {
-        DocidUtils.IsDocid("abc123.md").Should().BeFalse();
+        DocIdUtils.IsDocId("abc123.md").Should().BeFalse();
     }
 }

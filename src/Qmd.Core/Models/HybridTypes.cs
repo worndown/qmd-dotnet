@@ -46,7 +46,7 @@ public class HybridQueryResult
     public int BestChunkPos { get; set; }
     public double Score { get; set; }
     public string? Context { get; set; }
-    public string Docid { get; set; } = "";
+    public string DocId { get; set; } = "";
     public HybridQueryExplain? Explain { get; set; }
 }
 
